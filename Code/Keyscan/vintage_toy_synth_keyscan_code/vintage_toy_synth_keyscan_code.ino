@@ -1,0 +1,250 @@
+//Toy Piano Synth Code, for front velostat switches only using multiplexers for the first and last 8 keys, with dedicated inputs for the middle two keys.
+//*/
+
+//TODO: document and DEFINE the inputs and outputs we are using for this code
+
+//FIXME: some keys/sensors don't work as well as others - sensitivity is bad and can't reach high pressure values.
+//If I can't fix these in the hardware, add fixes in the software (e.g. have upper limit pressure values for each key).
+
+//#include <MIDI.h>
+//MIDI_CREATE_DEFAULT_INSTANCE();
+
+//========================================================================================
+//Values you may need to change
+
+//Set this value to the number of keys you are using
+const int NUM_OF_KEYS = 18;
+
+//Change this number to set what MIDI channel the MIDI notes are set to
+const int midiChan = 1;
+//Change these numbers to set what MIDI note number each key/piezo will send.
+//Also make sure that the total number of numbers here matches the value of NUM_OF_KEYS
+const int midiNote[NUM_OF_KEYS] = {60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89};
+
+//=======================================================================================
+
+int INIT_PHASE_TIME = 10;
+
+int PRESSURE_OFFSET = 100;
+
+//Variables for storing certain values
+int triggerVal[NUM_OF_KEYS] = {0};
+bool noteIsOn[NUM_OF_KEYS] = {false};
+
+unsigned long triggerTime[NUM_OF_KEYS] = {0};
+int triggerInitVal[NUM_OF_KEYS] = {0};
+bool inInitPhase[NUM_OF_KEYS] = {false};
+
+void setup()
+{
+    //MIDI.begin(MIDI_CHANNEL_OMNI);
+    
+    //for debugging. Eventually this will be for sending data to the BBB.
+    Serial.begin(38400);
+    
+    pinMode(2, OUTPUT);    // s0
+    pinMode(3, OUTPUT);    // s1
+    pinMode(4, OUTPUT);    // s2
+    pinMode(5, OUTPUT);    // s0
+    pinMode(6, OUTPUT);    // s1
+    pinMode(7, OUTPUT);    // s2
+}
+
+void loop()
+{
+    //repeat the below code for each input/key
+    for (int count; count < NUM_OF_KEYS; count++)
+    {
+      
+      //==========================================
+      //==========================================
+      //==========================================
+      //Read input
+      //FIXME: this code could be tidier
+      
+      if (count < 8)
+      {
+        //select the bit/input  
+        int r0 = bitRead (count, 0);   
+        int r1 = bitRead (count, 1);     
+        int r2 = bitRead (count, 2); 
+        digitalWrite (2, r0);
+        digitalWrite (3, r1);
+        digitalWrite (4, r2);
+        
+        //read the input value
+        triggerVal[count] = analogRead(A0);
+      }
+      
+      if (count == 8)
+      {
+         triggerVal[count] = analogRead(A1);
+      }
+      
+      else if (count == 9)
+      {
+         triggerVal[count] = analogRead(A2);
+      }
+      
+      else if (count > 9)
+      {
+        //select the bit/input  
+        
+        int mux_input = count - 10;
+        
+        int r0 = bitRead (mux_input, 0);   
+        int r1 = bitRead (mux_input, 1);     
+        int r2 = bitRead (mux_input, 2); 
+        digitalWrite (5, r0);
+        digitalWrite (6, r1);
+        digitalWrite (7, r2);
+        
+        //read the input value
+        triggerVal[count] = analogRead(A3);
+      }
+      
+//      if (triggerVal[count] > 0)
+//      {
+//        Serial.print(count);
+//        Serial.print(": ");
+//        Serial.println(triggerVal[count]);
+//      }
+
+        //==========================================
+        //==========================================
+        //==========================================
+        //Process input
+        
+        //==========================================
+        //Initial press stuff (for working out velocity)
+        
+        //========================
+        //if we've got the initial press of a key
+        if (triggerVal[count] > 0 && inInitPhase[count] == false && noteIsOn[count] == false)
+        {
+          //stored the current time 
+          triggerTime[count] = millis();
+          
+          triggerInitVal[count] = 0;
+          inInitPhase[count] = true;
+        }
+        
+        //========================
+        //if we're still holding down a key within the initial phase
+        else if (triggerVal[count] > 0 && inInitPhase[count] == true && millis() < (triggerTime[count] + INIT_PHASE_TIME) && noteIsOn[count] == false)
+        {
+          //if the current val is higher than the current init val
+          if (triggerVal[count] > triggerInitVal[count])
+          {
+            //store the current val
+            triggerInitVal[count] = triggerVal[count];
+          }
+        }
+        
+        //========================
+        //if a key is released before the initial phase is over
+        else if (triggerVal[count] == 0 && inInitPhase[count] == true && noteIsOn[count] == false)
+        {
+          //reset inInitPhase
+          inInitPhase[count] == false;
+          triggerInitVal[count] = 0;
+        }
+        
+        //==========================================
+        //Process note-on's and note-off's
+        
+        //========================
+        //if in the initial phase and current time is +INIT_PHASE_TIME of the initial trigger time
+        else if (triggerVal[count] > 0 && inInitPhase[count] == true && millis() >= (triggerTime[count] + INIT_PHASE_TIME) && noteIsOn[count] == false)
+        {
+          //Work out a velocity value based on the init val...
+
+           //Serial.print("Init val: ");
+           //Serial.println(triggerInitVal[count]);
+           
+           int velocity = (127.0 * triggerInitVal[count]) / 700.0;
+   
+           if (velocity > 127)
+           {
+             velocity = 127;
+             Serial.print("Velocity: ");
+             Serial.println(velocity);
+           }
+           
+           else if (velocity <= 0)
+           {
+             velocity = 5;
+             Serial.print("Velocity: ");
+             Serial.println(velocity);
+           }
+           else
+           {
+             Serial.print("Velocity: ");
+             Serial.println(velocity);
+           }
+
+            inInitPhase[count] = false;
+            
+            //trigger note
+            //TODO: send the serial bytes of anote message to the serial
+            //send a MIDI note-on message
+            //MIDI.sendNoteOn (midiNote[count], 110, midiChan);
+
+            //flag that the note is on
+            noteIsOn[count] = true;
+        }
+        
+        //========================
+        //if the note is currently on and we get a key release
+        else if (triggerVal[count] == 0 && noteIsOn[count] == true)
+        {
+                //turn off the note
+                //MIDI.sendNoteOff (midiNote[count], 0, midiChan);
+                noteIsOn[count] = false;
+        }
+        
+        //==========================================
+        //Process poly pressure
+        
+        //========================
+        //If we've got a key/pressure value of above the init input val whilst the note is on
+        else if (triggerVal[count] >= (triggerInitVal[count] + PRESSURE_OFFSET) && triggerInitVal[count] != 0 && noteIsOn[count] == true)
+        {
+          //Work out pressure value based on the difference between the current val and the init val...
+          //FIXME: this algorithm only really works for light presses.
+          //If a heavy press, we don't want so much offset - implement an equation for this.
+          
+          int init_pressure = triggerInitVal[count] + PRESSURE_OFFSET;
+          
+          int pressure = (((127.0 - 0) * (triggerVal[count] - init_pressure)) / (800.0 - init_pressure)) + 0;
+          
+          if (pressure > 127)
+           {
+             pressure = 127;
+             Serial.print("Pressure: ");
+             Serial.println(pressure);
+           }
+           else if (pressure < 0)
+           {
+             pressure = 0;
+             Serial.print("Pressure: ");
+             Serial.println(pressure);
+           }
+           else
+           {
+             Serial.print("Pressure: ");
+             Serial.println(pressure);
+           }
+             
+          //Send poly pressure message...
+          //...
+          
+        }
+
+        //==========================================
+   
+    }
+
+    //pause the loop
+    //delay(1);
+}
