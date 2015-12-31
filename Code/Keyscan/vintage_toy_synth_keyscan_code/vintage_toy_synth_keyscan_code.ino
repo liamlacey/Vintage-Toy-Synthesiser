@@ -1,4 +1,5 @@
 //Toy Piano Synth Code, for front velostat switches only using multiplexers for the first and last 8 keys, with dedicated inputs for the middle two keys.
+//TODO: improve this description
 //*/
 
 //TODO: document and DEFINE the inputs and outputs we are using for this code
@@ -6,19 +7,16 @@
 //FIXME: some keys/sensors don't work as well as others - sensitivity is bad and can't reach high pressure values.
 //If I can't fix these in the hardware, add fixes in the software (e.g. have upper limit pressure values for each key).
 
-//#include <MIDI.h>
-//MIDI_CREATE_DEFAULT_INSTANCE();
-
 //========================================================================================
-//Values you may need to change
 
-//Set this value to the number of keys you are using
+//Number of keys on the piano
 const int NUM_OF_KEYS = 18;
 
-//Change this number to set what MIDI channel the MIDI notes are set to
+//MIDI channel we want to use
 const int midiChan = 1;
-//Change these numbers to set what MIDI note number each key/piezo will send.
-//Also make sure that the total number of numbers here matches the value of NUM_OF_KEYS
+
+//Change these numbers to set what MIDI note number each key will send.
+//TODO: eventually the keys should just send 0-17, so this array won't be needed
 const int midiNote[NUM_OF_KEYS] = {60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89};
 
 //=======================================================================================
@@ -37,17 +35,17 @@ bool inInitPhase[NUM_OF_KEYS] = {false};
 
 void setup()
 {
-    //MIDI.begin(MIDI_CHANNEL_OMNI);
-    
-    //for debugging. Eventually this will be for sending data to the BBB.
+    //For sending MIDI messages to BBB. 
+    //We don't need to use the MIDI baud rate (31250) here, as we're sending the messages to a general
+    //serial output rather than a MIDI-specific output.
     Serial.begin(38400);
     
-    pinMode(2, OUTPUT);    // s0
-    pinMode(3, OUTPUT);    // s1
-    pinMode(4, OUTPUT);    // s2
-    pinMode(5, OUTPUT);    // s0
-    pinMode(6, OUTPUT);    // s1
-    pinMode(7, OUTPUT);    // s2
+    pinMode(2, OUTPUT);    // mux1 s0
+    pinMode(3, OUTPUT);    // mux1 s1
+    pinMode(4, OUTPUT);    // mux1 s2
+    pinMode(5, OUTPUT);    // mux2 s0
+    pinMode(6, OUTPUT);    // mux2 s1
+    pinMode(7, OUTPUT);    // mux2 s2
 }
 
 void loop()
@@ -55,7 +53,6 @@ void loop()
     //repeat the below code for each input/key
     for (int count; count < NUM_OF_KEYS; count++)
     {
-      
       //==========================================
       //==========================================
       //==========================================
@@ -237,14 +234,10 @@ void loop()
            }
              
           //Send poly pressure message...
-          //...
-          
+          //... 
         }
 
         //==========================================
    
-    }
-
-    //pause the loop
-    //delay(1);
+    } //for (int count; count < NUM_OF_KEYS; count++)
 }
