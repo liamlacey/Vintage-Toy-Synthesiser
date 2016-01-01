@@ -47,11 +47,12 @@ void setup()
   pinMode(2, OUTPUT);    // mux1 s0
   pinMode(3, OUTPUT);    // mux1 s1
   pinMode(4, OUTPUT);    // mux1 s2
-  pinMode(5, OUTPUT);    // mux2 s0
-  pinMode(6, OUTPUT);    // mux2 s1
-  pinMode(7, OUTPUT);    // mux2 s2
   
-  pinMode(13, OUTPUT);    // test LED
+  pinMode(10, OUTPUT);    // mux2 s0
+  pinMode(9, OUTPUT);    // mux2 s1
+  pinMode(8, OUTPUT);    // mux2 s2
+  
+  pinMode(13, OUTPUT);    // t
 }
 
 void loop()
@@ -98,12 +99,12 @@ void loop()
       int r0 = bitRead (mux_input, 0);   
       int r1 = bitRead (mux_input, 1);     
       int r2 = bitRead (mux_input, 2); 
-      digitalWrite (5, r0);
-      digitalWrite (6, r1);
-      digitalWrite (7, r2);
+      digitalWrite (10, r0);
+      digitalWrite (9, r1);
+      digitalWrite (8, r2);
 
       //read the input value
-      triggerVal[count] = analogRead(A3);
+      triggerVal[count] = analogRead(A5);
     }
 
     //      if (triggerVal[count] > 0)
