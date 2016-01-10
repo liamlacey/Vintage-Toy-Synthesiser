@@ -9,53 +9,6 @@
 #include <errno.h>
 
 #define KEYBOARD_SERIAL_PATH "/dev/ttyO1"
-
-// //=================================================================================
-// //=================================================================================
-// //=================================================================================
-// //Setup the serial port, using port/path passed in
-
-// int SetupSerialPort (const char path[], uint8_t should_be_blocking)
-// {
-//     int fd;
-//     struct termios tty_attributes;
-    
-//     // open device for read/write
-//     fd = open(path, O_RDWR);
-    
-//     if (fd < 0)
-//     {
-//         perror(path);
-//         return(-1);
-//     }
-    
-//     tcgetattr(fd,&tty_attributes);
-//     cfmakeraw(&tty_attributes);
-//     // Minimum number of characters for non-canonical read.
-//     tty_attributes.c_cc[VMIN]=1;
-//     // Timeout in deciseconds for non-canonical read.
-//     tty_attributes.c_cc[VTIME]=0;
-    
-//     // setup bauds
-//     cfsetispeed(&tty_attributes, B38400);
-//     cfsetospeed(&tty_attributes, B38400);
-    
-//     // apply changes now
-//     tcsetattr(fd, TCSANOW, &tty_attributes);
-    
-//     if (should_be_blocking)
-//     {
-//         // set it to blocking
-//         fcntl(fd, F_SETFL, 0);
-//     }
-//     else
-//     {
-//         // set it to non-blocking
-//         fcntl(fd, F_SETFL, O_NONBLOCK);
-//     }
-    
-//     return fd;
-// }
  
 int main (void) 
 {
