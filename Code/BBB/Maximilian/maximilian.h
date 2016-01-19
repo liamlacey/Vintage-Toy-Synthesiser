@@ -414,10 +414,11 @@ public:
 	int attackphase,holdphase,releasephase;
 };
 
-class maxiEnv {
-	
-	
+class maxiEnv
+{
+    
 public:
+    maxiEnv();
 	double ar(double input, double attack=1, double release=0.9, long holdtime=1, int trigger=0);
 	double adsr(double input, double attack=1, double decay=0.99, double sustain=0.125, double release=0.9, long holdtime=1, int trigger=0);
     double adsr(double input,int trigger);
