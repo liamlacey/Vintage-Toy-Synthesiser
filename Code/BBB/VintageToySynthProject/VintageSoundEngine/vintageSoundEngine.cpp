@@ -189,6 +189,7 @@ int routing	(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
     //This is main()
 int main()
 {
+    std::cout << "[VSE] Setting up audio engine stuff..." << std::endl;
 	setup();
 	
 #ifdef MAXIMILIAN_PORTAUDIO
@@ -242,6 +243,8 @@ int main()
 		exit( 0 );
 	}
 	
+    std::cout << "[VSE] Setting up RtAudio..." << std::endl;
+    
 	RtAudio::StreamParameters parameters;
 	parameters.deviceId = dac.getDefaultOutputDevice();
 	parameters.nChannels = maxiSettings::channels;
@@ -251,19 +254,25 @@ int main()
 	//double data[maxiSettings::channels];
 	vector<double> data(maxiSettings::channels,0);
 	
-	try {
+	try
+    {
+        std::cout << "[VSE] Starting RtAudio stream..." << std::endl;
+        
 		dac.openStream( &parameters, NULL, RTAUDIO_FLOAT64,
 					   sampleRate, &bufferFrames, &routing, (void *)&(data[0]));
 		
 		dac.startStream();
 	}
-	catch ( RtError& e ) {
+	catch ( RtError& e )
+    {
 		e.printMessage();
 		exit( 0 );
 	}
 	
-	std::cout << "[VSE] Maximilian sound engine has started (using RTAudio)\n";
+    std::cout << "[VSE] Maximilian sound engine has started (using RTAudio)" << std::endl;
 	
+    std::cout << "[VSE] Starting main loop..." << std::endl;
+    
     while (true)
     {
         usleep (1000000);

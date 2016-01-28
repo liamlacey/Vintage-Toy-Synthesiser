@@ -7,4 +7,5 @@ scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/BBB/VintageToySynth
 scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/BBB/VintageToySynthProject/VintageSoundEngine/"* root@192.168.7.2:/usr/VintageToySynthProject/VintageSoundEngine/
 scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/BBB/VintageToySynthProject/start" root@192.168.7.2:/usr/VintageToySynthProject/
 scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/BBB/VintageToySynthProject/stop" root@192.168.7.2:/usr/VintageToySynthProject/
+scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/BBB/VintageToySynthProject/globals.h" root@192.168.7.2:/usr/VintageToySynthProject/
 
