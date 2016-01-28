@@ -1,0 +1,8 @@
+# Script that stops all running Vintage Toy Synthesiser applications
+
+/etc/init.d/000vintageBrain stop
+
+
+
+
+

@@ -1,0 +1,4 @@
+# Script that starts all needed applications for the Vintage Toy Synthesiser
+
+/etc/init.d/000vintageBrain start
+sleep 1
