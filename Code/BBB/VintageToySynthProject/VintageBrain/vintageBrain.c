@@ -19,8 +19,45 @@
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <poll.h>
+#include <signal.h>
+#include <sched.h>
+#include <time.h>
+#include <netdb.h>
+#include <memory.h>
+#include <ifaddrs.h>
+#include <stdarg.h>
+#include <math.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <sys/termios.h>
+#include <sys/un.h>
+#include <sys/wait.h>
+#include <linux/spi/spidev.h>
+#include <linux/sockios.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <arpa/inet.h>
+
+#include "../globals.h"
 
 #define KEYBOARD_SERIAL_PATH "/dev/ttyO1"
+
+//==========================================================
+//==========================================================
+//==========================================================
+//Function that sends data to the vintageSoundEngine application using a socket
+
+void SendToSoundEngine (uint8_t data_buffer[], int data_buffer_size, int sock, struct sockaddr_un sock_addr)
+{
+    if (sendto (sock, data_buffer, data_buffer_size, 0, (struct sockaddr *) &sock_addr, sizeof(struct sockaddr_un)) == -1)
+        perror("[VB] Sending to sound engine");
+    
+    //PrintArray(data_buffer, data_buffer_size, "Data to Clock");
+}
 
 //==========================================================
 //==========================================================
@@ -76,23 +113,48 @@ int SetupSerialPort (const char path[], speed_t speed, bool should_be_blocking)
 
 int main (void)
 {
-    printf ("Running vintageBrain...\n");
+    printf ("[VB] Running vintageBrain...\n");
     
     int keyboard_fd;
     uint8_t keyboard_input_buf[1] = {0};
     
+    struct sockaddr_un brain_sock_addr, sound_engine_sock_addr;
+    int sock;
+    
     //==========================================================
-    //Set up serial connection
+    //Set up serial connections
     
-    printf ("Setting up key mech serial connection...\n");
+    printf ("[VB] Setting up serial connections...\n");
     
-    //open UART1 device file for read/write with baus rate of 38400
+    //open UART1 device file for read/write to keyboard with baud rate of 38400
     keyboard_fd = SetupSerialPort (KEYBOARD_SERIAL_PATH, B38400, true);
+    
+    //===============================================================
+    //Set up sockets for comms with the vintageSoundEngine application
+    
+    printf ("[VB] Setting up sockets...\n");
+
+    //sound engine socket
+    sound_engine_sock_addr.sun_family = AF_UNIX;
+    strncpy (sound_engine_sock_addr.sun_path, SOCK_SOUND_ENGINE_FILENAME, sizeof(sound_engine_sock_addr.sun_path) - 1);
+    
+    sock = socket (AF_UNIX, SOCK_DGRAM, 0);
+    
+    //brain socket
+    brain_sock_addr.sun_family = AF_UNIX;
+    strcpy (brain_sock_addr.sun_path, SOCK_BRAIN_FILENAME);
+    // Unlink (in case sock already exists)
+    unlink (brain_sock_addr.sun_path);
+    
+    if (bind (sock, (struct sockaddr *)&brain_sock_addr, sizeof(brain_sock_addr)) == -1)
+    {
+        perror("[VB] socket bind");
+    }
     
     //==========================================================
     //Enter main loop, and just read any data that comes in over the serial port
     
-    printf ("Starting reading data from key mech...\n");
+    printf ("[VB] Starting reading data from key mech...\n");
     
     while (true)
     {
@@ -103,7 +165,10 @@ int main (void)
         if (ret != -1)
         {
             //display the read byte
-            printf ("Byte read from keyboard: %d\n", keyboard_input_buf[0]);
+            printf ("[VB] Byte read from keyboard: %d\n", keyboard_input_buf[0]);
+            
+            //Send data to vintageSoundEngine app
+            SendToSoundEngine (keyboard_input_buf, 1, sock, sound_engine_sock_addr);
             
         } //if (ret)
         
