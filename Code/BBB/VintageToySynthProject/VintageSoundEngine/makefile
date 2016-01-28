@@ -3,10 +3,8 @@
 
 all: vintageSoundEngine
 
-#TODO: add all needed files for the vintageSoundEngine target 
-vintageSoundEngine: vintageSoundEngine.cpp
-	#TODO: add/corrected all needed files
-	g++ -Wall -D__LINUX_ALSA__ -o -O3 vintageSoundEngine main.cpp Maximilian/RtAudio.cpp Maximilian/player.cpp Maximilian/maximilian.cpp -lasound -lpthread
+vintageSoundEngine: vintageSoundEngine.cpp Maximilian/maximilian.cpp Maximilian/RtAudio.cpp
+	g++ -Wall -D__LINUX_ALSA__ -o vintageSoundEngine Maximilian/RtAudio.cpp vintageSoundEngine.cpp Maximilian/maximilian.cpp -lasound -lpthread -O3
 
 clean:
 	rm -f vintageSoundEngine
