@@ -1,0 +1,10 @@
+# Makefile to build the vintageBrain application for the BeagleBone Black using a cross-compiler on OS X
+# Command to call this makefile: make -f makefile_brain_osx
+
+all: vintageBrain
+
+vintageBrain: vintageBrain.c
+	/usr/local/linaro/arm-linux-gnueabihf/bin/arm-linux-gnueabihf-gcc -O3 vintageBrain.c -o vintageBrain
+
+clean:
+	rm -f vintageBrain
