@@ -178,11 +178,16 @@ int main (void)
         uint8_t test_buf[3] = {MIDI_NOTEON, test_num, 110};
         SendToSoundEngine (test_buf, 3, sock, sound_engine_sock_addr);
         
+        usleep (250000);
+        
+        uint8_t test_buf_2[3] = {MIDI_NOTEOFF, test_num, 0};
+        SendToSoundEngine (test_buf_2, 3, sock, sound_engine_sock_addr);
+        
+        usleep (250000);
+        
         test_num++;
         if (test_num > 72)
             test_num = 48;
-        
-        usleep (250000);
         
     } ///while (true)
     

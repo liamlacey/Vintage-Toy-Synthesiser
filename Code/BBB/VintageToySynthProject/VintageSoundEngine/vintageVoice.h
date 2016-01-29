@@ -53,16 +53,22 @@ public:
     void processAudio (double *output);
     
     void setOscPitch (uint8_t midi_note_num);
+    void triggerAmpEnvelope (uint8_t trigger_val);
     
 private:
     
     //maximilian objects
     maxiOsc oscSquare;
+    maxiEnv envAmp;
     
     //'patch' parameters
     
     //other parameters
     double oscPitch;
+    
+    //audio output variables
+    double envAmpOut, oscOut;
+    
 };
 
 #endif /* defined(____vintageVoice__) */

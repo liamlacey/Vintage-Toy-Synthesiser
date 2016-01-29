@@ -24,6 +24,12 @@ VintageVoice::VintageVoice (uint8_t voice_num)
     
     //init variables
     oscPitch = 200;
+    
+    //init objects
+    envAmp.setAttack(0);
+    envAmp.setDecay(200);
+    envAmp.setSustain(0.2);
+    envAmp.setRelease(2000);
 }
 
 VintageVoice::~VintageVoice()
@@ -39,7 +45,16 @@ VintageVoice::~VintageVoice()
 
 void VintageVoice::processAudio (double *output)
 {
-    output[0] = oscSquare.square (oscPitch);
+    //FIXME: is there a way of only processing this function if the ampEnv is currently running?
+    
+    //process amplitude envelope
+    envAmpOut = envAmp.adsr (1, envAmp.trigger);
+    
+    //process oscillators
+    oscOut = oscSquare.square (oscPitch);
+    
+    //set final audio output, making both the L and R channels the same
+    output[0] = oscOut  * envAmpOut;
     output[1] = output[0];
 }
 
@@ -52,4 +67,15 @@ void VintageVoice::setOscPitch (uint8_t midi_note_num)
 {
     convert mtof;
     oscPitch = mtof.mtof(midi_note_num);
+}
+
+//==========================================================
+//==========================================================
+//==========================================================
+//Triggers the amplitude envelope of the voice to either start or stop,
+//essentially starting or stopping a note.
+
+void VintageVoice::triggerAmpEnvelope (uint8_t trigger_val)
+{
+    envAmp.trigger = trigger_val;
 }
