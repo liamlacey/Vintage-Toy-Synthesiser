@@ -189,9 +189,50 @@ int routing	(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
     //This is main()
 int main()
 {
+    std::cout << "[VSE] Running vintageSoundEngine..." << std::endl;
+    
+    uint8_t socket_input_buf[16] = {0};
+    int ret = 0;
+    
+    //===============================================================
+    //Setup socket for comms with vintageBrain
+    
+    std::cout << "[VSE] Setting up sockets..." << std::endl;
+    
+    int sock;
+    struct sockaddr_un client, server;
+    
+    if ((sock = socket (AF_UNIX, SOCK_DGRAM, 0)) == -1)
+    {
+        fprintf(stderr,"[VSE] Socket");
+    }
+    
+    server.sun_family = AF_UNIX;
+    strcpy(server.sun_path, SOCK_BRAIN_FILENAME);
+    client.sun_family = AF_UNIX;
+    strcpy(client.sun_path, SOCK_SOUND_ENGINE_FILENAME);
+    unlink(client.sun_path);
+    
+    if (bind (sock, (struct sockaddr *) &client, sizeof(client)) == -1)
+    {
+        std::cout << "[VSE] ERROR: Bind client" << std::endl;
+    }
+    
+    if (connect (sock, (struct sockaddr *) &server, sizeof(server)) == -1)
+    {
+        std::cout << "[VSE] ERROR: Connect client" << std::endl;
+    }
+    
+    //===============================================================
+    //Setup my audio synth engine
+    
     std::cout << "[VSE] Setting up audio engine stuff..." << std::endl;
 	setup();
 	
+    //===============================================================
+    //Setup PortAudio or RtAudio, depending in which one is defined/chosen,
+    //and start the audio stream processing
+    
 #ifdef MAXIMILIAN_PORTAUDIO
 	PaStream *stream;
 	PaError err;
@@ -223,16 +264,7 @@ int main()
 	if( err != paNoError )
 		std::cout <<   "PortAudio error: " << Pa_GetErrorText( err ) << std::endl;
 	
-	
-	char input;
-	std::cout << "\nMaximilian is playing (using PortAudio) ... press <enter> to quit.\n";
-	std::cin.get( input );
-	
-	
-	
-	err = Pa_Terminate();
-	if( err != paNoError )
-		std::cout <<  "PortAudio error: "<< Pa_GetErrorText( err ) << std::endl;
+	std::cout << "[VSE] Maximilian sound engine has started (using PortAudio)" << std::endl;
 	
 #elif defined(MAXIMILIAN_RT_AUDIO)
 	RtAudio dac(RtAudio::WINDOWS_DS);
@@ -268,19 +300,52 @@ int main()
 		e.printMessage();
 		exit( 0 );
 	}
-	
+    
     std::cout << "[VSE] Maximilian sound engine has started (using RTAudio)" << std::endl;
+    
+    #endif
 	
+    //===============================================================
+    //Start main loop (listening for messages from vintageBrain socket)
+    
     std::cout << "[VSE] Starting main loop..." << std::endl;
     
     while (true)
     {
-        usleep (1000000);
-        std::cout << "[VSE] Waiting for messages from vintageBrain...\n";
-    };
+        //usleep (1000000);
+        //std::cout << "[VSE] Waiting for messages from vintageBrain...\n";
+        
+        
+        //Attempt to read data from socket, blocking on read
+        ret = read (sock, socket_input_buf, sizeof(socket_input_buf));
+        
+        if (ret > 0)
+        {
+            //display the read data...
+            std::cout << "[VSE] Data read from socket: ";
+            for (int i = 0; i < ret; i++)
+                std::cout << "[" << (int)socket_input_buf[i] << "] ";
+            std::cout << std::endl;
+            
+        } //if (ret > 0)
+        
+    } //while (true)
 	
+    //===============================================================
+    //Stop PortAudio/RtAudio
+    
+    #ifdef MAXIMILIAN_PORTAUDIO
+    
+    err = Pa_Terminate();
+    if( err != paNoError )
+        std::cout <<  "PortAudio error: "<< Pa_GetErrorText( err ) << std::endl;
+    
+    #elif defined(MAXIMILIAN_RT_AUDIO)
+    
 	if ( dac.isStreamOpen() ) dac.closeStream();
-#endif
+    
+    #endif
+
 	
 	return 0;
 }

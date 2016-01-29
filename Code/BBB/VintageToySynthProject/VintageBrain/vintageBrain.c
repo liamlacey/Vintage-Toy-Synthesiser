@@ -156,6 +156,8 @@ int main (void)
     
     printf ("[VB] Starting reading data from key mech...\n");
     
+    //uint8_t test_num = 0;
+    
     while (true)
     {
         //attempt to read a byte from the serial device file
@@ -171,6 +173,12 @@ int main (void)
             SendToSoundEngine (keyboard_input_buf, 1, sock, sound_engine_sock_addr);
             
         } //if (ret)
+        
+        //test sending data to socket
+//        uint8_t test_buf[1] = {test_num};
+//        SendToSoundEngine (test_buf, 1, sock, sound_engine_sock_addr);
+//        test_num++;
+//        usleep (1000000);
         
     } ///while (true)
     
