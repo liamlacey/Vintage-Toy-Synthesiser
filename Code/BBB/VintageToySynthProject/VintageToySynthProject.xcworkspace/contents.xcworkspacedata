@@ -20,6 +20,12 @@
       <FileRef
          location = "group:vintageSoundEngine.cpp">
       </FileRef>
+      <FileRef
+         location = "group:vintageVoice.h">
+      </FileRef>
+      <FileRef
+         location = "group:vintageVoice.cpp">
+      </FileRef>
       <Group
          location = "group:Maximilian"
          name = "Maximilian">

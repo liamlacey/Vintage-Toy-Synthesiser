@@ -15,3 +15,7 @@
 
 //client sockets
 #define SOCK_SOUND_ENGINE_FILENAME "/var/vintageToySynthProject/vintageSoundEngine.cli"
+
+
+//==========================================================================
+#define NUM_OF_VOICES 2
