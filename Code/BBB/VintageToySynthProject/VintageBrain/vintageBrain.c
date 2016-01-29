@@ -156,29 +156,33 @@ int main (void)
     
     printf ("[VB] Starting reading data from key mech...\n");
     
-    //uint8_t test_num = 0;
+    uint8_t test_num = 48;
     
     while (true)
     {
-        //attempt to read a byte from the serial device file
-        int ret = read (keyboard_fd, keyboard_input_buf, 1);
-        
-        //if read something
-        if (ret != -1)
-        {
-            //display the read byte
-            printf ("[VB] Byte read from keyboard: %d\n", keyboard_input_buf[0]);
-            
-            //Send data to vintageSoundEngine app
-            SendToSoundEngine (keyboard_input_buf, 1, sock, sound_engine_sock_addr);
-            
-        } //if (ret)
-        
+//        //attempt to read a byte from the serial device file
+//        int ret = read (keyboard_fd, keyboard_input_buf, 1);
+//        
+//        //if read something
+//        if (ret != -1)
+//        {
+//            //display the read byte
+//            printf ("[VB] Byte read from keyboard: %d\n", keyboard_input_buf[0]);
+//            
+//            //Send data to vintageSoundEngine app
+//            SendToSoundEngine (keyboard_input_buf, 1, sock, sound_engine_sock_addr);
+//            
+//        } //if (ret)
+//        
         //test sending data to socket
-//        uint8_t test_buf[1] = {test_num};
-//        SendToSoundEngine (test_buf, 1, sock, sound_engine_sock_addr);
-//        test_num++;
-//        usleep (1000000);
+        uint8_t test_buf[3] = {MIDI_NOTEON, test_num, 110};
+        SendToSoundEngine (test_buf, 3, sock, sound_engine_sock_addr);
+        
+        test_num++;
+        if (test_num > 72)
+            test_num = 48;
+        
+        usleep (1000000);
         
     } ///while (true)
     

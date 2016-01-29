@@ -52,8 +52,8 @@
 #include "../globals.h"
 #include "vintageVoice.h"
 
+//FIXME: am I able to declare this in main and pass it into routing and play?
 VintageVoice *vintageVoice[NUM_OF_VOICES];
-
 
 #ifdef MAXIMILIAN_PORTAUDIO
 #include "Maximilian/portaudio.h"
@@ -134,6 +134,235 @@ int routing	(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
     {
         //for now just test processing 1 voice, as the test code in the voice object is essentially for two voices
         vintageVoice[0]->processAudio (output);
+    }
+    
+    //==========================================================
+    //==========================================================
+    //==========================================================
+    //Function that processes MIDI bytes coming from the vintageBrain socket
+    
+    uint8_t ProcInputByte (uint8_t input_byte, uint8_t message_buffer[], uint8_t *byte_counter)
+    {
+        /*
+         A recommended approach for a receiving device is to maintain its "running status buffer" as so:
+         Buffer is cleared (ie, set to 0) at power up.
+         Buffer stores the status when a Voice Category Status (ie, 0x80 to 0xEF) is received.
+         Buffer is cleared when a System Common Category Status (ie, 0xF0 to 0xF7) is received - need to implement this fully!?
+         Nothing is done to the buffer when a RealTime Category message (ie, 0xF8 to 0xFF, which includes clock messages) is received.
+         Any data bytes are ignored when the buffer is 0.
+         
+         (http://www.blitter.com/~russtopia/MIDI/~jglatt/tech/midispec/run.htm)
+         
+         */
+        
+        static uint8_t running_status_value = 0;
+        static uint8_t prev_cc_num = 127; //don't init this to 0, incase the first CC we get is 32, causing it to be ignored!
+        uint8_t result = 0;
+        
+        //=====================================================================
+        //If we've received the start of a new MIDI message (a status byte)...
+        
+        if (input_byte >= MIDI_NOTEOFF)
+        {
+            //If it's a Voice Category message
+            if (input_byte >= MIDI_NOTEOFF && input_byte <= MIDI_PITCH_BEND_MAX)
+            {
+                message_buffer[0] = input_byte;
+                *byte_counter = 1;
+                result = 0;
+                
+                running_status_value = message_buffer[0];
+            }
+            
+            //If it's a clock message
+            else if (input_byte >= MIDI_CLOCK && input_byte <= MIDI_CLOCK_STOP)
+            {
+                //Don't do anything with MidiInCount or running_status_value here,
+                //so that running status works correctly.
+                
+                message_buffer[0] = input_byte;
+                result = input_byte;
+            }
+            
+            //If it's the start of a sysex message
+            else if (input_byte == MIDI_SYSEX_START)
+            {
+                message_buffer[0] = input_byte;
+                *byte_counter = 1;
+            }
+            
+            //If it's the end of a sysex
+            else if (input_byte == MIDI_SYSEX_END)
+            {
+                message_buffer[*byte_counter] = input_byte;
+                *byte_counter = 0;
+                
+                result = MIDI_SYSEX_START;
+            }
+            
+            // If any other status byte, don't do anything
+            
+        } //if (input_byte >= MIDI_NOTEOFF)
+        
+        //=====================================================================
+        //If we're received a data byte of a non-sysex MIDI message...
+        //FIXME: do I actually need to check *byte_counter here?
+        
+        else if (input_byte < MIDI_NOTEOFF && message_buffer[0] != MIDI_SYSEX_START && *byte_counter != 0)
+        {
+            switch (*byte_counter)
+            {
+                case 1:
+                {
+                    //Process the second byte...
+                    
+                    //Check running_status_value here instead of message_buffer[0], as it could be possible
+                    //that we are receiving running status messages entwined with clock messages, where
+                    //message_buffer[0] will actually be equal to MIDI_CLOCK.
+                    
+                    //TODO: process NRPNs, correctly (e.g. process 9 byte NRPN, and then as 12 bytes if the following CC is 0x26)
+                    
+                    //if it's a channel aftertouch message
+                    if (running_status_value >= MIDI_CAT && running_status_value <= MIDI_CAT_MAX)
+                    {
+                        message_buffer[1] = input_byte;
+                        result = MIDI_CAT;
+                        
+                        //set the correct status value
+                        message_buffer[0] = running_status_value;
+                        
+                        //wait for next data byte if running status
+                        *byte_counter = 1;
+                    }
+                    
+                    //if it's a program change message
+                    else if (running_status_value >= MIDI_PROGRAM_CHANGE && running_status_value <= MIDI_PROGRAM_CHANGE_MAX)
+                    {
+                        message_buffer[1] = input_byte;
+                        result = MIDI_PROGRAM_CHANGE;
+                        
+                        //set the correct status value
+                        message_buffer[0] = running_status_value;
+                        
+                        //wait for next data byte if running status
+                        *byte_counter = 1;
+                    }
+                    
+                    //else it's a 3+ byte MIDI message
+                    else
+                    {
+                        message_buffer[1] = input_byte;
+                        *byte_counter = 2;
+                        
+                        //set the correct status value
+                        message_buffer[0] = running_status_value;
+                    }
+                    
+                    break;
+                }
+                    
+                case 2:
+                {
+                    //Process the third byte...
+                    
+                    result = 0;
+                    
+                    //TODO: process NRPNs, correctly
+                    
+                    //if it's not zero it's a note on
+                    if (input_byte && (running_status_value >= MIDI_NOTEON && running_status_value <= MIDI_NOTEON_MAX))
+                    {
+                        //3rd byte is velocity
+                        message_buffer[2] = input_byte;
+                        result = MIDI_NOTEON;
+                        
+                        //set the correct status value
+                        message_buffer[0] = running_status_value;
+                    }
+                    
+                    //if it's a note off
+                    else if ((running_status_value >= MIDI_NOTEOFF && running_status_value <= MIDI_NOTEOFF_MAX) ||
+                             (!input_byte && (running_status_value >= MIDI_NOTEON && running_status_value <= MIDI_NOTEON_MAX)))
+                    {
+                        //3rd byte should be zero
+                        message_buffer[2] = 0;
+                        result = MIDI_NOTEOFF;
+                        
+                        //set the correct status value
+                        message_buffer[0] = running_status_value;
+                    }
+                    
+                    //if it's a CC
+                    else if (running_status_value >= MIDI_CC && running_status_value <= MIDI_CC_MAX)
+                    {
+                        //if we have got a 32-63 CC (0-31 LSB/fine CC),
+                        //and the last CC we received was the MSB/coarse CC pair
+                        if (message_buffer[1] >= 32 && message_buffer[1] <= 63 && (prev_cc_num == (message_buffer[1] - 32)))
+                        {
+                            //Don't do anything. Right now if this is the case we just want to ignore it.
+                            //However in the future we may want to process coarse/fine CC pairs to
+                            //control parameters at a higher resolution.
+                            std::cout << "[VSE] Received CC num " << (int)message_buffer[1] << " directly after CC num " << (int)prev_cc_num << ", so ignoring it" << std::endl;
+                        }
+                        
+                        else
+                        {
+                            message_buffer[2] = input_byte;
+                            result = MIDI_CC;
+                            
+                            //set the correct status value
+                            message_buffer[0] = running_status_value;
+                            
+                        } //else
+                        
+                        //store this CC num as the previously received CC
+                        prev_cc_num = message_buffer[1];
+                    }
+                    
+                    //if it's a poly aftertouch message
+                    else if (running_status_value >= MIDI_PAT && running_status_value <= MIDI_PAT_MAX)
+                    {
+                        message_buffer[2] = input_byte;
+                        result = MIDI_PAT;
+                        
+                        //set the correct status value
+                        message_buffer[0] = running_status_value;
+                    }
+                    
+                    //if it's a pitch bend message
+                    else if (running_status_value >= MIDI_PITCH_BEND && running_status_value <= MIDI_PITCH_BEND_MAX)
+                    {
+                        message_buffer[2] = input_byte;
+                        result = MIDI_PITCH_BEND;
+                        
+                        //set the correct status value
+                        message_buffer[0] = running_status_value;
+                    }
+                    
+                    // wait for next data byte (if running status)
+                    *byte_counter = 1;
+                    
+                    break;
+                }
+                    
+                default:
+                {
+                    break;
+                }
+                    
+            } //switch (*byte_counter)
+            
+        } //else if (input_byte < MIDI_NOTEOFF && message_buffer[0] != MIDI_SYSEX_START && *byte_counter != 0)
+        
+        //if we're currently receiving a sysex message
+        else if (message_buffer[0] == MIDI_SYSEX_START)
+        {
+            //add data to the sysex buffer
+            message_buffer[*byte_counter] = input_byte;
+            *byte_counter++;
+        }
+        
+        return result;
     }
 
     //==========================================================
@@ -269,6 +498,10 @@ int main()
     
     std::cout << "[VSE] Starting main loop..." << std::endl;
     
+    uint8_t input_message_flag = 0;
+    uint8_t input_message_buffer[32] = {0};
+    uint8_t input_message_counter = 0;
+    
     while (true)
     {
         //usleep (1000000);
@@ -277,13 +510,34 @@ int main()
         //Attempt to read data from socket, blocking on read
         ret = read (sock, socket_input_buf, sizeof(socket_input_buf));
         
+        //if we have read something
         if (ret > 0)
         {
             //display the read data...
-            std::cout << "[VSE] Data read from socket: ";
+//            std::cout << "[VSE] Data read from socket: ";
+//            for (int i = 0; i < ret; i++)
+//                std::cout << "[" << (int)socket_input_buf[i] << "] ";
+//            std::cout << std::endl;
+            
+            //for each read byte
             for (int i = 0; i < ret; i++)
-                std::cout << "[" << (int)socket_input_buf[i] << "] ";
-            std::cout << std::endl;
+            {
+                //process the read byte
+                input_message_flag = ProcInputByte (socket_input_buf[i], input_message_buffer, &input_message_counter);
+                
+                //if we have received a full MIDI message
+                if (input_message_flag)
+                {
+                    std::cout << "[VSE] input_message_flag: " << (int)input_message_flag << std::endl;
+                   
+                    std::cout << "[VSE] Processed MIDI message: ";
+                    for (int i = 0; i < ret; i++)
+                        std::cout << "[" << (int)input_message_buffer[i] << "] ";
+                    std::cout << std::endl;
+                    
+                } //if (input_message_flag)
+                
+            } //for (int i = 0; i < ret; i++)
             
         } //if (ret > 0)
         
