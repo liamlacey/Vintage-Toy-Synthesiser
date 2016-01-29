@@ -63,19 +63,6 @@ private:
     
     //other parameters
     double oscPitch;
-    
-//    //These are the synthesiser bits
-//    maxiOsc VCO1[NUM_OF_VOICES],VCO2[NUM_OF_VOICES],LFO1[NUM_OF_VOICES];
-//    maxiSVF svfVcf[NUM_OF_VOICES];
-//    maxiEnv ADSR[NUM_OF_VOICES];
-//    
-//    //This is a bunch of control signals so that we can hear something
-//    maxiOsc timer;//this is the metronome
-//    int currentCount,lastCount,voice;//these values are used to check if we have a new beat this sample
-//    
-//    //and these are some variables we can use to pass stuff around
-//    double VCO1out[NUM_OF_VOICES],VCO2out[NUM_OF_VOICES],LFO1out[NUM_OF_VOICES],VCFout[NUM_OF_VOICES],ADSRout[NUM_OF_VOICES],mix,pitch[NUM_OF_VOICES];
-
 };
 
 #endif /* defined(____vintageVoice__) */
