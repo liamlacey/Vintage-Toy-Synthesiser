@@ -182,7 +182,7 @@ int main (void)
         if (test_num > 72)
             test_num = 48;
         
-        usleep (1000000);
+        usleep (250000);
         
     } ///while (true)
     
