@@ -47,12 +47,12 @@
 class VintageVoice
 {
 public:
-    VintageVoice (int voice_num);
+    VintageVoice (uint8_t voice_num);
     ~VintageVoice();
     
     void processAudio (double *output);
     
-    void setNotePitch (uint8_t midi_note_num);
+    void setOscPitch (uint8_t midi_note_num);
     
 private:
     

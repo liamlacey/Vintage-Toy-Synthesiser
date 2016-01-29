@@ -543,7 +543,7 @@ int main()
                         uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
                         
                         //set the pitch of the voices oscillators based on the note number
-                        vintageVoice[voice_num]->setNotePitch (input_message_buffer[1]);
+                        vintageVoice[voice_num]->setOscPitch (input_message_buffer[1]);
                         
                     } //if (input_message_flag == MIDI_NOTEON)
                     

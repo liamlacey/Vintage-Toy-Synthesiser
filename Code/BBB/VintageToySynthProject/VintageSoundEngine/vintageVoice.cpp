@@ -18,9 +18,9 @@
 //==========================================================
 //==========================================================
 
-VintageVoice::VintageVoice (int voice_num)
+VintageVoice::VintageVoice (uint8_t voice_num)
 {
-    std::cout << "[VV] Initing vintageVoice num " << voice_num << std::endl;
+    std::cout << "[VV] Initing vintageVoice num " << (int)voice_num << std::endl;
     
     oscPitch = 200;
     
@@ -110,7 +110,7 @@ void VintageVoice::processAudio (double *output)
 //==========================================================
 //Sets the oscillator pitch based in the incoming MIDI note number
 
-void VintageVoice::setNotePitch (uint8_t midi_note_num)
+void VintageVoice::setOscPitch (uint8_t midi_note_num)
 {
     convert mtof;
     oscPitch = mtof.mtof(midi_note_num);
