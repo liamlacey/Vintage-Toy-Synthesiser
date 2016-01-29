@@ -1,10 +1,14 @@
-//
-//  vintageVoice.cpp
-//  
-//
-//  Created by Liam Lacey on 29/01/2016.
-//
-//
+/*
+ vintageVoice.cpp
+ 
+ Created by Liam Lacey on 29/01/2016.
+ Copyright 2016 Liam Lacey. All rights reserved.
+ 
+ This is a file for the vintageSoundEngine application for the Vintage Toy Piano Synth project.
+ This application is the audio synthesis engine for the synthesiser, using the Maximilian synthesis library.
+ 
+ This particular file/class handles the audio processing for each voice.
+ */
 
 #include "vintageVoice.h"
 

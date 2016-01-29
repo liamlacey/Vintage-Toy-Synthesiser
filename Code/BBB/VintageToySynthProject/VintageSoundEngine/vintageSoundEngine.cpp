@@ -1,10 +1,17 @@
 /*
- *  player.cpp
- *  rtaudiotest
- *
- *  Created by Chris on 23/08/2011.
- *  Copyright 2011 Goldsmiths Creative Computing. All rights reserved.
- *
+ vintageSoundEngine.cpp
+ 
+ Created by Liam Lacey on 28/01/2016.
+ Copyright 2016 Liam Lacey. All rights reserved.
+ 
+ This is the main file for the vintageSoundEngine application for the Vintage Toy Piano Synth project.
+ This application is the audio synthesis engine for the synthesiser, using the Maximilian synthesis library.
+ 
+ This particular file is heavily based on Maximilians player.cpp file which connects to RtAudio or PortAudio,
+ attaching the play() function as the audio processing callback function. It also listens from messages
+ from the vintageBrain socket.
+ 
+ The audio processing for each voice is handled within the VintageVoice objects.
  */
 
 #include <stdio.h>

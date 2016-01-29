@@ -1,10 +1,9 @@
-//
-//  vintageVoice.h
-//  
-//
-//  Created by Liam Lacey on 29/01/2016.
-//
-//
+/*
+ vintageVoice.cpp
+ 
+ Created by Liam Lacey on 29/01/2016.
+ Copyright 2016 Liam Lacey. All rights reserved.
+ */
 
 #ifndef ____vintageVoice__
 #define ____vintageVoice__
