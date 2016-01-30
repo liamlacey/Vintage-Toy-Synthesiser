@@ -105,7 +105,8 @@ void VintageVoice::setNoteVelocity (uint8_t vel_val)
 
 void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_user_val)
 {
-    patchParameterData[param_num].voice_val = scaleValue (param_user_val,
+    patchParameterData[param_num].user_val = param_user_val;
+    patchParameterData[param_num].voice_val = scaleValue (patchParameterData[param_num].user_val,
                                                           patchParameterData[param_num].user_min_val,
                                                           patchParameterData[param_num].user_max_val,
                                                           patchParameterData[param_num].voice_min_val,
