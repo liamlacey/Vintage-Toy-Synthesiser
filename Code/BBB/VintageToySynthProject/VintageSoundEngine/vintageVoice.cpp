@@ -30,12 +30,18 @@ VintageVoice::VintageVoice (uint8_t voice_num)
     }
     
     oscPitch = 200;
+    oscSubPitch = 100;
     
     //init objects
-    envAmp.setAttack(0);
-    envAmp.setDecay(200);
-    envAmp.setSustain(0.2);
-    envAmp.setRelease(2000);
+    envAmp.setAttack (patchParameterData[PARAM_AEG_ATTACK].voice_val);
+    envAmp.setDecay (patchParameterData[PARAM_AEG_DECAY].voice_val);
+    envAmp.setSustain (patchParameterData[PARAM_AEG_SUSTAIN].voice_val);
+    envAmp.setRelease (patchParameterData[PARAM_AEG_RELEASE].voice_val);
+    
+    envFilter.setAttack (patchParameterData[PARAM_FEG_ATTACK].voice_val);
+    envFilter.setDecay (patchParameterData[PARAM_FEG_DECAY].voice_val);
+    envFilter.setSustain (patchParameterData[PARAM_FEG_SUSTAIN].voice_val);
+    envFilter.setRelease (patchParameterData[PARAM_FEG_RELEASE].voice_val);
 }
 
 VintageVoice::~VintageVoice()
@@ -53,14 +59,30 @@ void VintageVoice::processAudio (double *output)
 {
     //FIXME: is there a way of only processing this function if the ampEnv is currently running?
     
-    //process amplitude envelope
+    //process envelopes
     envAmpOut = envAmp.adsr (patchParameterData[PARAM_AEG_AMOUNT].voice_val, envAmp.trigger);
+    envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
     
     //process oscillators
-    oscOut = oscSquare.square (oscPitch);
+    //FIXME: should I be setting each osc output to it's own variable, and then mixing them at the end? I don't think that'll make a difference.
+    oscOut = oscSine.sinewave (oscPitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;
+    oscOut += (oscTri.triangle (oscPitch) * patchParameterData[PARAM_OSC_TRI_LEVEL].voice_val);
+    oscOut += (oscSaw.saw (oscPitch) * patchParameterData[PARAM_OSC_SAW_LEVEL].voice_val);
+    oscOut += (oscPulse.pulse (oscPitch, patchParameterData[PARAM_OSC_PULSE_AMOUNT].voice_val) * patchParameterData[PARAM_OSC_PULSE_LEVEL].voice_val);
+    oscOut += (oscSquare.square (oscSubPitch) * patchParameterData[PARAM_OSC_SQUARE_LEVEL].voice_val);
+    oscOut /= 4.;
     
-    //set final audio output, making both the L and R channels the same
-    output[0] = oscOut  * envAmpOut;
+    //process filter (pass in oscOut, return filterOut)
+    filterSvf.setCutoff (patchParameterData[PARAM_FILTER_FREQ].voice_val * envFilterOut);
+    filterSvf.setResonance (patchParameterData[PARAM_FILTER_RESO].voice_val);
+    filterOut = filterSvf.play (oscOut,
+                                patchParameterData[PARAM_FILTER_LP_MIX].voice_val,
+                                patchParameterData[PARAM_FILTER_BP_MIX].voice_val,
+                                patchParameterData[PARAM_FILTER_HP_MIX].voice_val,
+                                patchParameterData[PARAM_FILTER_NOTCH_MIX].voice_val);
+    
+    //apply amp envelope, making both the L and R channels the same (pass in filterOut, return output)
+    output[0] = filterOut * envAmpOut;
     output[1] = output[0];
 }
 
@@ -73,17 +95,20 @@ void VintageVoice::setOscPitch (uint8_t midi_note_num)
 {
     convert mtof;
     oscPitch = mtof.mtof(midi_note_num);
+    oscSubPitch = mtof.mtof(midi_note_num - 12);
 }
 
+
 //==========================================================
 //==========================================================
 //==========================================================
-//Triggers the amplitude envelope of the voice to either start or stop,
+//Triggers the envelopes of the voice to either start or stop,
 //essentially starting or stopping a note.
 
-void VintageVoice::triggerAmpEnvelope (uint8_t trigger_val)
+void VintageVoice::triggerEnvelopes (uint8_t trigger_val)
 {
     envAmp.trigger = trigger_val;
+    envFilter.trigger = trigger_val;
 }
 
 //==========================================================

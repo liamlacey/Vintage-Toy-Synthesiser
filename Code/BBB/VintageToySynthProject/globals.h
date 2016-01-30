@@ -134,7 +134,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //0
     {}, //1
     {}, //2
-    {64, 0, 127, true, true, 0.5, 0., 1.}, //3 - PARAM_OSC_PULSE_AMOUNT
+    {90, 0, 127, true, true, 0.7, 0., 1.}, //3 - PARAM_OSC_PULSE_AMOUNT
     {}, //4
     {}, //5
     {}, //6
@@ -150,13 +150,13 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {127, 0, 127, true, true, 1., 0., 1.}, //16 - PARAM_OSC_SAW_LEVEL
     {127, 0, 127, true, true, 1., 0., 1.}, //17 - PARAM_OSC_PULSE_LEVEL
     {127, 0, 127, true, true, 1., 0., 1.}, //18 - PARAM_OSC_SQUARE_LEVEL
-    {0, 0, 127, true, true, 0, 0., 20.}, //19 - PARAM_FILTER_RESO
+    {5, 0, 127, true, true, 0.1, 0.1, 50.}, //19 - PARAM_FILTER_RESO
     {}, //20
     {}, //21
     {0, 0, 127, true, true, 0, 0, 5000}, //22 - PARAM_FEG_ATTACK
-    {2, 0, 127, true, true, 200, 0, 5000}, //23 - PARAM_FEG_DECAY
-    {20, 0, 127, true, true, 0.2, 0., 1.}, //24 - PARAM_FEG_SUSTAIN
-    {20, 0, 127, true, true, 2000, 0, 5000}, //25 - PARAM_FEG_RELEASE
+    {2, 0, 127, true, true, 400, 0, 5000}, //23 - PARAM_FEG_DECAY
+    {20, 0, 127, true, true, 0.7, 0., 1.}, //24 - PARAM_FEG_SUSTAIN
+    {20, 0, 127, true, true, 3000, 0, 5000}, //25 - PARAM_FEG_RELEASE
     {127, 0, 127, true, true, 1., 0, 1.}, //26 - PARAM_FILTER_LP_MIX
     {0, 0, 127, true, true, 0., 0, 1.}, //27 - PARAM_FILTER_BP_MIX
     {0, 0, 127, true, true, 0., 0, 1.}, //28 - PARAM_FILTER_HP_MIX
@@ -205,7 +205,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //71
     {20, 0, 127, true, true, 2000, 0, 5000}, //72 - PARAM_AEG_RELEASE
     {0, 0, 127, true, true, 0, 0, 5000}, //73 - PARAM_AEG_ATTACK
-    {20, 0, 127, true, true, 500, 50, 20000}, //74 - PARAM_FILTER_FREQ
+    {20, 0, 127, true, true, 5000, 50, 20000}, //74 - PARAM_FILTER_FREQ
     {2, 0, 127, true, true, 200, 0, 5000}, //75 - PARAM_AEG_DECAY
     {}, //76
     {}, //77

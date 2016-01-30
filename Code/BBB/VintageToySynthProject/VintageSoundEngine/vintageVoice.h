@@ -53,7 +53,7 @@ public:
     void processAudio (double *output);
     
     void setOscPitch (uint8_t midi_note_num);
-    void triggerAmpEnvelope (uint8_t trigger_val);
+    void triggerEnvelopes (uint8_t trigger_val);
     void setNoteVelocity (uint8_t vel_val);
 
     void setPatchParamVoiceValue (uint8_t param_num, uint8_t param_user_val);
@@ -61,17 +61,19 @@ public:
 private:
     
     //maximilian objects
-    maxiOsc oscSquare;
-    maxiEnv envAmp;
+    maxiOsc oscSine, oscTri, oscSaw, oscPulse, oscSquare;
+    maxiEnv envAmp, envFilter;
+    maxiSVF filterSvf;
     
     //'patch' parameters
     PatchParameterData patchParameterData[128];
     
     //other parameters
     double oscPitch;
+    double oscSubPitch; //current the square osc is used as sub only, but this will change if introducing note params for each osc
     
     //audio output variables
-    double envAmpOut, oscOut;
+    double envAmpOut, oscOut, filterOut, envFilterOut;
     
 };
 

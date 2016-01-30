@@ -550,7 +550,7 @@ int main()
                         //trigger the note to start playing
                         //FIXME: eventually we'll only want to retrigger the envelope if it isn't already playing (mono mode beahaviour).
                         //Actually, I think sending a trigger value of 1 whilst it already 1 doesn't retrigger, so this is probably correct already!
-                        vintageVoice[voice_num]->triggerAmpEnvelope(1);
+                        vintageVoice[voice_num]->triggerEnvelopes(1);
                         
                     } //if (input_message_flag == MIDI_NOTEON)
                     
@@ -562,7 +562,7 @@ int main()
                         uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
                         
                         //trigger the note to stop
-                        vintageVoice[voice_num]->triggerAmpEnvelope(0);
+                        vintageVoice[voice_num]->triggerEnvelopes(0);
                         
                     } //if (input_message_flag == MIDI_NOTEON)
                     
