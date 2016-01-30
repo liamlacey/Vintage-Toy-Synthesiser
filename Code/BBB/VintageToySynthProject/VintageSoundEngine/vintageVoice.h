@@ -54,6 +54,9 @@ public:
     
     void setOscPitch (uint8_t midi_note_num);
     void triggerAmpEnvelope (uint8_t trigger_val);
+    void setNoteVelocity (uint8_t vel_val);
+
+    void setPatchParamVoiceValue (uint8_t param_num, uint8_t param_user_val);
     
 private:
     
@@ -62,6 +65,7 @@ private:
     maxiEnv envAmp;
     
     //'patch' parameters
+    PatchParameterData patchParameterData[128];
     
     //other parameters
     double oscPitch;

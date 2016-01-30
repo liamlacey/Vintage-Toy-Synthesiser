@@ -8,3 +8,5 @@ vintageSoundEngine: vintageSoundEngine.cpp vintageVoice.cpp  Maximilian/maximili
 
 clean:
 	rm -f vintageSoundEngine
+
+# -std=c++0x OR -std=gnu++0x <--- goes after -WALL

@@ -23,6 +23,12 @@ VintageVoice::VintageVoice (uint8_t voice_num)
     std::cout << "[VV] Initing vintageVoice num " << (int)voice_num << std::endl;
     
     //init variables
+    
+    for (uint8_t i = 0; i < 128; i++)
+    {
+        patchParameterData[i] = defaultPatchParameterData[i];
+    }
+    
     oscPitch = 200;
     
     //init objects
@@ -48,7 +54,7 @@ void VintageVoice::processAudio (double *output)
     //FIXME: is there a way of only processing this function if the ampEnv is currently running?
     
     //process amplitude envelope
-    envAmpOut = envAmp.adsr (1, envAmp.trigger);
+    envAmpOut = envAmp.adsr (patchParameterData[PARAM_AEG_AMOUNT].voice_val, envAmp.trigger);
     
     //process oscillators
     oscOut = oscSquare.square (oscPitch);
@@ -78,4 +84,30 @@ void VintageVoice::setOscPitch (uint8_t midi_note_num)
 void VintageVoice::triggerAmpEnvelope (uint8_t trigger_val)
 {
     envAmp.trigger = trigger_val;
+}
+
+//==========================================================
+//==========================================================
+//==========================================================
+//Sets the amp envelope amount.
+//FIXME: amp envelope amount will eventually also be set with the amount control, not just velocity.
+//also we will have velocity->amp depth which will affect this value
+
+void VintageVoice::setNoteVelocity (uint8_t vel_val)
+{
+    setPatchParamVoiceValue (PARAM_AEG_AMOUNT, vel_val);
+}
+
+//==========================================================
+//==========================================================
+//==========================================================
+//Sets a parameters voice value based on the parameters current user value
+
+void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_user_val)
+{
+    patchParameterData[param_num].voice_val = scaleValue (param_user_val,
+                                                          patchParameterData[param_num].user_min_val,
+                                                          patchParameterData[param_num].user_max_val,
+                                                          patchParameterData[param_num].voice_min_val,
+                                                          patchParameterData[param_num].voice_max_val);
 }

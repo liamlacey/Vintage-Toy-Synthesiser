@@ -48,3 +48,54 @@
 
 #define MIDI_CHANNEL_BITS 0b00001111
 #define MIDI_STATUS_BITS 0b11110000
+
+//==========================================================================
+//Patch parameter CC numbers
+
+#define PARAM_AEG_AMOUNT 7
+
+//==========================================================================
+//structure that stores info about a patch parameter
+
+typedef struct
+{
+    uint8_t user_val;
+    uint8_t user_min_val;
+    uint8_t user_max_val;
+    bool sound_param;
+    //I think only vintageSoundEngine cares about these 3 variables
+    double voice_val;
+    double voice_min_val;
+    double voice_max_val;
+
+} PatchParameterData;
+
+//array that stores the default data for all patch parameters
+
+static const PatchParameterData defaultPatchParameterData[128] =
+{
+    {}, //0
+    {}, //1
+    {}, //2
+    {}, //3
+    {}, //4
+    {}, //5
+    {}, //6
+    {127, 0, 127, true, 1., 0., 1.}, //7 - PARAM_AEG_AMOUNT
+};
+
+
+//===================================================================
+//Function that scales a number to a new number based on a new range
+
+static float scaleValue (float value, float minValue, float maxValue, float minRange, float maxRange)
+{
+    //minValue is the min range of the value coming in.
+    //maxValue is the max range of the value coming in.
+    //minRange is the min range of the value going out.
+    //maxRange is the max range of the value going out.
+    
+    return (((maxRange - minRange) *
+             (value - minValue)) /
+            (maxValue - minValue)) + minRange;
+}

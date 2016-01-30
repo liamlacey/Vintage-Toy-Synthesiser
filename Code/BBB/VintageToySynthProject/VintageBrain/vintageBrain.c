@@ -157,6 +157,7 @@ int main (void)
     printf ("[VB] Starting reading data from key mech...\n");
     
     uint8_t test_num = 48;
+    uint8_t test_vel = 20;
     
     while (true)
     {
@@ -175,7 +176,7 @@ int main (void)
 //        } //if (ret)
 //        
         //test sending data to socket
-        uint8_t test_buf[3] = {MIDI_NOTEON, test_num, 110};
+        uint8_t test_buf[3] = {MIDI_NOTEON, test_num, test_vel};
         SendToSoundEngine (test_buf, 3, sock, sound_engine_sock_addr);
         
         usleep (250000);
@@ -188,6 +189,10 @@ int main (void)
         test_num++;
         if (test_num > 72)
             test_num = 48;
+        
+        test_vel += 5;
+        if (test_vel > 127)
+            test_vel = 20;
         
     } ///while (true)
     

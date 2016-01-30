@@ -49,7 +49,6 @@
 
 #include "vintageSoundEngine.h"
 #include "Maximilian/maximilian.h"
-#include "../globals.h"
 #include "vintageVoice.h"
 
 //FIXME: am I able to declare this in main and pass it into routing and play?
@@ -545,7 +544,8 @@ int main()
                         //set the pitch of the voices oscillators based on the note number
                         vintageVoice[voice_num]->setOscPitch (input_message_buffer[1]);
                         
-                        //TODO: use the velocity - I think this should set the maxiEnv::adsr() input argument
+                        //set the amp env amount using the velocity value
+                        vintageVoice[voice_num]->setNoteVelocity (input_message_buffer[2]);
                         
                         //trigger the note to start playing
                         //FIXME: eventually we'll only want to retrigger the envelope if it isn't already playing (mono mode beahaviour).
