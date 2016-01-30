@@ -52,6 +52,7 @@
 #include "vintageVoice.h"
 
 //FIXME: am I able to declare this in main and pass it into routing and play?
+//I think I pass into routing using the *userData variable.
 VintageVoice *vintageVoice[NUM_OF_VOICES];
 
 #ifdef MAXIMILIAN_PORTAUDIO

@@ -12,6 +12,8 @@
 
 //FIXME: do I need to do any thread locking when setting variables that are accessed in processAudio (called by the audio callback function)?
 
+//TODO: when implementing modulation, try and do it in such a way so that, if possible, it would be easy to add further modulation destinations.
+
 #include "vintageVoice.h"
 
 //==========================================================
@@ -59,9 +61,18 @@ void VintageVoice::processAudio (double *output)
 {
     //FIXME: is there a way of only processing this function if the ampEnv is currently running?
     
+    //TODO: implement vintage mode amount.
+    //This will involve adding things like:
+    // - random frequency and amounts of osc detuning when a note is pressed
+    // - random frequency and amounts of filter cutoff offset when a note is pressed
+    // - random frequency and amounts of noise added when a note is pressed
+    //possible the above three but added periodically throughout a note, not just when pressed.
+    
     //process envelopes
     envAmpOut = envAmp.adsr (patchParameterData[PARAM_AEG_AMOUNT].voice_val, envAmp.trigger);
     envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
+    
+    //TODO: implement and process LFO (including LFO depth PAT modulation)
     
     //process oscillators
     //FIXME: should I be setting each osc output to it's own variable, and then mixing them at the end? I don't think that'll make a difference.
@@ -73,6 +84,7 @@ void VintageVoice::processAudio (double *output)
     oscOut /= 4.;
     
     //process filter (pass in oscOut, return filterOut)
+    //TODO: implement cutoff modulation (LFO and PAT) and reso modulation (LFO)
     filterSvf.setCutoff (patchParameterData[PARAM_FILTER_FREQ].voice_val * envFilterOut);
     filterSvf.setResonance (patchParameterData[PARAM_FILTER_RESO].voice_val);
     filterOut = filterSvf.play (oscOut,
@@ -115,11 +127,16 @@ void VintageVoice::triggerEnvelopes (uint8_t trigger_val)
 //==========================================================
 //==========================================================
 //Sets the amp envelope amount.
-//FIXME: amp envelope amount will eventually also be set with the amount control, not just velocity.
-//also we will have velocity->amp depth which will affect this value
 
 void VintageVoice::setNoteVelocity (uint8_t vel_val)
 {
+    //FIXME: amp envelope amount will eventually also be set with multiple params, not just velocity.
+    //These params will be AEG amount control, vel to amp mod depth, and LFO to amp mod delth
+    //Therefore I think we need to start using a new varialbe here which is set based on
+    //the velocity value, the mod depths, and the AEG amount value. Then use
+    //this new variable in play() instead of the patchParam value. This variable
+    //will need to be set whenever each of these four states change.
+    //Though I think because LFO changes in realtime within play(), this may need to be processed in play().
     setPatchParamVoiceValue (PARAM_AEG_AMOUNT, vel_val);
 }
 

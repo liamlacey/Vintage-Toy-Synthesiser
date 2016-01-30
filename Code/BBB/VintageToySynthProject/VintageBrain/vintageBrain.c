@@ -46,6 +46,8 @@
 
 #define KEYBOARD_SERIAL_PATH "/dev/ttyO1"
 
+//TODO: parameters that need implementing here - all key ones, the voice one, and the global volume one
+
 //==========================================================
 //==========================================================
 //==========================================================
