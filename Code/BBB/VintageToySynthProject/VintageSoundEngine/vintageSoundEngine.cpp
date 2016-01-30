@@ -531,12 +531,12 @@ int main()
                 //if we have received a full MIDI message
                 if (input_message_flag)
                 {
-                    std::cout << "[VSE] input_message_flag: " << (int)input_message_flag << std::endl;
+                    //std::cout << "[VSE] input_message_flag: " << (int)input_message_flag << std::endl;
                    
-                    std::cout << "[VSE] Processed MIDI message: ";
-                    for (int i = 0; i < ret; i++)
-                        std::cout << "[" << (int)input_message_buffer[i] << "] ";
-                    std::cout << std::endl;
+//                    std::cout << "[VSE] Processed MIDI message: ";
+//                    for (int i = 0; i < ret; i++)
+//                        std::cout << "[" << (int)input_message_buffer[i] << "] ";
+//                    std::cout << std::endl;
                     
                     //================================
                     //Process note-on messages
