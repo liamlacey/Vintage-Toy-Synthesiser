@@ -131,8 +131,11 @@ int routing	(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
     
     void play(double *output)
     {
-        //for now just test processing 1 voice, as the test code in the voice object is essentially for two voices
+        //FXIXME: for now just test processing 1 voice.
+        //Need to start processing multiple voices once implemented voice allocation in vintageBrain
         vintageVoice[0]->processAudio (output);
+        
+        //TODO: process distortion on output here
     }
     
     //==========================================================
@@ -564,7 +567,36 @@ int main()
                         //trigger the note to stop
                         vintageVoice[voice_num]->triggerEnvelopes(0);
                         
-                    } //if (input_message_flag == MIDI_NOTEON)
+                    } //if (input_message_flag == MIDI_NOTEOFF)
+                    
+                    //================================
+                    //Process CC/param messages
+                    else if (input_message_flag == MIDI_CC)
+                    {
+                        //channel relates to voice number. Channel 15 means send to all voices
+                        uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
+                        
+                        for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+                        {
+                            //if we want to send this message to voice number 'voice'
+                            if (voice_num == 15 || voice_num == voice)
+                            {
+                                //TODO: check if this param/CC num is a sound param, and in range.
+                                //At this point it always should be, but it may be best to check anyway.
+                                
+                                //set the paramaters voice value
+                                vintageVoice[voice_num]->setPatchParamVoiceValue (input_message_buffer[1], input_message_buffer[2]);
+                                
+                            } //if (voice_num == 15 || voice_num == voice)
+                            
+                        } //for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+                        
+                    } //if (input_message_flag == MIDI_CC)
+                    
+                    //================================
+                    //TODO: Process poly aftertouch messages
+                    //It will be up to vintageBrain to determine which voice the PAT message needs to go to
+                    //(as it handles voice allocation), so here we just need to send it to voice num determined by the channel
                     
                 } //if (input_message_flag)
                 
