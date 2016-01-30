@@ -136,7 +136,8 @@ void VintageVoice::setNoteVelocity (uint8_t vel_val)
     //the velocity value, the mod depths, and the AEG amount value. Then use
     //this new variable in play() instead of the patchParam value. This variable
     //will need to be set whenever each of these four states change.
-    //Though I think because LFO changes in realtime within play(), this may need to be processed in play().
+    //Though I think because LFO changes in realtime within play(), this may need to be processed in play(),
+    //which would mean we would need a global vel val, and other vals, that are used in play().
     setPatchParamVoiceValue (PARAM_AEG_AMOUNT, vel_val);
 }
 
