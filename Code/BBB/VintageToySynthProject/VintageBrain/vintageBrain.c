@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <termios.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
@@ -33,7 +32,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/socket.h>
-#include <sys/termios.h>
 #include <sys/un.h>
 #include <sys/wait.h>
 #include <linux/spi/spidev.h>
@@ -41,6 +39,10 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <arpa/inet.h>
+//No longer want these, otherwise you get a redefinition error within asm/termbits.h
+//#include <termios.h>
+//#include <sys/termios.h>
+#include <asm/termbits.h>
 
 #include "../globals.h"
 
@@ -78,10 +80,17 @@ void SendToSoundEngine (uint8_t data_buffer[], int data_buffer_size, int sock, s
 //==========================================================
 //Function that sets up a serial port
 
-int SetupSerialPort (const char path[], speed_t speed, bool should_be_blocking)
+int SetupSerialPort (const char path[], int speed, bool should_be_blocking)
 {
+    //Below is some new code for setting up serial comms which allows me
+    //to use non-standard baud rates (such as 31250 for MIDI interface comms).
+    //This code was provided in this thread:
+    //https://groups.google.com/forum/#!searchin/beagleboard/Peter$20Hurdley%7Csort:date/beagleboard/GC0rKe6rM0g/lrHWS_e2_poJ
+    //This is a direct link to the example code:
+    //https://gist.githubusercontent.com/peterhurley/fbace59b55d87306a5b8/raw/220cfc2cb1f2bf03ce662fe387362c3cc21b65d7/anybaud.c
+
     int fd;
-    struct termios tty_attributes;
+    struct termios2 tio;
     
     // open device for read/write
     fd = open (path, O_RDWR);
@@ -94,30 +103,60 @@ int SetupSerialPort (const char path[], speed_t speed, bool should_be_blocking)
         return (-1);
     }
     
-    tcgetattr (fd, &tty_attributes);
-    cfmakeraw (&tty_attributes);
-    tty_attributes.c_cc[VMIN]=1;
-    tty_attributes.c_cc[VTIME]=0;
+    if (ioctl (fd, TCGETS2, &tio) < 0)
+        perror("TCGETS2 ioctl");
     
-    // setup bauds
-    cfsetispeed (&tty_attributes, speed);
-    cfsetospeed (&tty_attributes, speed);
+    tio.c_cflag &= ~CBAUD;
+    tio.c_cflag |= BOTHER;
+    tio.c_ispeed = speed;
+    tio.c_ospeed = speed;
+    
+    if (ioctl( fd, TCSETS2, &tio) < 0)
+        perror("TCGETS2 ioctl");
+    
+    printf("[VB] %s speed set to %d baud\r\n", path, speed);
 
-    // apply changes now
-    tcsetattr (fd, TCSANOW, &tty_attributes);
-    
-    if (should_be_blocking)
-    {
-        // set it to blocking
-        fcntl (fd, F_SETFL, 0);
-    }
-    else
-    {
-        // set it to non-blocking
-        fcntl (fd, F_SETFL, O_NONBLOCK);
-    }
-    
     return fd;
+    
+    //Original serial setup code (which can only set standard baud rates)
+    
+    //    int fd;
+    //    struct termios tty_attributes;
+    //
+    //    // open device for read/write
+    //    fd = open (path, O_RDWR);
+    //
+    //    //if can't open file
+    //    if (fd < 0)
+    //    {
+    //        //show error and exit
+    //        perror (path);
+    //        return (-1);
+    //    }
+    //
+    //    tcgetattr (fd, &tty_attributes);
+    //    cfmakeraw (&tty_attributes);
+    //    tty_attributes.c_cc[VMIN]=1;
+    //    tty_attributes.c_cc[VTIME]=0;
+    //
+    //    // setup bauds
+    //    cfsetispeed (&tty_attributes, speed);
+    //    cfsetospeed (&tty_attributes, speed);
+    //
+    //
+    //    // apply changes now
+    //    tcsetattr (fd, TCSANOW, &tty_attributes);
+    //
+    //    if (should_be_blocking)
+    //    {
+    //        // set it to blocking
+    //        fcntl (fd, F_SETFL, 0);
+    //    }
+    //    else
+    //    {
+    //        // set it to non-blocking
+    //        fcntl (fd, F_SETFL, O_NONBLOCK);
+    //    }
 }
 
 //==========================================================
@@ -286,7 +325,7 @@ uint8_t ProcInputByte (uint8_t input_byte, uint8_t message_buffer[], uint8_t *by
                         //Don't do anything. Right now if this is the case we just want to ignore it.
                         //However in the future we may want to process coarse/fine CC pairs to
                         //control parameters at a higher resolution.
-                        printf ("[VSE] Received CC num %d directly after CC num %d, so ignoring it\r\n", message_buffer[1], *prev_cc_num);
+                        printf ("[VB] Received CC num %d directly after CC num %d, so ignoring it\r\n", message_buffer[1], *prev_cc_num);
                     }
                     
                     else
@@ -381,11 +420,10 @@ int main (void)
     printf ("[VB] Setting up serial connections...\n");
     
     //open UART1 device file for read/write to keyboard with baud rate of 38400
-    keyboard_fd = SetupSerialPort (KEYBOARD_SERIAL_PATH, B38400, true);
+    keyboard_fd = SetupSerialPort (KEYBOARD_SERIAL_PATH, 38400, true);
     
     //open UART2 device file for read/write to MIDI interface with baud rate of 31250
-    //FIXME: how can I set the baud rate I need here? is it possible?! :(
-    midi_fd = SetupSerialPort (MIDI_SERIAL_PATH, /*B*/31250, true);
+    midi_fd = SetupSerialPort (MIDI_SERIAL_PATH, 31250, true);
     
     //===============================================================
     //Set up sockets for comms with the vintageSoundEngine application
@@ -444,7 +482,7 @@ int main (void)
             if (ret != -1)
             {
                 //display the read byte
-                //printf ("[VB] Byte read from keyboard: %d\n", serial_input_buf[0]);
+                printf ("[VB] Byte read from keyboard: %d\n", serial_input_buf[0]);
                 
                 //process the read byte
                 uint8_t input_message_flag = ProcInputByte (serial_input_buf[0],
@@ -456,7 +494,7 @@ int main (void)
                 //if we have received a full MIDI message
                 if (input_message_flag)
                 {
-                    //printf ("[VB] Received full MIDI message from keyboard with status byte %d\n", input_message_buffer[INPUT_SRC_KEYBOARD][0]);
+                    printf ("[VB] Received full MIDI message from keyboard with status byte %d\n", input_message_buffer[INPUT_SRC_KEYBOARD][0]);
                     
                     //Send data to vintageSoundEngine app
                     //FIXME: eventually we'll want to query what the message is and perform some kind
@@ -497,6 +535,18 @@ int main (void)
                 if (input_message_flag)
                 {
                      printf ("[VB] Received full MIDI message from MIDI interface with status byte %d\n", input_message_buffer[INPUT_SRC_MIDI_IN][0]);
+                   
+                    //test!!
+                    if (input_message_flag == MIDI_NOTEON || input_message_flag == MIDI_NOTEOFF)
+                    {
+                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEON;
+                        SendToSoundEngine (input_message_buffer[INPUT_SRC_MIDI_IN], 3, sock, sound_engine_sock_addr);
+                    }
+                    else if (input_message_flag == MIDI_NOTEOFF)
+                    {
+                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEOFF;
+                        SendToSoundEngine (input_message_buffer[INPUT_SRC_MIDI_IN], 3, sock, sound_engine_sock_addr);
+                    }
                     
                 } //if (input_message_flag)
 
