@@ -453,12 +453,18 @@ void ProcessCcMessage (uint8_t message_buffer[],
     //Send to the sound engine if needed
     if (patch_param_data[param_num].sound_param)
     {
+        //set channel to 15 to signify that this message is ment for all voices
+        message_buffer[0] = MIDI_CC + 15;
+        
         SendToSoundEngine (message_buffer, 3, sock, sound_engine_sock_addr);
     }
     
     //Send to MIDI out if needed
     if (send_to_midi_out && patch_param_data[param_num].patch_param)
     {
+        //make sure channel is set to 0
+        message_buffer[0] = MIDI_CC;
+        
         WriteToMidiOutFd (message_buffer, 3);
     }
 }

@@ -604,7 +604,7 @@ int main()
                                 //At this point it always should be, but it may be best to check anyway.
                                 
                                 //set the paramaters voice value
-                                vintageVoice[voice_num]->setPatchParamVoiceValue (input_message_buffer[1], input_message_buffer[2]);
+                                vintageVoice[voice]->setPatchParamVoiceValue (input_message_buffer[1], input_message_buffer[2]);
                                 
                             } //if (voice_num == 15 || voice_num == voice)
                             
