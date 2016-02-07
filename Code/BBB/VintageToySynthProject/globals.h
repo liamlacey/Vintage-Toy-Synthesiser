@@ -118,8 +118,8 @@ typedef struct
     uint8_t user_val;
     uint8_t user_min_val;
     uint8_t user_max_val;
-    bool sound_param;
-    bool patch_param;
+    bool sound_param; //sets whether the paramater needs to be sent to the sound engine or not
+    bool patch_param; //sets whether this is actually a patch parameter or just a utility CC
     //I think only vintageSoundEngine cares about these 3 variables
     double voice_val;
     double voice_min_val;

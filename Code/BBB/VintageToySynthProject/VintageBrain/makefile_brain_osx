@@ -4,7 +4,7 @@
 all: vintageBrain
 
 vintageBrain: vintageBrain.c
-	/usr/local/linaro/arm-linux-gnueabihf/bin/arm-linux-gnueabihf-gcc -O3 vintageBrain.c -o vintageBrain
+	/usr/local/linaro/arm-linux-gnueabihf/bin/arm-linux-gnueabihf-gcc -O3 -std=gnu99 vintageBrain.c -o vintageBrain
 
 clean:
 	rm -f vintageBrain

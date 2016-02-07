@@ -54,8 +54,8 @@ int maxiSettings::sampleRate = 44100;
 //FIXME: could I reduce CPU usage by dropping channels to 1? At the moment both channels are the same.
 int maxiSettings::channels = 2;
 //int maxiSettings::bufferSize = 1024;
-//int maxiSettings::bufferSize = 512;
-int maxiSettings::bufferSize = 400;
+int maxiSettings::bufferSize = 512;
+//int maxiSettings::bufferSize = 400;
 
 
 //this is a 514-point sinewave table that has many uses. 

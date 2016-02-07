@@ -46,6 +46,8 @@
 
 #include "../globals.h"
 
+//#define DEBUG 1
+
 #define KEYBOARD_SERIAL_PATH "/dev/ttyO1"
 #define MIDI_SERIAL_PATH "/dev/ttyO2"
 
@@ -407,14 +409,55 @@ uint8_t ProcInputByte (uint8_t input_byte, uint8_t message_buffer[], uint8_t *by
 //====================================================================================
 //Processes a note message recieived from any source, sending it to the needed places
 
-void ProcessNoteMessage (uint8_t message_buffer[], bool send_to_midi_out, int sock, struct sockaddr_un sound_engine_sock_addr)
+void ProcessNoteMessage (uint8_t message_buffer[],
+                         bool send_to_midi_out,
+                         int sock,
+                         struct sockaddr_un sound_engine_sock_addr)
 {
     //TODO: proper voice allocation
     
     //Send to the sound engine
     SendToSoundEngine (message_buffer, 3, sock, sound_engine_sock_addr);
     
+    //Send to MIDI out if needed
     if (send_to_midi_out)
+    {
+        WriteToMidiOutFd (message_buffer, 3);
+    }
+}
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//Processes a CC/param message from any source, sending it to the needed places
+
+void ProcessCcMessage (uint8_t message_buffer[],
+                       PatchParameterData patch_param_data[],
+                       bool send_to_midi_out,
+                       int sock,
+                       struct sockaddr_un sound_engine_sock_addr)
+{
+    uint8_t param_num = message_buffer[1];
+    uint8_t param_val = message_buffer[2];
+    
+    //Store the new param value, and bounding it if needed...
+    
+    if (param_val > patch_param_data[param_num].user_max_val)
+        param_val = patch_param_data[param_num].user_max_val;
+    else if (param_val < patch_param_data[param_num].user_min_val)
+        param_val = patch_param_data[param_num].user_min_val;
+    
+    patch_param_data[param_num].user_val = param_val;
+    message_buffer[2] = param_val;
+    
+    //Send to the sound engine if needed
+    if (patch_param_data[param_num].sound_param)
+    {
+        SendToSoundEngine (message_buffer, 3, sock, sound_engine_sock_addr);
+    }
+    
+    //Send to MIDI out if needed
+    if (send_to_midi_out && patch_param_data[param_num].patch_param)
     {
         WriteToMidiOutFd (message_buffer, 3);
     }
@@ -462,6 +505,13 @@ int main (void)
     //don't init this to 0, incase the first CC we get is 32, causing it to be ignored!
     uint8_t input_message_prev_cc_num[NUM_OF_INPUT_SRC_TYPES] = {127};
     
+    //'patch' parameter data
+    PatchParameterData patchParameterData[128];
+    
+    for (uint8_t i = 0; i < 128; i++)
+    {
+        patchParameterData[i] = defaultPatchParameterData[i];
+    }
     
     //==========================================================
     //Set up SIGINT and SIGTERM so that the process can be shutdown
@@ -554,24 +604,25 @@ int main (void)
                 {
                     //printf ("[VB] Received full MIDI message from keyboard with status byte %d\n", input_message_buffer[INPUT_SRC_KEYBOARD][0]);
                     
-                    //Send data to vintageSoundEngine app
-                    //FIXME: eventually we'll want to query what the message is and perform some kind
-                    //of voice allocation rather than just sending the message straight to the sound engine.
-                    //Also we dont know that it will always be a 3 byte message.
-                    //SendToSoundEngine (input_message_buffer[INPUT_SRC_KEYBOARD], 3, sock, sound_engine_sock_addr);
-                    //WriteToMidiOutFd (midi_fd, input_message_buffer[INPUT_SRC_KEYBOARD], 3);
-                    
-                    //test!!
                     if (input_message_flag == MIDI_NOTEON)
                     {
+                        #ifdef DEBUG
                         printf ("[VB] Received note-on message from keyboard\r\n");
+                        #endif
+                        
                         ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], true, sock, sound_engine_sock_addr);
-                    }
+                        
+                    } //if (input_message_flag == MIDI_NOTEON)
+                    
                     else if (input_message_flag == MIDI_NOTEOFF)
                     {
+                        #ifdef DEBUG
                         printf ("[VB] Received note-off message from keyboard\r\n");
+                        #endif
+                        
                         ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], true, sock, sound_engine_sock_addr);
-                    }
+                        
+                    } //else if (input_message_flag == MIDI_NOTEOFF)
                     
                 } //if (input_message_flag)
                 
@@ -609,22 +660,42 @@ int main (void)
                    
                     if (input_message_flag == MIDI_NOTEON)
                     {
+                        #ifdef DEBUG
                         printf ("[VB] Received note-on message from MIDI\r\n");
+                        #endif
                         
                         //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEON;
                         
                         ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], false, sock, sound_engine_sock_addr);
-                    }
+                        
+                    } //if (input_message_flag == MIDI_NOTEON)
+                    
                     else if (input_message_flag == MIDI_NOTEOFF)
                     {
+                        #ifdef DEBUG
                         printf ("[VB] Received note-off message from MIDI\r\n");
+                        #endif
                         
                         //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEOFF;
                         
                         ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], false, sock, sound_engine_sock_addr);
-                    }
+                        
+                    } //else if (input_message_flag == MIDI_NOTEOFF)
+                    
+                    else if (input_message_flag == MIDI_CC)
+                    {
+                        #ifdef DEBUG
+                        printf ("[VB] Received CC message from MIDI\r\n");
+                        #endif
+                        
+                        //set the MIDI channel to 0
+                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_CC;
+                        
+                        ProcessCcMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, false, sock, sound_engine_sock_addr);
+                        
+                    } //else if (input_message_flag == MIDI_CC)
                     
                 } //if (input_message_flag)
 
