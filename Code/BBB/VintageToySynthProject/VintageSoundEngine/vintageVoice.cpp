@@ -160,4 +160,47 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
                                                           patchParameterData[param_num].user_max_val,
                                                           patchParameterData[param_num].voice_min_val,
                                                           patchParameterData[param_num].voice_max_val);
+    
+    //==========================================================
+    //Set certain things based on the recieved param num
+    
+    if (param_num == PARAM_AEG_ATTACK)
+    {
+        envAmp.setAttack (patchParameterData[param_num].voice_val);
+    }
+    
+    else if (param_num == PARAM_AEG_DECAY)
+    {
+        envAmp.setDecay (patchParameterData[param_num].voice_val);
+    }
+    
+    else if (param_num == PARAM_AEG_SUSTAIN)
+    {
+        envAmp.setSustain (patchParameterData[param_num].voice_val);
+    }
+    
+    else if (param_num == PARAM_AEG_RELEASE)
+    {
+        envAmp.setRelease (patchParameterData[param_num].voice_val);
+    }
+    
+    else if (param_num == PARAM_FEG_ATTACK)
+    {
+        envFilter.setAttack (patchParameterData[param_num].voice_val);
+    }
+    
+    else if (param_num == PARAM_FEG_DECAY)
+    {
+        envFilter.setDecay (patchParameterData[param_num].voice_val);
+    }
+    
+    else if (param_num == PARAM_FEG_SUSTAIN)
+    {
+        envFilter.setSustain (patchParameterData[param_num].voice_val);
+    }
+    
+    else if (param_num == PARAM_FEG_RELEASE)
+    {
+        envFilter.setRelease (patchParameterData[param_num].voice_val);
+    }
 }
