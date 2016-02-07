@@ -77,19 +77,20 @@ void VintageVoice::processAudio (double *output)
     //TODO: implement and process LFO (including LFO depth PAT modulation)
     
     //process oscillators
-    //FIXME: should I be setting each osc output to it's own variable, and then mixing them at the end? I don't think that'll make a difference.
-    oscOut = oscSine.sinewave (oscPitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;
-    oscOut += (oscTri.triangle (oscPitch) * patchParameterData[PARAM_OSC_TRI_LEVEL].voice_val);
-    oscOut += (oscSaw.saw (oscPitch) * patchParameterData[PARAM_OSC_SAW_LEVEL].voice_val);
-    oscOut += (oscPulse.pulse (oscPitch, patchParameterData[PARAM_OSC_PULSE_AMOUNT].voice_val) * patchParameterData[PARAM_OSC_PULSE_LEVEL].voice_val);
-    oscOut += (oscSquare.square (oscSubPitch) * patchParameterData[PARAM_OSC_SQUARE_LEVEL].voice_val);
-    oscOut /= 4.;
+    oscSineOut = oscSine.sinewave (oscPitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;
+    oscTriOut = (oscTri.triangle (oscPitch) * patchParameterData[PARAM_OSC_TRI_LEVEL].voice_val);
+    oscSawOut = (oscSaw.saw (oscPitch) * patchParameterData[PARAM_OSC_SAW_LEVEL].voice_val);
+    oscPulseOut = (oscPulse.pulse (oscPitch, patchParameterData[PARAM_OSC_PULSE_AMOUNT].voice_val) * patchParameterData[PARAM_OSC_PULSE_LEVEL].voice_val);
+    oscSquareOut = (oscSquare.square (oscSubPitch) * patchParameterData[PARAM_OSC_SQUARE_LEVEL].voice_val);
+    
+    //mix oscillators toehether
+    oscMixOut = (oscSineOut + oscTriOut + oscSawOut + oscPulseOut + oscSquareOut) / 5.;
     
     //process filter (pass in oscOut, return filterOut)
     //TODO: implement cutoff modulation (LFO and PAT) and reso modulation (LFO)
     filterSvf.setCutoff (patchParameterData[PARAM_FILTER_FREQ].voice_val * envFilterOut);
     filterSvf.setResonance (patchParameterData[PARAM_FILTER_RESO].voice_val);
-    filterOut = filterSvf.play (oscOut,
+    filterOut = filterSvf.play (oscMixOut,
                                 patchParameterData[PARAM_FILTER_LP_MIX].voice_val,
                                 patchParameterData[PARAM_FILTER_BP_MIX].voice_val,
                                 patchParameterData[PARAM_FILTER_HP_MIX].voice_val,
