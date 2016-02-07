@@ -51,9 +51,10 @@
 #include "Maximilian/maximilian.h"
 #include "vintageVoice.h"
 
-//FIXME: am I able to declare this in main and pass it into routing and play?
+//FIXME: am I able to declare these in main and pass it into routing and play?
 //I think I pass into routing using the *userData variable.
 VintageVoice *vintageVoice[NUM_OF_VOICES];
+maxiDistortion distortion;
 
 #ifdef MAXIMILIAN_PORTAUDIO
 #include "Maximilian/portaudio.h"
@@ -134,6 +135,7 @@ int routing	(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
     {
         double voice_out[NUM_OF_VOICES];
         double mix = 0;
+        double distortionOut;
         
         //process each voice
         for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
@@ -147,11 +149,18 @@ int routing	(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
             mix += voice_out[voice];
         }
         
-        //TODO: process distortion on output here
-        
         //set output
         output[0] = mix;
         output[1] = mix;
+        
+        //Trying out individual distortions per each voice to see if this sounds better.
+        //May be too CPU intensive though.
+        
+//        distortionOut = distortion.atanDist (mix, 200.0);
+//        
+//        //set output
+//        output[0] = distortionOut;
+//        output[1] = distortionOut;
     }
     
     //==========================================================

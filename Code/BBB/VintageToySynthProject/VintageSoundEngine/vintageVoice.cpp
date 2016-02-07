@@ -96,8 +96,17 @@ void VintageVoice::processAudio (double *output)
                                 patchParameterData[PARAM_FILTER_HP_MIX].voice_val,
                                 patchParameterData[PARAM_FILTER_NOTCH_MIX].voice_val);
     
+    
+    //process distortion...
+    //FIXME: should PARAM_FX_DISTORTION_AMOUNT also change the shape of the distortion?
+    distortionOut = distortion.atanDist (filterOut, 200.0);
+    
+    //process distortion mix
+    //FIXME: probably need to reduce the disortionOut value so bringing in disortion doesn't increase the overall volume too much
+    effectsMixOut = (distortionOut * patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val) + (filterOut * (1.0 - patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val));
+    
     //apply amp envelope, making both the L and R channels the same (pass in filterOut, return output)
-    output[0] = filterOut * envAmpOut;
+    output[0] = effectsMixOut * envAmpOut;
     output[1] = output[0];
 }
 
