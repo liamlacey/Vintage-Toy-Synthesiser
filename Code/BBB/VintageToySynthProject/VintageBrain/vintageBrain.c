@@ -405,6 +405,24 @@ uint8_t ProcInputByte (uint8_t input_byte, uint8_t message_buffer[], uint8_t *by
 //====================================================================================
 //====================================================================================
 //====================================================================================
+//Processes a note message recieived from any source, sending it to the needed places
+
+void ProcessNoteMessage (uint8_t message_buffer[], bool send_to_midi_out, int sock, struct sockaddr_un sound_engine_sock_addr)
+{
+    //TODO: proper voice allocation
+    
+    //Send to the sound engine
+    SendToSoundEngine (message_buffer, 3, sock, sound_engine_sock_addr);
+    
+    if (send_to_midi_out)
+    {
+        WriteToMidiOutFd (message_buffer, 3);
+    }
+}
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
 //Handles signals
 static void SignalHandler (int sig)
 {
@@ -547,12 +565,12 @@ int main (void)
                     if (input_message_flag == MIDI_NOTEON)
                     {
                         printf ("[VB] Received note-on message from keyboard\r\n");
-                        SendToSoundEngine (input_message_buffer[INPUT_SRC_KEYBOARD], 3, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], true, sock, sound_engine_sock_addr);
                     }
                     else if (input_message_flag == MIDI_NOTEOFF)
                     {
                         printf ("[VB] Received note-off message from keyboard\r\n");
-                        SendToSoundEngine (input_message_buffer[INPUT_SRC_KEYBOARD], 3, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], true, sock, sound_engine_sock_addr);
                     }
                     
                 } //if (input_message_flag)
@@ -589,20 +607,23 @@ int main (void)
                 {
                      //printf ("[VB] Received full MIDI message from MIDI interface with status byte %d\n", input_message_buffer[INPUT_SRC_MIDI_IN][0]);
                    
-                    //test!!
                     if (input_message_flag == MIDI_NOTEON)
                     {
                         printf ("[VB] Received note-on message from MIDI\r\n");
                         
+                        //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEON;
-                        SendToSoundEngine (input_message_buffer[INPUT_SRC_MIDI_IN], 3, sock, sound_engine_sock_addr);
+                        
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], false, sock, sound_engine_sock_addr);
                     }
                     else if (input_message_flag == MIDI_NOTEOFF)
                     {
                         printf ("[VB] Received note-off message from MIDI\r\n");
                         
+                        //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEOFF;
-                        SendToSoundEngine (input_message_buffer[INPUT_SRC_MIDI_IN], 3, sock, sound_engine_sock_addr);
+                        
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], false, sock, sound_engine_sock_addr);
                     }
                     
                 } //if (input_message_flag)
