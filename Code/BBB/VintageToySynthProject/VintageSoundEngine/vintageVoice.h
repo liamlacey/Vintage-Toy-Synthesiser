@@ -66,6 +66,7 @@ private:
     maxiOsc oscSine, oscTri, oscSaw, oscPulse, oscSquare;
     maxiEnv envAmp, envFilter;
     maxiSVF filterSvf;
+    maxiOsc lfo;
     maxiDistortion distortion;
     
     //'patch' parameters
@@ -76,7 +77,7 @@ private:
     double oscSubPitch; //current the square osc is used as sub only, but this will change if introducing note params for each osc
     
     //audio output variables
-    double envAmpOut, oscSineOut, oscTriOut, oscSawOut, oscPulseOut, oscSquareOut, oscMixOut, filterOut, envFilterOut, distortionOut, effectsMixOut;
+    double envAmpOut, oscSineOut, oscTriOut, oscSawOut, oscPulseOut, oscSquareOut, oscMixOut, filterOut, envFilterOut, lfoOut, distortionOut, effectsMixOut;
     
 };
 

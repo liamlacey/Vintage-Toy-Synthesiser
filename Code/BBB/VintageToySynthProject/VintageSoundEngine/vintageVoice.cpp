@@ -68,13 +68,34 @@ void VintageVoice::processAudio (double *output)
     // - random frequency and amounts of osc detuning when a note is pressed
     // - random frequency and amounts of filter cutoff offset when a note is pressed
     // - random frequency and amounts of noise added when a note is pressed
+    // - slight detuning of the 5 oscillators on each voice
     //possible the above three but added periodically throughout a note, not just when pressed.
+    
+    //process LFO...
+    //FIXME: for LFO rate it would be better if we used an LFO rate table (an array of 128 different rates)
+    if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 0)
+        lfoOut = lfo.sinewave (patchParameterData[PARAM_LFO_RATE].voice_val) * patchParameterData[PARAM_LFO_DEPTH].voice_val;
+    else if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 1)
+        lfoOut = lfo.triangle (patchParameterData[PARAM_LFO_RATE].voice_val) * patchParameterData[PARAM_LFO_DEPTH].voice_val;
+    else if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 2)
+        lfoOut = lfo.saw (patchParameterData[PARAM_LFO_RATE].voice_val) * patchParameterData[PARAM_LFO_DEPTH].voice_val;
+    else if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 3)
+        lfoOut = lfo.square (patchParameterData[PARAM_LFO_RATE].voice_val) * patchParameterData[PARAM_LFO_DEPTH].voice_val;
     
     //process envelopes
     envAmpOut = envAmp.adsr (patchParameterData[PARAM_AEG_AMOUNT].voice_val, envAmp.trigger);
     envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
     
-    //TODO: implement and process LFO (including LFO depth PAT modulation)
+    //process lfo->amp env depth modulation
+    //Don't forget that the LFO wave has to be halved and offset by 0.5 to act as an amplitude modulator.
+    double offset_lfo_val = ((lfoOut * 0.5) + 0.5);
+    //FIXME: if patchParameterData[PARAM_MOD_LFO_AMP].voice_val is negative it will double the signal which not what we want.
+    //What do we want a negative depth value to do, and how should it do it?
+    envAmpOut = envAmpOut * (1.0 - (offset_lfo_val * patchParameterData[PARAM_MOD_LFO_AMP].voice_val));
+    
+    //TODO: implement all lfo modulation
+    
+    //TODO: implement all aftertouch modulation
     
     //process oscillators
     oscSineOut = oscSine.sinewave (oscPitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;

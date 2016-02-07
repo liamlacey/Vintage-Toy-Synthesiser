@@ -178,8 +178,8 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //44
     {}, //45
     {}, //46
-    {3, 0, 127, true, true, 200, 20, 30000}, //47 - PARAM_LFO_RATE
-    {64, 0, 127, true, true, 0., -1., 1.}, //48 - PARAM_LFO_DEPTH
+    {1, 0, 127, true, true, 1, 0.01, 30}, //47 - PARAM_LFO_RATE
+    {64, 0, 127, true, true, 1., -1., 1.}, //48 - PARAM_LFO_DEPTH
     {}, //49
     {0, 0, 3, true, true, 0, 0, 3}, //50 - PARAM_LFO_SHAPE
     {}, //51
