@@ -237,7 +237,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {0, 0, 127, false, true, 0, 0, 0}, //103 - PARAM_VOICE_MODE
     {}, //104
     {}, //105
-    {6, 0, 12, false, true, 0, 0, 0}, //106 - PARAM_KEYS_TRANSPOSE
+    {64, 58, 70, false, true, 0, 0, 0}, //106 - PARAM_KEYS_TRANSPOSE
     {0, 0, 127, false, true, 0, 0, 0}, //107 - PARAM_GLOBAL_VINTAGE_AMOUNT
     {}, //108
     {}, //109
@@ -245,7 +245,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //111
     {64, 0, 127, true, true, 0., -1., 1.}, //112 - PARAM_MOD_LFO_FREQ
     {}, //113
-    {2, 0, 4, false, true, 0, 0, 0}, //114 - PARAM_KEYS_OCTAVE
+    {64, 62, 66, false, true, 0, 0, 0}, //114 - PARAM_KEYS_OCTAVE
 };
 
 
