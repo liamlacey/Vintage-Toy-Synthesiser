@@ -132,21 +132,26 @@ int routing	(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
     
     void play (double *output)
     {
-        double voice_in = 0;
-        double voice_out = 0;
+        double voice_out[NUM_OF_VOICES];
+        double mix = 0;
         
         //process each voice
         for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
         {
-            voice_in = 0;
-            vintageVoice[0]->processAudio (&voice_in);
-            voice_out += voice_in;
+            vintageVoice[voice]->processAudio (&voice_out[voice]);
+        }
+        
+        //mix all voices together (for some reason this won't work if done in the above for loop...)
+        for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+        {
+            mix += voice_out[voice];
         }
         
         //TODO: process distortion on output here
         
-        output[0] = voice_out;
-        output[1] = voice_out;
+        //set output
+        output[0] = mix;
+        output[1] = mix;
     }
     
     //==========================================================

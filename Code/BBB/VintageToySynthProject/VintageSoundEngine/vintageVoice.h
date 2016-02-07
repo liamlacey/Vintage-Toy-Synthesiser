@@ -60,6 +60,8 @@ public:
     
 private:
     
+    uint8_t voiceNum;
+    
     //maximilian objects
     maxiOsc oscSine, oscTri, oscSaw, oscPulse, oscSquare;
     maxiEnv envAmp, envFilter;

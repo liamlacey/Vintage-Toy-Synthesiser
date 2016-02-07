@@ -530,7 +530,9 @@ void ProcessNoteMessage (uint8_t message_buffer[],
         //get next voice we can use
         uint8_t free_voice = GetNextFreeVoice (voice_alloc_data);
         
+        #ifdef DEBUG
         printf ("[VB] Next free voice: %d\r\n", free_voice);
+        #endif
         
         //if we have a voice to use
         if (free_voice > 0)
@@ -560,7 +562,9 @@ void ProcessNoteMessage (uint8_t message_buffer[],
         //free used voice of this note
         uint8_t freed_voice = FreeVoiceOfNote (message_buffer[1], voice_alloc_data);
         
+        #ifdef DEBUG
         printf ("[VB] freed voice: %d\r\n", freed_voice);
+        #endif
         
         //if we sucessfully freed a voice
         if (freed_voice > 0)

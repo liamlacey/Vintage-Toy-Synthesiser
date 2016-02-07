@@ -22,7 +22,9 @@
 
 VintageVoice::VintageVoice (uint8_t voice_num)
 {
-    std::cout << "[VV] Initing vintageVoice num " << (int)voice_num << std::endl;
+    voiceNum = voice_num;
+    
+    std::cout << "[VV] Initing vintageVoice num " << (int)voiceNum << std::endl;
     
     //init variables
     
