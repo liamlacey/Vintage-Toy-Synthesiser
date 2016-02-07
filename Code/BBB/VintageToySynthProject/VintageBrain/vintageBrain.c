@@ -64,6 +64,25 @@ enum InputSourceTypes
 
 int keyboard_fd, midi_fd;
 
+//Struct that stores info about the current/previous note for a voice
+typedef struct
+{
+    int16_t note_num;
+    int16_t note_vel;
+    
+} VoiceNoteData;
+
+//Struct that stores info about the current/previous note for each voice,
+//as well as an ordered list of free voices
+typedef struct
+{
+    uint8_t free_voices[NUM_OF_VOICES];
+    VoiceNoteData voice_note_data[NUM_OF_VOICES];
+    
+    uint8_t last_voice; //for note stealing (last voice)
+    
+} VoiceAllocData;
+
 //TODO: parameters that need implementing here - all key ones, the voice one, and the global volume one
 
 //==========================================================
@@ -407,17 +426,162 @@ uint8_t ProcInputByte (uint8_t input_byte, uint8_t message_buffer[], uint8_t *by
 //====================================================================================
 //====================================================================================
 //====================================================================================
+//Gets the next free voice (the oldest played voice) from the voice_alloc_data.free_voices buffer,
+//or steals the oldest voice if not voices are currently free.
+
+uint8_t GetNextFreeVoice (VoiceAllocData *voice_alloc_data)
+{
+    uint8_t free_voice = 0;
+    
+    //get the next free voice number from first index of the free_voices array
+    free_voice = voice_alloc_data->free_voices[0];
+    
+    //if got a free voice
+    if (free_voice != 0)
+    {
+        //shift all voices forwards, removing the first value, and adding 0 on the end...
+        
+        for (uint8_t voice = 0; voice < NUM_OF_VOICES - 1; voice++)
+        {
+            voice_alloc_data->free_voices[voice] = voice_alloc_data->free_voices[voice + 1];
+        }
+        
+        voice_alloc_data->free_voices[NUM_OF_VOICES - 1] = 0;
+        
+    } //if (free_voice != 0)
+    
+    else
+    {
+        //use the oldest voice
+        free_voice = voice_alloc_data->last_voice;
+        
+        //TODO: Send a note-off message to the stolen voice so that when
+        //sending the new note-on it enters the attack phase....
+        
+    } //else ((free_voice != 0))
+    
+    return free_voice;
+}
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//Adds a new free voice to the voice_alloc_data.free_voices buffer
+
+uint8_t FreeVoiceOfNote (uint8_t note_num, VoiceAllocData *voice_alloc_data)
+{
+    //first, find which voice note_num is currently being played on
+    
+    uint8_t free_voice = 0;
+    
+    for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+    {
+        if (note_num == voice_alloc_data->voice_note_data[voice].note_num)
+        {
+            free_voice = voice + 1;
+            break;
+        }
+        
+    } //for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+    
+    
+    //if we have a voice to free up
+    if (free_voice > 0)
+    {
+        //find space in voice buffer
+        
+        for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+        {
+            //if we find zero put the voice in that place
+            if (voice_alloc_data->free_voices[voice] == 0)
+            {
+                voice_alloc_data->free_voices[voice] = free_voice;
+                break;
+            }
+            
+        } //for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+        
+    } //if (free_voice > 0)
+    
+    return free_voice;
+}
+
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
 //Processes a note message recieived from any source, sending it to the needed places
 
 void ProcessNoteMessage (uint8_t message_buffer[],
+                         VoiceAllocData *voice_alloc_data,
                          bool send_to_midi_out,
                          int sock,
                          struct sockaddr_un sound_engine_sock_addr)
 {
-    //TODO: proper voice allocation
     
-    //Send to the sound engine
-    SendToSoundEngine (message_buffer, 3, sock, sound_engine_sock_addr);
+    //====================================================================================
+    //Voice allocation for sound engine
+    
+    //TODO: mono voice allocation
+    
+    //if a note-on message
+    if ((message_buffer[0] & MIDI_STATUS_BITS) == MIDI_NOTEON)
+    {
+        //get next voice we can use
+        uint8_t free_voice = GetNextFreeVoice (voice_alloc_data);
+        
+        printf ("[VB] Next free voice: %d\r\n", free_voice);
+        
+        //if we have a voice to use
+        if (free_voice > 0)
+        {
+            //put free_voice into the correct range
+            free_voice -= 1;
+            
+            //store the note info for this voice
+            voice_alloc_data->voice_note_data[free_voice].note_num = message_buffer[1];
+            voice_alloc_data->voice_note_data[free_voice].note_vel = message_buffer[2];
+            
+            //set the last played voice (for note stealing)
+            voice_alloc_data->last_voice = free_voice + 1;
+            
+            //Send to the sound engine...
+            
+            uint8_t note_buffer[3] = {MIDI_NOTEON + free_voice, message_buffer[1], message_buffer[2]};
+            SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+            
+        } //if (free_voice > 0)
+        
+    } //((message_buffer[0] & MIDI_STATUS_BITS) == MIDI_NOTEON)
+    
+    //if a note-off message
+    else
+    {
+        //free used voice of this note
+        uint8_t freed_voice = FreeVoiceOfNote (message_buffer[1], voice_alloc_data);
+        
+        printf ("[VB] freed voice: %d\r\n", freed_voice);
+        
+        //if we sucessfully freed a voice
+        if (freed_voice > 0)
+        {
+            //put freed_voice into the correct range
+            freed_voice -= 1;
+            
+            //reset the note info for this voice
+            voice_alloc_data->voice_note_data[freed_voice].note_num = -1;
+            voice_alloc_data->voice_note_data[freed_voice].note_vel = -1;
+            
+            //Send to the sound engine...
+            
+            uint8_t note_buffer[3] = {MIDI_NOTEOFF + freed_voice, message_buffer[1], message_buffer[2]};
+            SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+        }
+        
+    } //else (note-off message)
+    
+    //====================================================================================
+    //Sending to MIDI-out
     
     //Send to MIDI out if needed
     if (send_to_midi_out)
@@ -511,12 +675,27 @@ int main (void)
     //don't init this to 0, incase the first CC we get is 32, causing it to be ignored!
     uint8_t input_message_prev_cc_num[NUM_OF_INPUT_SRC_TYPES] = {127};
     
-    //'patch' parameter data
+    //==========================================================
+    //'patch' parameter data stuff
+    
     PatchParameterData patchParameterData[128];
     
     for (uint8_t i = 0; i < 128; i++)
     {
         patchParameterData[i] = defaultPatchParameterData[i];
+    }
+    
+    //==========================================================
+    //voice alloc stuff
+    
+    VoiceAllocData voice_alloc_data;
+    
+    for (uint8_t i = 0; i < NUM_OF_VOICES; i++)
+    {
+        voice_alloc_data.free_voices[i] = i + 1;
+        
+        voice_alloc_data.voice_note_data[i].note_num = -1;
+        voice_alloc_data.voice_note_data[i].note_vel = -1;
     }
     
     //==========================================================
@@ -616,7 +795,7 @@ int main (void)
                         printf ("[VB] Received note-on message from keyboard\r\n");
                         #endif
                         
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], true, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], &voice_alloc_data, true, sock, sound_engine_sock_addr);
                         
                     } //if (input_message_flag == MIDI_NOTEON)
                     
@@ -626,7 +805,7 @@ int main (void)
                         printf ("[VB] Received note-off message from keyboard\r\n");
                         #endif
                         
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], true, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], &voice_alloc_data, true, sock, sound_engine_sock_addr);
                         
                     } //else if (input_message_flag == MIDI_NOTEOFF)
                     
@@ -673,7 +852,7 @@ int main (void)
                         //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEON;
                         
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], false, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], &voice_alloc_data, false, sock, sound_engine_sock_addr);
                         
                     } //if (input_message_flag == MIDI_NOTEON)
                     
@@ -686,7 +865,7 @@ int main (void)
                         //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEOFF;
                         
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], false, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], &voice_alloc_data, false, sock, sound_engine_sock_addr);
                         
                     } //else if (input_message_flag == MIDI_NOTEOFF)
                     
