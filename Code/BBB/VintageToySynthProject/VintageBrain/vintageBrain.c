@@ -60,7 +60,19 @@ enum InputSourceTypes
 #define NUM_OF_POLL_FDS NUM_OF_INPUT_SRC_TYPES
 #define POLL_TIME -1
 
+int keyboard_fd, midi_fd;
+
 //TODO: parameters that need implementing here - all key ones, the voice one, and the global volume one
+
+//==========================================================
+//==========================================================
+//==========================================================
+
+void WriteToMidiOutFd (uint8_t data_buffer[], int data_buffer_size)
+{
+    if (write (midi_fd, data_buffer, data_buffer_size) == -1)
+        perror("[VB] Writing to MIDI output");
+}
 
 //==========================================================
 //==========================================================
@@ -120,43 +132,45 @@ int SetupSerialPort (const char path[], int speed, bool should_be_blocking)
     
     //Original serial setup code (which can only set standard baud rates)
     
-    //    int fd;
-    //    struct termios tty_attributes;
-    //
-    //    // open device for read/write
-    //    fd = open (path, O_RDWR);
-    //
-    //    //if can't open file
-    //    if (fd < 0)
-    //    {
-    //        //show error and exit
-    //        perror (path);
-    //        return (-1);
-    //    }
-    //
-    //    tcgetattr (fd, &tty_attributes);
-    //    cfmakeraw (&tty_attributes);
-    //    tty_attributes.c_cc[VMIN]=1;
-    //    tty_attributes.c_cc[VTIME]=0;
-    //
-    //    // setup bauds
-    //    cfsetispeed (&tty_attributes, speed);
-    //    cfsetospeed (&tty_attributes, speed);
-    //
-    //
-    //    // apply changes now
-    //    tcsetattr (fd, TCSANOW, &tty_attributes);
-    //
-    //    if (should_be_blocking)
-    //    {
-    //        // set it to blocking
-    //        fcntl (fd, F_SETFL, 0);
-    //    }
-    //    else
-    //    {
-    //        // set it to non-blocking
-    //        fcntl (fd, F_SETFL, O_NONBLOCK);
-    //    }
+//        int fd;
+//        struct termios tty_attributes;
+//    
+//        // open device for read/write
+//        fd = open (path, O_RDWR);
+//    
+//        //if can't open file
+//        if (fd < 0)
+//        {
+//            //show error and exit
+//            perror (path);
+//            return (-1);
+//        }
+//    
+//        tcgetattr (fd, &tty_attributes);
+//        cfmakeraw (&tty_attributes);
+//        tty_attributes.c_cc[VMIN]=1;
+//        tty_attributes.c_cc[VTIME]=0;
+//    
+//        // setup bauds
+//        cfsetispeed (&tty_attributes, B38400);
+//        cfsetospeed (&tty_attributes, B38400);
+//    
+//    
+//        // apply changes now
+//        tcsetattr (fd, TCSANOW, &tty_attributes);
+//    
+//        if (should_be_blocking)
+//        {
+//            // set it to blocking
+//            fcntl (fd, F_SETFL, 0);
+//        }
+//        else
+//        {
+//            // set it to non-blocking
+//            fcntl (fd, F_SETFL, O_NONBLOCK);
+//        }
+//    
+//        return fd;
 }
 
 //==========================================================
@@ -388,6 +402,23 @@ uint8_t ProcInputByte (uint8_t input_byte, uint8_t message_buffer[], uint8_t *by
     return result;
 }
 
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//Handles signals
+static void SignalHandler (int sig)
+{
+    printf("[VB] caught signal %d. Killing process.\r\n", sig);
+    
+    //Close connnections to serial ports
+    if (close (keyboard_fd) == -1)
+        perror("[UPDATE] Closing keyboard_fd file descriptor");
+    if (close (midi_fd) == -1)
+        perror("[UPDATE] Closing midi_fd file descriptor");
+    
+    exit(0);
+}
+
 //==========================================================
 //==========================================================
 //==========================================================
@@ -397,7 +428,6 @@ int main (void)
 {
     printf ("[VB] Running vintageBrain...\n");
     
-    int keyboard_fd, midi_fd;
     uint8_t serial_input_buf[1] = {0};
     
     struct sockaddr_un brain_sock_addr, sound_engine_sock_addr;
@@ -413,6 +443,16 @@ int main (void)
     uint8_t input_message_running_status_value[NUM_OF_INPUT_SRC_TYPES] = {0};
     //don't init this to 0, incase the first CC we get is 32, causing it to be ignored!
     uint8_t input_message_prev_cc_num[NUM_OF_INPUT_SRC_TYPES] = {127};
+    
+    
+    //==========================================================
+    //Set up SIGINT and SIGTERM so that the process can be shutdown
+    //correctly when it asked to quit.
+    
+    if(signal(SIGINT, SignalHandler) == SIG_ERR)	// Setup SIGINT handler
+        fprintf(stderr, "[DR] [ERROR] Cannot setup SIGINT handler");
+    if(signal(SIGTERM, SignalHandler) == SIG_ERR)	// Setup SIGTERM handler
+        fprintf(stderr, "[DR] [ERROR] Cannot setup SIGTERM handler");
     
     //==========================================================
     //Set up serial connections
@@ -482,7 +522,7 @@ int main (void)
             if (ret != -1)
             {
                 //display the read byte
-                printf ("[VB] Byte read from keyboard: %d\n", serial_input_buf[0]);
+                //printf ("[VB] Byte read from keyboard: %d\n", serial_input_buf[0]);
                 
                 //process the read byte
                 uint8_t input_message_flag = ProcInputByte (serial_input_buf[0],
@@ -494,13 +534,26 @@ int main (void)
                 //if we have received a full MIDI message
                 if (input_message_flag)
                 {
-                    printf ("[VB] Received full MIDI message from keyboard with status byte %d\n", input_message_buffer[INPUT_SRC_KEYBOARD][0]);
+                    //printf ("[VB] Received full MIDI message from keyboard with status byte %d\n", input_message_buffer[INPUT_SRC_KEYBOARD][0]);
                     
                     //Send data to vintageSoundEngine app
                     //FIXME: eventually we'll want to query what the message is and perform some kind
                     //of voice allocation rather than just sending the message straight to the sound engine.
                     //Also we dont know that it will always be a 3 byte message.
-                    SendToSoundEngine (input_message_buffer[INPUT_SRC_KEYBOARD], 3, sock, sound_engine_sock_addr);
+                    //SendToSoundEngine (input_message_buffer[INPUT_SRC_KEYBOARD], 3, sock, sound_engine_sock_addr);
+                    //WriteToMidiOutFd (midi_fd, input_message_buffer[INPUT_SRC_KEYBOARD], 3);
+                    
+                    //test!!
+                    if (input_message_flag == MIDI_NOTEON)
+                    {
+                        printf ("[VB] Received note-on message from keyboard\r\n");
+                        SendToSoundEngine (input_message_buffer[INPUT_SRC_KEYBOARD], 3, sock, sound_engine_sock_addr);
+                    }
+                    else if (input_message_flag == MIDI_NOTEOFF)
+                    {
+                        printf ("[VB] Received note-off message from keyboard\r\n");
+                        SendToSoundEngine (input_message_buffer[INPUT_SRC_KEYBOARD], 3, sock, sound_engine_sock_addr);
+                    }
                     
                 } //if (input_message_flag)
                 
@@ -522,7 +575,7 @@ int main (void)
             if (ret != -1)
             {
                 //display the read byte
-                printf ("[VB] Byte read from MIDI interface: %d\n", serial_input_buf[0]);
+                //printf ("[VB] Byte read from MIDI interface: %d\n", serial_input_buf[0]);
                 
                 //process the read byte
                 uint8_t input_message_flag = ProcInputByte (serial_input_buf[0],
@@ -534,16 +587,20 @@ int main (void)
                 //if we have received a full MIDI message
                 if (input_message_flag)
                 {
-                     printf ("[VB] Received full MIDI message from MIDI interface with status byte %d\n", input_message_buffer[INPUT_SRC_MIDI_IN][0]);
+                     //printf ("[VB] Received full MIDI message from MIDI interface with status byte %d\n", input_message_buffer[INPUT_SRC_MIDI_IN][0]);
                    
                     //test!!
-                    if (input_message_flag == MIDI_NOTEON || input_message_flag == MIDI_NOTEOFF)
+                    if (input_message_flag == MIDI_NOTEON)
                     {
+                        printf ("[VB] Received note-on message from MIDI\r\n");
+                        
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEON;
                         SendToSoundEngine (input_message_buffer[INPUT_SRC_MIDI_IN], 3, sock, sound_engine_sock_addr);
                     }
                     else if (input_message_flag == MIDI_NOTEOFF)
                     {
+                        printf ("[VB] Received note-off message from MIDI\r\n");
+                        
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEOFF;
                         SendToSoundEngine (input_message_buffer[INPUT_SRC_MIDI_IN], 3, sock, sound_engine_sock_addr);
                     }
