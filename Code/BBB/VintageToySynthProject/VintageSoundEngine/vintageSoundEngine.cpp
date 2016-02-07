@@ -130,13 +130,23 @@ int routing	(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
     //==========================================================
     //==========================================================
     
-    void play(double *output)
+    void play (double *output)
     {
-        //FXIXME: for now just test processing 1 voice.
-        //Need to start processing multiple voices once implemented voice allocation in vintageBrain
-        vintageVoice[0]->processAudio (output);
+        double voice_in = 0;
+        double voice_out = 0;
+        
+        //process each voice
+        for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+        {
+            voice_in = 0;
+            vintageVoice[0]->processAudio (&voice_in);
+            voice_out += voice_in;
+        }
         
         //TODO: process distortion on output here
+        
+        output[0] = voice_out;
+        output[1] = voice_out;
     }
     
     //==========================================================
@@ -385,6 +395,14 @@ int main()
         vintageVoice[i] = new VintageVoice(i);
     }
     
+    //'patch' parameter data
+    PatchParameterData patchParameterData[128];
+    
+    for (uint8_t i = 0; i < 128; i++)
+    {
+        patchParameterData[i] = defaultPatchParameterData[i];
+    }
+    
     //===============================================================
     //Setup socket for comms with vintageBrain
     
@@ -417,8 +435,8 @@ int main()
     //===============================================================
     //Setup my audio synth engine
     
-    std::cout << "[VSE] Setting up audio engine stuff..." << std::endl;
-	setup();
+//    std::cout << "[VSE] Setting up audio engine stuff..." << std::endl;
+//	setup();
 	
     //===============================================================
     //Setup PortAudio or RtAudio, depending in which one is defined/chosen,

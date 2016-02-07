@@ -149,6 +149,9 @@ void VintageVoice::setNoteVelocity (uint8_t vel_val)
 void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_user_val)
 {
     patchParameterData[param_num].user_val = param_user_val;
+    //FIXME: this could probably be done within vintageSoundEngine.cpp instead of within the voice object,
+    //as each voice will probably be given the same value most of the time, so it would save CPU
+    //to only have to do this once instead of for each voice.
     patchParameterData[param_num].voice_val = scaleValue (patchParameterData[param_num].user_val,
                                                           patchParameterData[param_num].user_min_val,
                                                           patchParameterData[param_num].user_max_val,
