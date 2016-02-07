@@ -82,8 +82,10 @@ void VintageVoice::processAudio (double *output)
     else if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 3)
         lfoOut = lfo.square (patchParameterData[PARAM_LFO_RATE].voice_val) * patchParameterData[PARAM_LFO_DEPTH].voice_val;
     
-    //process envelopes
-    envAmpOut = envAmp.adsr (patchParameterData[PARAM_AEG_AMOUNT].voice_val, envAmp.trigger);
+    //process amp envelope with note velocity
+    envAmpOut = envAmp.adsr (patchParameterData[PARAM_AEG_AMOUNT].voice_val * voiceVelocityValue, envAmp.trigger);
+    
+    //process filter envelope
     envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
     
     //process lfo->amp env depth modulation
@@ -171,7 +173,20 @@ void VintageVoice::setNoteVelocity (uint8_t vel_val)
     //will need to be set whenever each of these four states change.
     //Though I think because LFO changes in realtime within play(), this may need to be processed in play(),
     //which would mean we would need a global vel val, and other vals, that are used in play().
-    setPatchParamVoiceValue (PARAM_AEG_AMOUNT, vel_val);
+    
+    //convert user velocity value into a voice velocity value
+    voiceVelocityValue = scaleValue (vel_val,
+                                     0,
+                                     127,
+                                     0.,
+                                     1.);
+    
+    //TODO: change the velocity->amp depth (voiceVelocityValue) using the PARAM_MOD_VEL_AMP param value, so that it equals 1 with no depth.
+    //HOW DO I DO THIS?
+    //FIXME: if we start modulating other parameters with velocity we will either needed individual vel variables
+    //for each mod destination, or just do all the depth processesing within play
+    
+    //setPatchParamVoiceValue (PARAM_AEG_AMOUNT, vel_val);
 }
 
 //==========================================================
