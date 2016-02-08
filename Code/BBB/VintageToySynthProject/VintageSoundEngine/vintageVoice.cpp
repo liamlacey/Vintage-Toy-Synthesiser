@@ -68,11 +68,13 @@ void VintageVoice::processAudio (double *output)
     // - random frequency and amounts of osc detuning when a note is pressed
     // - random frequency and amounts of filter cutoff offset when a note is pressed
     // - random frequency and amounts of noise added when a note is pressed
-    // - slight detuning of the 5 oscillators on each voice
+    // - detuning of the 5 oscillators on each voice
+    // - changing the phase of the oscs so they're different
     //possible the above three but added periodically throughout a note, not just when pressed.
     
     //process LFO...
-    //FIXME: for LFO rate it would be better if we used an LFO rate table (an array of 128 different rates)
+    //FIXME: for LFO rate it would be better if we used an LFO rate table (an array of 128 different rates).
+    //FIXME: Does the LFO osc always need to be halved and offset like being doing with lfo->amp mod? If so do that here.
     if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 0)
         lfoOut = lfo.sinewave (patchParameterData[PARAM_LFO_RATE].voice_val) * patchParameterData[PARAM_LFO_DEPTH].voice_val;
     else if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 1)
@@ -100,6 +102,7 @@ void VintageVoice::processAudio (double *output)
     //TODO: implement all aftertouch modulation
     
     //process oscillators
+    //FIXME: do we want the oscillators to have the same phase? If not this should be set in the contructor
     oscSineOut = oscSine.sinewave (oscPitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;
     oscTriOut = (oscTri.triangle (oscPitch) * patchParameterData[PARAM_OSC_TRI_LEVEL].voice_val);
     oscSawOut = (oscSaw.saw (oscPitch) * patchParameterData[PARAM_OSC_SAW_LEVEL].voice_val);
@@ -151,11 +154,14 @@ void VintageVoice::setOscPitch (uint8_t midi_note_num)
 //==========================================================
 //Triggers the envelopes of the voice to either start or stop,
 //essentially starting or stopping a note.
+//FIXME: change this function to a more appropriate name, such as processNewNote.
 
 void VintageVoice::triggerEnvelopes (uint8_t trigger_val)
 {
     envAmp.trigger = trigger_val;
     envFilter.trigger = trigger_val;
+    
+    //TODO: reset phase of LFO using the function phaseReset().
 }
 
 //==========================================================
