@@ -154,7 +154,8 @@ void VintageVoice::setOscPitch (uint8_t midi_note_num)
 //==========================================================
 //Triggers the envelopes of the voice to either start or stop,
 //essentially starting or stopping a note.
-//FIXME: change this function to a more appropriate name, such as processNewNote.
+//FIXME: change this function to a more appropriate name, such as processNoteMessage.
+//FIXME: why aren't the processing of note pitch and velocity done here either? Everything could be done in one function. Though make sure if it is called due a a note-off message (trigger val set to 0) the pitch and velocity aren't changed
 
 void VintageVoice::triggerEnvelopes (uint8_t trigger_val)
 {
