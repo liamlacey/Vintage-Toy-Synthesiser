@@ -260,6 +260,19 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
     {
         oscSquarePitch = mtof.mtof (rootNoteNum + (patchParameterData[param_num].voice_val - 64));
     }
+    
+    else if (param_num == PARAM_OSC_PHASE_SPREAD)
+    {
+        //FIXME: I need to properly understand what the phase value represents in order to implement a definitive algorithm here.
+        //But basically what it does is, the higher the param value, the more spread the phases are of each oscillator from one another.
+        //Sine will always stay at 0, tri will change of a small range, saw over a slightly bigger range, and so on.
+        
+        oscSine.phaseReset(0.0);
+        oscTri.phaseReset (patchParameterData[param_num].voice_val * 0.002);
+        oscSaw.phaseReset (patchParameterData[param_num].voice_val * 0.004);
+        oscPulse.phaseReset (patchParameterData[param_num].voice_val * 0.006);
+        oscSquare.phaseReset (patchParameterData[param_num].voice_val * 0.008);
+    }
 }
 
 ////==========================================================
