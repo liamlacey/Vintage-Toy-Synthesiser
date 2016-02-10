@@ -52,9 +52,10 @@ public:
     
     void processAudio (double *output);
     
-    void setOscPitch (uint8_t midi_note_num);
-    void triggerEnvelopes (uint8_t trigger_val);
-    void setNoteVelocity (uint8_t vel_val);
+    void processNoteMessage (bool note_status, uint8_t note_num, uint8_t note_vel);
+    //void setOscPitch (uint8_t midi_note_num);
+    //void triggerEnvelopes (uint8_t trigger_val);
+    //void setNoteVelocity (uint8_t vel_val);
 
     void setPatchParamVoiceValue (uint8_t param_num, uint8_t param_user_val);
     

@@ -139,61 +139,34 @@ void VintageVoice::processAudio (double *output)
 //==========================================================
 //==========================================================
 //==========================================================
-//Sets the oscillator pitch based in the incoming MIDI note number
+//Function that does everything that needs to be done when a new
+//note-on or note-off message is sent to the voice.
 
-void VintageVoice::setOscPitch (uint8_t midi_note_num)
+void processNoteMessage (bool note_status, uint8_t note_num, uint8_t note_vel)
 {
-    convert mtof;
-    oscPitch = mtof.mtof(midi_note_num);
-    oscSubPitch = mtof.mtof(midi_note_num - 12);
-}
-
-
-//==========================================================
-//==========================================================
-//==========================================================
-//Triggers the envelopes of the voice to either start or stop,
-//essentially starting or stopping a note.
-//FIXME: change this function to a more appropriate name, such as processNoteMessage.
-//FIXME: why aren't the processing of note pitch and velocity done here either? Everything could be done in one function. Though make sure if it is called due a a note-off message (trigger val set to 0) the pitch and velocity aren't changed
-
-void VintageVoice::triggerEnvelopes (uint8_t trigger_val)
-{
+    //if a note-on
+    if (note_status == true)
+    {
+        //set the oscillator pitches
+        convert mtof;
+        oscPitch = mtof.mtof(midi_note_num);
+        oscSubPitch = mtof.mtof(midi_note_num - 12);
+        
+        //set the note velocity
+        //TODO: change the velocity->amp depth (voiceVelocityValue) using the PARAM_MOD_VEL_AMP param value, so that it equals 1 with no depth.
+        //HOW DO I DO THIS?
+        //FIXME: if we start modulating other parameters with velocity we will either needed individual vel variables
+        //for each mod destination, or just do all the depth processesing within play
+        voiceVelocityValue = scaleValue (note_vel, 0, 127, 0., 1.);
+        
+        //reset LFO osc phase
+        lfo.phaseReset(0.0);
+        
+    } //if (note_status == true)
+    
+    //set trigger value of envelopes
     envAmp.trigger = trigger_val;
     envFilter.trigger = trigger_val;
-    
-    //TODO: reset phase of LFO using the function phaseReset().
-}
-
-//==========================================================
-//==========================================================
-//==========================================================
-//Sets the amp envelope amount.
-
-void VintageVoice::setNoteVelocity (uint8_t vel_val)
-{
-    //FIXME: amp envelope amount will eventually also be set with multiple params, not just velocity.
-    //These params will be AEG amount control, vel to amp mod depth, and LFO to amp mod delth
-    //Therefore I think we need to start using a new varialbe here which is set based on
-    //the velocity value, the mod depths, and the AEG amount value. Then use
-    //this new variable in play() instead of the patchParam value. This variable
-    //will need to be set whenever each of these four states change.
-    //Though I think because LFO changes in realtime within play(), this may need to be processed in play(),
-    //which would mean we would need a global vel val, and other vals, that are used in play().
-    
-    //convert user velocity value into a voice velocity value
-    voiceVelocityValue = scaleValue (vel_val,
-                                     0,
-                                     127,
-                                     0.,
-                                     1.);
-    
-    //TODO: change the velocity->amp depth (voiceVelocityValue) using the PARAM_MOD_VEL_AMP param value, so that it equals 1 with no depth.
-    //HOW DO I DO THIS?
-    //FIXME: if we start modulating other parameters with velocity we will either needed individual vel variables
-    //for each mod destination, or just do all the depth processesing within play
-    
-    //setPatchParamVoiceValue (PARAM_AEG_AMOUNT, vel_val);
 }
 
 //==========================================================
@@ -256,3 +229,62 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
         envFilter.setRelease (patchParameterData[param_num].voice_val);
     }
 }
+
+////==========================================================
+////==========================================================
+////==========================================================
+////Sets the oscillator pitch based in the incoming MIDI note number
+//
+//void VintageVoice::setOscPitch (uint8_t midi_note_num)
+//{
+//    convert mtof;
+//    oscPitch = mtof.mtof(midi_note_num);
+//    oscSubPitch = mtof.mtof(midi_note_num - 12);
+//}
+//
+////==========================================================
+////==========================================================
+////==========================================================
+////Triggers the envelopes of the voice to either start or stop,
+////essentially starting or stopping a note.
+////FIXME: change this function to a more appropriate name, such as processNoteMessage.
+////FIXME: why aren't the processing of note pitch and velocity done here either? Everything could be done in one function. Though make sure if it is called due a a note-off message (trigger val set to 0) the pitch and velocity aren't changed
+//
+//void VintageVoice::triggerEnvelopes (uint8_t trigger_val)
+//{
+//    envAmp.trigger = trigger_val;
+//    envFilter.trigger = trigger_val;
+//    
+//    //TODO: reset phase of LFO using the function phaseReset().
+//}
+//
+////==========================================================
+////==========================================================
+////==========================================================
+////Sets the amp envelope amount.
+//
+//void VintageVoice::setNoteVelocity (uint8_t vel_val)
+//{
+//    //FIXME: amp envelope amount will eventually also be set with multiple params, not just velocity.
+//    //These params will be AEG amount control, vel to amp mod depth, and LFO to amp mod delth
+//    //Therefore I think we need to start using a new varialbe here which is set based on
+//    //the velocity value, the mod depths, and the AEG amount value. Then use
+//    //this new variable in play() instead of the patchParam value. This variable
+//    //will need to be set whenever each of these four states change.
+//    //Though I think because LFO changes in realtime within play(), this may need to be processed in play(),
+//    //which would mean we would need a global vel val, and other vals, that are used in play().
+//    
+//    //convert user velocity value into a voice velocity value
+//    voiceVelocityValue = scaleValue (vel_val,
+//                                     0,
+//                                     127,
+//                                     0.,
+//                                     1.);
+//    
+//    //TODO: change the velocity->amp depth (voiceVelocityValue) using the PARAM_MOD_VEL_AMP param value, so that it equals 1 with no depth.
+//    //HOW DO I DO THIS?
+//    //FIXME: if we start modulating other parameters with velocity we will either needed individual vel variables
+//    //for each mod destination, or just do all the depth processesing within play
+//    
+//    //setPatchParamVoiceValue (PARAM_AEG_AMOUNT, vel_val);
+//}

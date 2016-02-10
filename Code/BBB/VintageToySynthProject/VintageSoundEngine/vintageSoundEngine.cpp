@@ -577,17 +577,19 @@ int main()
                         //channel relates to voice number
                         uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
                         
-                        //set the pitch of the voices oscillators based on the note number
-                        vintageVoice[voice_num]->setOscPitch (input_message_buffer[1]);
+                        vintageVoice[voice_num]->processNoteMessage (1, input_message_buffer[1], input_message_buffer[2]);
                         
-                        //set the amp env amount using the velocity value
-                        vintageVoice[voice_num]->setNoteVelocity (input_message_buffer[2]);
-                        
-                        //trigger the note to start playing
-                        //FIXME: eventually we'll only want to retrigger the envelope if it isn't already playing (mono mode beahaviour).
-                        //Actually, I think sending a trigger value of 1 whilst it already 1 doesn't retrigger, so this is probably correct already!
-                        vintageVoice[voice_num]->triggerEnvelopes(1);
-                        
+//                        //set the pitch of the voices oscillators based on the note number
+//                        vintageVoice[voice_num]->setOscPitch (input_message_buffer[1]);
+//                        
+//                        //set the amp env amount using the velocity value
+//                        vintageVoice[voice_num]->setNoteVelocity (input_message_buffer[2]);
+//                        
+//                        //trigger the note to start playing
+//                        //FIXME: eventually we'll only want to retrigger the envelope if it isn't already playing (mono mode beahaviour).
+//                        //Actually, I think sending a trigger value of 1 whilst it already 1 doesn't retrigger, so this is probably correct already!
+//                        vintageVoice[voice_num]->triggerEnvelopes(1);
+
                     } //if (input_message_flag == MIDI_NOTEON)
                     
                     //================================
@@ -597,8 +599,10 @@ int main()
                         //channel relates to voice number
                         uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
                         
-                        //trigger the note to stop
-                        vintageVoice[voice_num]->triggerEnvelopes(0);
+                        vintageVoice[voice_num]->processNoteMessage (0, 0, 0);
+                        
+//                        //trigger the note to stop
+//                        vintageVoice[voice_num]->triggerEnvelopes(0);
                         
                     } //if (input_message_flag == MIDI_NOTEOFF)
                     
