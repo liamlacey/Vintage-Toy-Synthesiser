@@ -83,7 +83,7 @@ void loop()
     //==========================================
     //==========================================
     //==========================================
-    //Read input...
+    //Read analogue control input...
 
     //Select the mux/analogue pin we want to read from based on the control number
     //FIXME: there are probably equations I can use here instead.
@@ -129,7 +129,7 @@ void loop()
       //==========================================
       //==========================================
       //==========================================
-      //Process input...
+      //Process analogue control input...
 
       //if the read control value is different from it's last reading
       if (prevAnalogueValue[control_num] != read_val)
@@ -153,7 +153,21 @@ void loop()
         
       } //if (prevAnalogueValue[control_num] != read_val)
 
+      
+
   } //for (byte control_num; control_num < NUM_OF_CONTROLS; control_num++)
+
+  //==========================================
+  //==========================================
+  //==========================================
+  //Read serial input...
+
+  //if there is something to read on the serial port
+  if (Serial.available()) 
+  {
+    //TODO: process message for sending back all current control values.
+ 
+  } //if (Serial.available()) 
 
 }
 
