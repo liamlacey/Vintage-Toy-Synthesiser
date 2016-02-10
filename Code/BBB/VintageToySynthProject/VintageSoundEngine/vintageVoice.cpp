@@ -33,8 +33,9 @@ VintageVoice::VintageVoice (uint8_t voice_num)
         patchParameterData[i] = defaultPatchParameterData[i];
     }
     
-    oscPitch = 200;
-    oscSubPitch = 100;
+    oscSinePitch = oscTriPitch = oscSawPitch = oscPulsePitch = oscSquarePitch = 200;
+    voiceVelocityValue = 1.0;
+    rootNoteNum = 60;
     
     //init objects
     envAmp.setAttack (patchParameterData[PARAM_AEG_ATTACK].voice_val);
@@ -103,11 +104,11 @@ void VintageVoice::processAudio (double *output)
     
     //process oscillators
     //FIXME: do we want the oscillators to have the same phase? If not this should be set in the contructor
-    oscSineOut = oscSine.sinewave (oscPitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;
-    oscTriOut = (oscTri.triangle (oscPitch) * patchParameterData[PARAM_OSC_TRI_LEVEL].voice_val);
-    oscSawOut = (oscSaw.saw (oscPitch) * patchParameterData[PARAM_OSC_SAW_LEVEL].voice_val);
-    oscPulseOut = (oscPulse.pulse (oscPitch, patchParameterData[PARAM_OSC_PULSE_AMOUNT].voice_val) * patchParameterData[PARAM_OSC_PULSE_LEVEL].voice_val);
-    oscSquareOut = (oscSquare.square (oscSubPitch) * patchParameterData[PARAM_OSC_SQUARE_LEVEL].voice_val);
+    oscSineOut = oscSine.sinewave (oscSinePitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;
+    oscTriOut = (oscTri.triangle (oscTriPitch) * patchParameterData[PARAM_OSC_TRI_LEVEL].voice_val);
+    oscSawOut = (oscSaw.saw (oscSawPitch) * patchParameterData[PARAM_OSC_SAW_LEVEL].voice_val);
+    oscPulseOut = (oscPulse.pulse (oscPulsePitch, patchParameterData[PARAM_OSC_PULSE_AMOUNT].voice_val) * patchParameterData[PARAM_OSC_PULSE_LEVEL].voice_val);
+    oscSquareOut = (oscSquare.square (oscSquarePitch) * patchParameterData[PARAM_OSC_SQUARE_LEVEL].voice_val);
     
     //mix oscillators toehether
     oscMixOut = (oscSineOut + oscTriOut + oscSawOut + oscPulseOut + oscSquareOut) / 5.;
@@ -147,10 +148,16 @@ void processNoteMessage (bool note_status, uint8_t note_num, uint8_t note_vel)
     //if a note-on
     if (note_status == true)
     {
+        //store the root note num
+        rootNoteNum = note_num;
+        
         //set the oscillator pitches
         convert mtof;
-        oscPitch = mtof.mtof(midi_note_num);
-        oscSubPitch = mtof.mtof(midi_note_num - 12);
+        oscSinePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_SINE_NOTE].voice_val - 64));
+        oscTriPitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_TRI_NOTE].voice_val - 64));
+        oscSawPitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_SAW_NOTE].voice_val - 64));
+        oscPulsePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_PULSE_NOTE].voice_val - 64));
+        oscSquarePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_SQUARE_NOTE].voice_val - 64));
         
         //set the note velocity
         //TODO: change the velocity->amp depth (voiceVelocityValue) using the PARAM_MOD_VEL_AMP param value, so that it equals 1 with no depth.
@@ -227,6 +234,31 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
     else if (param_num == PARAM_FEG_RELEASE)
     {
         envFilter.setRelease (patchParameterData[param_num].voice_val);
+    }
+    
+    else if (param_num == PARAM_OSC_SINE_NOTE)
+    {
+        oscSinePitch = mtof.mtof (rootNoteNum + (patchParameterData[param_num].voice_val - 64));
+    }
+    
+    else if (param_num == PARAM_OSC_TRI_NOTE)
+    {
+        oscTriPitch = mtof.mtof (rootNoteNum + (patchParameterData[param_num].voice_val - 64));
+    }
+    
+    else if (param_num == PARAM_OSC_SAW_NOTE)
+    {
+        oscSawPitch = mtof.mtof (rootNoteNum + (patchParameterData[param_num].voice_val - 64));
+    }
+    
+    else if (param_num == PARAM_OSC_PULSE_NOTE)
+    {
+        oscPulsePitch = mtof.mtof (rootNoteNum + (patchParameterData[param_num].voice_val - 64));
+    }
+    
+    else if (param_num == PARAM_OSC_SQUARE_NOTE)
+    {
+        oscSquarePitch = mtof.mtof (rootNoteNum + (patchParameterData[param_num].voice_val - 64));
     }
 }
 

@@ -74,9 +74,9 @@ private:
     PatchParameterData patchParameterData[128];
     
     //other parameters
-    double oscPitch;
-    double oscSubPitch; //current the square osc is used as sub only, but this will change if introducing note params for each osc
+    double oscSinePitch, oscTriPitch, oscSawPitch, oscPulsePitch, oscSquarePitch;
     double voiceVelocityValue;
+    uint8_t rootNoteNum;
     
     //audio output variables
     double envAmpOut, oscSineOut, oscTriOut, oscSawOut, oscPulseOut, oscSquareOut, oscMixOut, filterOut, envFilterOut, lfoOut, distortionOut, effectsMixOut;
