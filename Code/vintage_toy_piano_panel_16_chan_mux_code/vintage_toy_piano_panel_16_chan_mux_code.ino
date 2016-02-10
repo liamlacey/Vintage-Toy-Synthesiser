@@ -23,7 +23,7 @@
 //==========================================
 
 //The number of pots/switches attached
-const byte NUM_OF_CONTROLS = 64;
+const byte NUM_OF_CONTROLS = 39;
 
 //The previous anologue value received from each control
 int prevAnalogueValue[NUM_OF_CONTROLS] = {0};
@@ -152,8 +152,6 @@ void loop()
         } //if (prevParamValue[control_num] != param_val)
         
       } //if (prevAnalogueValue[control_num] != read_val)
-
-      
 
   } //for (byte control_num; control_num < NUM_OF_CONTROLS; control_num++)
 
