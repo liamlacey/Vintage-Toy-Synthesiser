@@ -62,6 +62,7 @@ VintageVoice::~VintageVoice()
 
 void VintageVoice::processAudio (double *output)
 {
+    //==========================================================
     //FIXME: is there a way of only processing this function if the ampEnv is currently running?
     
     //TODO: implement vintage mode amount.
@@ -73,46 +74,56 @@ void VintageVoice::processAudio (double *output)
     // - changing the phase of the oscs so they're different
     //possible the above three but added periodically throughout a note, not just when pressed.
     
+    //==========================================================
     //process LFO...
-    //FIXME: for LFO rate it would be better if we used an LFO rate table (an array of 128 different rates).
-    //FIXME: Does the LFO osc always need to be halved and offset like being doing with lfo->amp mod? If so do that here.
-    if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 0)
-        lfoOut = lfo.sinewave (patchParameterData[PARAM_LFO_RATE].voice_val) * patchParameterData[PARAM_LFO_DEPTH].voice_val;
-    else if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 1)
-        lfoOut = lfo.triangle (patchParameterData[PARAM_LFO_RATE].voice_val) * patchParameterData[PARAM_LFO_DEPTH].voice_val;
-    else if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 2)
-        lfoOut = lfo.saw (patchParameterData[PARAM_LFO_RATE].voice_val) * patchParameterData[PARAM_LFO_DEPTH].voice_val;
-    else if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 3)
-        lfoOut = lfo.square (patchParameterData[PARAM_LFO_RATE].voice_val) * patchParameterData[PARAM_LFO_DEPTH].voice_val;
     
+    //set shape and rate
+        //FIXME: for LFO rate it would be better if we used an LFO rate table (an array of 128 different rates).
+    if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 0)
+        lfoOut = lfo.sinewave (patchParameterData[PARAM_LFO_RATE].voice_val);
+    else if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 1)
+        lfoOut = lfo.triangle (patchParameterData[PARAM_LFO_RATE].voice_val);
+    else if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 2)
+        lfoOut = lfo.saw (patchParameterData[PARAM_LFO_RATE].voice_val);
+    else if (patchParameterData[PARAM_LFO_SHAPE].voice_val == 3)
+        lfoOut = lfo.square (patchParameterData[PARAM_LFO_RATE].voice_val);
+    
+    //convert the osc wave into an lfo wave (multiply and offset)
+    lfoOut = ((lfoOut * 0.5) + 0.5);
+    
+    //set depth
+    lfoOut = lfoOut * patchParameterData[PARAM_LFO_DEPTH].voice_val;
+    
+    //==========================================================
     //process amp envelope with note velocity
     envAmpOut = envAmp.adsr (patchParameterData[PARAM_AEG_AMOUNT].voice_val * voiceVelocityValue, envAmp.trigger);
     
+    //==========================================================
     //process filter envelope
     envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
     
+    //==========================================================
     //process lfo->amp env depth modulation
-    //Don't forget that the LFO wave has to be halved and offset by 0.5 to act as an amplitude modulator.
-    double offset_lfo_val = ((lfoOut * 0.5) + 0.5);
     //FIXME: if patchParameterData[PARAM_MOD_LFO_AMP].voice_val is negative it will double the signal which not what we want.
     //What do we want a negative depth value to do, and how should it do it?
-    envAmpOut = envAmpOut * (1.0 - (offset_lfo_val * patchParameterData[PARAM_MOD_LFO_AMP].voice_val));
+    envAmpOut = envAmpOut * (1.0 - (lfoOut * patchParameterData[PARAM_MOD_LFO_AMP].voice_val));
     
     //TODO: implement all lfo modulation
     
     //TODO: implement all aftertouch modulation
     
+    //==========================================================
     //process oscillators
-    //FIXME: do we want the oscillators to have the same phase? If not this should be set in the contructor
     oscSineOut = oscSine.sinewave (oscSinePitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;
     oscTriOut = (oscTri.triangle (oscTriPitch) * patchParameterData[PARAM_OSC_TRI_LEVEL].voice_val);
     oscSawOut = (oscSaw.saw (oscSawPitch) * patchParameterData[PARAM_OSC_SAW_LEVEL].voice_val);
     oscPulseOut = (oscPulse.pulse (oscPulsePitch, patchParameterData[PARAM_OSC_PULSE_AMOUNT].voice_val) * patchParameterData[PARAM_OSC_PULSE_LEVEL].voice_val);
     oscSquareOut = (oscSquare.square (oscSquarePitch) * patchParameterData[PARAM_OSC_SQUARE_LEVEL].voice_val);
     
-    //mix oscillators toehether
+    //mix oscillators together
     oscMixOut = (oscSineOut + oscTriOut + oscSawOut + oscPulseOut + oscSquareOut) / 5.;
     
+    //==========================================================
     //process filter (pass in oscOut, return filterOut)
     //TODO: implement cutoff modulation (LFO and PAT) and reso modulation (LFO)
     filterSvf.setCutoff (patchParameterData[PARAM_FILTER_FREQ].voice_val * envFilterOut);
@@ -124,6 +135,7 @@ void VintageVoice::processAudio (double *output)
                                 patchParameterData[PARAM_FILTER_NOTCH_MIX].voice_val);
     
     
+    //==========================================================
     //process distortion...
     //FIXME: should PARAM_FX_DISTORTION_AMOUNT also change the shape of the distortion?
     distortionOut = distortion.atanDist (filterOut, 200.0);
@@ -132,6 +144,7 @@ void VintageVoice::processAudio (double *output)
     //FIXME: probably need to reduce the disortionOut value so bringing in disortion doesn't increase the overall volume too much
     effectsMixOut = (distortionOut * patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val) + (filterOut * (1.0 - patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val));
     
+    //==========================================================
     //apply amp envelope, making both the L and R channels the same (pass in filterOut, return output)
     output[0] = effectsMixOut * envAmpOut;
     output[1] = output[0];
