@@ -95,19 +95,21 @@ void VintageVoice::processAudio (double *output)
     lfoOut = lfoOut * patchParameterData[PARAM_LFO_DEPTH].voice_val;
     
     //==========================================================
+    //Amp envelope stuff...
+    
     //process amp envelope with note velocity
     envAmpOut = envAmp.adsr (patchParameterData[PARAM_AEG_AMOUNT].voice_val * voiceVelocityValue, envAmp.trigger);
+    
+    //process lfo->amp env depth modulation
+    //FIXME: if patchParameterData[PARAM_MOD_LFO_AMP].voice_val is negative it will double the signal which not what we want.
+    //What do we want a negative depth value to do, and how should it do it?
+    envAmpOut = envAmpOut * (1.0 - (lfoOut * patchParameterData[PARAM_MOD_LFO_AMP].voice_val));
     
     //==========================================================
     //process filter envelope
     envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
     
     //==========================================================
-    //process lfo->amp env depth modulation
-    //FIXME: if patchParameterData[PARAM_MOD_LFO_AMP].voice_val is negative it will double the signal which not what we want.
-    //What do we want a negative depth value to do, and how should it do it?
-    envAmpOut = envAmpOut * (1.0 - (lfoOut * patchParameterData[PARAM_MOD_LFO_AMP].voice_val));
-    
     //TODO: implement all lfo modulation
     
     //TODO: implement all aftertouch modulation
