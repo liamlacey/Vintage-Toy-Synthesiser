@@ -506,6 +506,32 @@ uint8_t FreeVoiceOfNote (uint8_t note_num, VoiceAllocData *voice_alloc_data)
     return free_voice;
 }
 
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//Returns a list of voices that are currently playing note note_num (using the voice_list array)
+//as well as returning the number of voices.
+//Even though at the moment it will probably only ever be 1 voice here, I'm implementing
+//it to be able to return multiple voices incase in the future I allow the same note
+//to play multiple voices.
+
+uint8_t GetVoicesOfNote (uint8_t note_num, VoiceAllocData *voice_alloc_data, uint8_t voice_list[])
+{
+    uint8_t num_of_voices = 0;
+    
+    for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+    {
+        if (note_num == voice_alloc_data->voice_note_data[voice].note_num)
+        {
+            voice_list[num_of_voices] = voice + 1;
+            num_of_voices++;
+        }
+        
+    } //for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+    
+    return num_of_voices;
+}
+
 
 //====================================================================================
 //====================================================================================
@@ -592,6 +618,49 @@ void ProcessNoteMessage (uint8_t message_buffer[],
     {
         WriteToMidiOutFd (message_buffer, 3);
     }
+}
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//Processes a poly aftertouch message, sending it to the needed places
+
+void ProcessPolyAftertouchMessage (uint8_t message_buffer[],
+                                   VoiceAllocData *voice_alloc_data,
+                                   bool send_to_midi_out,
+                                   int sock,
+                                   struct sockaddr_un sound_engine_sock_addr)
+{
+    //====================================================================================
+    //Sending to sound engine
+    
+    uint8_t voice_list[NUM_OF_VOICES];
+    uint8_t num_of_voices;
+    
+    //get all voices that the note for this aftertouch message are currently playing on
+    num_of_voices = GetVoicesOfNote (message_buffer[1], voice_alloc_data, voice_list);
+    
+    //for each found voice
+    for (uint8_t voice = 0; voice < num_of_voices; voice++)
+    {
+        //send the aftertouch message to the sound engine, using channel to signify voice number
+        uint8_t pat_buffer[3] = {MIDI_PAT + voice_list[voice], message_buffer[1], message_buffer[2]};
+        SendToSoundEngine (pat_buffer, 3, sock, sound_engine_sock_addr);
+        
+    } //for (uint8_t voice = 0; voice < num_of_voices; voice++)
+    
+    //====================================================================================
+    //Sending to MIDI-out
+    
+    //Send to MIDI out if needed
+    if (send_to_midi_out)
+    {
+        //make sure channel is set to 0
+        message_buffer[0] = MIDI_PAT;
+        
+        WriteToMidiOutFd (message_buffer, 3);
+        
+    } //if (send_to_midi_out)
 }
 
 //====================================================================================

@@ -227,7 +227,7 @@ void processNoteMessage (bool note_status, uint8_t note_num, uint8_t note_vel)
 //==========================================================
 //Converts a MIDI aftertouch value into a voice aftertouch value
 
-void processAftertouchValue (uint8_t aftertouch_val)
+void VintageVoice::processAftertouchMessage (uint8_t aftertouch_val)
 {
     aftertouchValue = scaleValue (aftertouch_val, 0, 127, 0., 1.);
 }

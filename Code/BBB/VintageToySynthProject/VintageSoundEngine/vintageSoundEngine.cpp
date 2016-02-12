@@ -631,9 +631,17 @@ int main()
                     } //if (input_message_flag == MIDI_CC)
                     
                     //================================
-                    //TODO: Process poly aftertouch messages
-                    //It will be up to vintageBrain to determine which voice the PAT message needs to go to
-                    //(as it handles voice allocation), so here we just need to send it to voice num determined by the channel
+                    //Process poly aftertouch messages
+
+                    else if (input_message_flag == MIDI_PAT)
+                    {
+                        //channel relates to voice number
+                        uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
+                        
+                        vintageVoice[voice_num]->processAftertouchMessage (input_message_buffer[2]);
+                        
+                    } //if (input_message_flag == MIDI_NOTEOFF)
+                    
                     
                 } //if (input_message_flag)
                 
