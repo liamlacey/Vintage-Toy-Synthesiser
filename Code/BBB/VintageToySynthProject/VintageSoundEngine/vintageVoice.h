@@ -59,6 +59,9 @@ public:
 
     void setPatchParamVoiceValue (uint8_t param_num, uint8_t param_user_val);
     
+    double getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, double realtime_mod_val);
+    double boundValue (double val, double min_val, double max_val);
+    
 private:
     
     uint8_t voiceNum;
@@ -77,6 +80,7 @@ private:
     double oscSinePitch, oscTriPitch, oscSawPitch, oscPulsePitch, oscSquarePitch;
     double voiceVelocityValue;
     uint8_t rootNoteNum;
+    double aftertouchValue;
     
     //audio output variables
     double envAmpOut, oscSineOut, oscTriOut, oscSawOut, oscPulseOut, oscSquareOut, oscMixOut, filterOut, envFilterOut, lfoOut, distortionOut, effectsMixOut;

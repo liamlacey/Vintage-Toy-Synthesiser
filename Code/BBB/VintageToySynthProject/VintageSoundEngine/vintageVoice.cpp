@@ -14,6 +14,8 @@
 
 //TODO: when implementing modulation, try and do it in such a way so that, if possible, it would be easy to add further modulation destinations.
 
+//FIXME: can we improve CPU usage by changing some doubles to floats?
+
 #include "vintageVoice.h"
 
 //==========================================================
@@ -36,6 +38,7 @@ VintageVoice::VintageVoice (uint8_t voice_num)
     oscSinePitch = oscTriPitch = oscSawPitch = oscPulsePitch = oscSquarePitch = 200;
     voiceVelocityValue = 1.0;
     rootNoteNum = 60;
+    aftertouchValue = 0;
     
     //init objects
     envAmp.setAttack (patchParameterData[PARAM_AEG_ATTACK].voice_val);
@@ -127,9 +130,36 @@ void VintageVoice::processAudio (double *output)
     
     //==========================================================
     //process filter (pass in oscOut, return filterOut)
-    //TODO: implement cutoff modulation (LFO and PAT) and reso modulation (LFO)
-    filterSvf.setCutoff (patchParameterData[PARAM_FILTER_FREQ].voice_val * envFilterOut);
-    filterSvf.setResonance (patchParameterData[PARAM_FILTER_RESO].voice_val);
+    
+    //FIMXE: how much of this stuff can be done outside of this function (so that it isn't repeated over and over?)
+    
+    //================================
+    //process LFO->cutoff modulation
+    double cutoff_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_FREQ, PARAM_FILTER_FREQ, lfoOut);
+    //process AT->cutoff modulation
+    double cutoff_at_mod_val = getModulatedParamValue (PARAM_MOD_AT_FREQ, PARAM_FILTER_FREQ, aftertouchValue);
+    
+    //Add the cutoff modulation values to the patch value, making sure the produced value is in range
+    double cutoff_val = patchParameterData[PARAM_FILTER_FREQ].voice_val + cutoff_lfo_mod_val + cutoff_at_mod_val;
+    cutoff_val = boundValue (cutoff_val, patchParameterData[PARAM_FILTER_FREQ].voice_min_val, patchParameterData[PARAM_FILTER_FREQ].voice_max_val);
+    
+    //set cutoff value, multipled by filter envelope
+    filterSvf.setCutoff (/*patchParameterData[PARAM_FILTER_FREQ].voice_val*/ cutoff_val * envFilterOut);
+    
+    //================================
+    //process LFO->reso modulation
+    double reso_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_RESO, PARAM_FILTER_RESO, lfoOut);
+    
+    //Add the reso modulation values to the patch value, making sure the produced value is in range
+    double reso_val = patchParameterData[PARAM_FILTER_RESO].voice_val + reso_lfo_mod_val;
+    reso_val = boundValue (reso_val, patchParameterData[PARAM_FILTER_RESO].voice_min_val, patchParameterData[PARAM_FILTER_RESO].voice_max_val);
+    
+    //set resonance value
+    filterSvf.setResonance (/*patchParameterData[PARAM_FILTER_RESO].voice_val*/ reso_val);
+    
+    //================================
+    //Apply the filter
+    
     filterOut = filterSvf.play (oscMixOut,
                                 patchParameterData[PARAM_FILTER_LP_MIX].voice_val,
                                 patchParameterData[PARAM_FILTER_BP_MIX].voice_val,
@@ -143,6 +173,7 @@ void VintageVoice::processAudio (double *output)
     distortionOut = distortion.atanDist (filterOut, 200.0);
     
     //process distortion mix
+    //FIXME: is this (mixing dry and wet) the best way to apply distortion? Or should I just always be running the main output through the distortion function?
     //FIXME: probably need to reduce the disortionOut value so bringing in disortion doesn't increase the overall volume too much
     effectsMixOut = (distortionOut * patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val) + (filterOut * (1.0 - patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val));
     
@@ -189,6 +220,16 @@ void processNoteMessage (bool note_status, uint8_t note_num, uint8_t note_vel)
     //set trigger value of envelopes
     envAmp.trigger = trigger_val;
     envFilter.trigger = trigger_val;
+}
+
+//==========================================================
+//==========================================================
+//==========================================================
+//Converts a MIDI aftertouch value into a voice aftertouch value
+
+void processAftertouchValue (uint8_t aftertouch_val)
+{
+    aftertouchValue = scaleValue (aftertouch_val, 0, 127, 0., 1.);
 }
 
 //==========================================================
@@ -348,3 +389,39 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
 //    
 //    //setPatchParamVoiceValue (PARAM_AEG_AMOUNT, vel_val);
 //}
+
+//==========================================================
+//==========================================================
+//==========================================================
+
+double getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, double realtime_mod_val)
+{
+    double modulated_param_val = 0;
+    
+    if (patchParameterData[mod_depth_param].voice_val > 0)
+    {
+        modulated_param_val = ((patchParameterData[source_param].voice_max_val - patchParameterData[source_param].voice_val) * (realtime_mod_val * patchParameterData[mod_depth_param].voice_val));
+    }
+    else if (patchParameterData[mod_depth_param].voice_val < 0)
+    {
+        modulated_param_val = ((patchParameterData[source_param].voice_val - patchParameterData[source_param].voice_min_val) * (realtime_mod_val * patchParameterData[mod_depth_param].voice_val))
+    }
+    
+    return modulated_param_val;
+}
+
+//==========================================================
+//==========================================================
+//==========================================================
+
+double boundValue (double val, double min_val, double max_val)
+{
+    if (val > max_val)
+        val = max_val;
+    
+    else if (val < min_val)
+        val = min_val;
+    
+    return val;
+}
+
