@@ -716,9 +716,9 @@ static void SignalHandler (int sig)
     
     //Close connnections to serial ports
     if (close (keyboard_fd) == -1)
-        perror("[UPDATE] Closing keyboard_fd file descriptor");
+        perror("[VB] Closing keyboard_fd file descriptor");
     if (close (midi_fd) == -1)
-        perror("[UPDATE] Closing midi_fd file descriptor");
+        perror("[VB] Closing midi_fd file descriptor");
     
     exit(0);
 }

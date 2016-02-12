@@ -10,6 +10,9 @@
       <FileRef
          location = "group:vintageBrain.c">
       </FileRef>
+      <FileRef
+         location = "group:initSerialPorts.c">
+      </FileRef>
    </Group>
    <Group
       location = "group:VintageSoundEngine"
