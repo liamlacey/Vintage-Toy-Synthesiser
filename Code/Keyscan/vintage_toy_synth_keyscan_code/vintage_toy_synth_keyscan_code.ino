@@ -34,6 +34,7 @@ bool noteIsOn[NUM_OF_KEYS] = {false};
 unsigned long triggerTime[NUM_OF_KEYS] = {0};
 int triggerInitVal[NUM_OF_KEYS] = {0};
 bool inInitPhase[NUM_OF_KEYS] = {false};
+byte prevPressureVal[NUM_OF_KEYS] = {0};
 
 bool testLedState = false;
 
@@ -80,7 +81,7 @@ void loop()
       triggerVal[count] = analogRead(A0);
     }
 
-    if (count == 8)
+    else if (count == 8)
     {
       triggerVal[count] = analogRead(A1);
     }
@@ -186,9 +187,11 @@ void loop()
         //Serial.print("Velocity: ");
         //Serial.println(velocity);
       }
-
+      
       inInitPhase[count] = false;
 
+      //if (velocity > 0)
+      //{
       //Send MIDI note-on message
       SendMidiMessage (0x90 + midiChan, midiNote[count], velocity); 
 
@@ -197,6 +200,11 @@ void loop()
       
       //test feedback
       digitalWrite (13, HIGH);
+      //}
+      //else
+      //{
+        //???
+      //}
     }
 
     //========================
@@ -212,44 +220,53 @@ void loop()
       digitalWrite (13, LOW);
     }
 
-    //==========================================
-    //Process poly pressure
-
-      //========================
-    //If we've got a key/pressure value of above the init input val whilst the note is on
-    else if (triggerVal[count] >= (triggerInitVal[count] + PRESSURE_OFFSET) && triggerInitVal[count] != 0 && noteIsOn[count] == true)
-    {
-      //Work out pressure value based on the difference between the current val and the init val...
-      //FIXME: this algorithm only really works for light presses.
-      //If a heavy press, we don't want so much offset - implement an equation for this.
-      
-      //FIXME: make sure a pressure value of 0 is sent on key release if needed
-
-      int init_pressure = triggerInitVal[count] + PRESSURE_OFFSET;
-
-      int pressure = (((127.0 - 0) * (triggerVal[count] - init_pressure)) / (800.0 - init_pressure)) + 0;
-
-      if (pressure > 127)
-      {
-        pressure = 127;
-        //Serial.print("Pressure: ");
-        //Serial.println(pressure);
-      }
-      else if (pressure < 0)
-      {
-        pressure = 0;
-        //Serial.print("Pressure: ");
-        //Serial.println(pressure);
-      }
-      else
-      {
-        //Serial.print("Pressure: ");
-        //Serial.println(pressure);
-      }
-
-      //Send MIDI poly aftertouch message...
-      SendMidiMessage (0xA0 + midiChan, midiNote[count], pressure); 
-    }
+//Disabled aftertouch, as the synth engine on my BBB can't currently handle it, even if it's just being sent to MIDI-out
+//    //==========================================
+//    //Process poly pressure
+//
+//      //========================
+//    //If we've got a key/pressure value of above the init input val whilst the note is on
+//    else if (triggerVal[count] >= (triggerInitVal[count] + PRESSURE_OFFSET) && triggerInitVal[count] != 0 && noteIsOn[count] == true)
+//    {
+//      //Work out pressure value based on the difference between the current val and the init val...
+//      //FIXME: this algorithm only really works for light presses.
+//      //If a heavy press, we don't want so much offset - implement an equation for this.
+//      
+//      //FIXME: make sure a pressure value of 0 is sent on key release if needed
+//
+//      int init_pressure = triggerInitVal[count] + PRESSURE_OFFSET;
+//
+//      int pressure = (((127.0 - 0) * (triggerVal[count] - init_pressure)) / (800.0 - init_pressure)) + 0;
+//
+//      if (pressure > 127)
+//      {
+//        pressure = 127;
+//        //Serial.print("Pressure: ");
+//        //Serial.println(pressure);
+//      }
+//      else if (pressure < 0)
+//      {
+//        pressure = 0;
+//        //Serial.print("Pressure: ");
+//        //Serial.println(pressure);
+//      }
+//      else
+//      {
+//        //Serial.print("Pressure: ");
+//        //Serial.println(pressure);
+//      }
+//      
+//      //if we have a new pressure value for this key
+//      if (pressure != prevPressureVal[count])
+//      {
+//        //Send MIDI poly aftertouch message...
+//        SendMidiMessage (0xA0 + midiChan, midiNote[count], pressure);
+//        
+//        //store the pressure value
+//        prevPressureVal[count] = pressure;
+//      } 
+//      
+//    }
 
     //==========================================
 
