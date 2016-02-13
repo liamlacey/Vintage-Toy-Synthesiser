@@ -81,9 +81,9 @@ int main()
 	err = Pa_OpenDefaultStream( &stream,
 							   0,          /* no input channels */
 							   maxiSettings::channels,          /* stereo output */
-							   paFloat32,  /* 64 bit floating point output */
+							   paInt32/*paFloat32*/,  /* 64 bit floating point output */
 							   maxiSettings::sampleRate,
-							   maxiSettings::bufferSize,        /* frames per buffer, i.e. the number
+							   paFramesPerBufferUnspecified /*maxiSettings::bufferSize*/,        /* frames per buffer, i.e. the number
 												   of sample frames that PortAudio will
 												   request from the callback. Many apps
 												   may want to use
@@ -102,7 +102,7 @@ int main()
 	
 	
 	char input;
-	std::cout << "\nMaximilian is playing ... press <enter> to quit.\n";
+	std::cout << "\nMaximilian is playing (using PortAudio) ... press <enter> to quit.\n";
 	std::cin.get( input );
 	
 	
@@ -141,8 +141,10 @@ int main()
 	}
 	
 	char input;
-	std::cout << "\nMaximilian is playing ... press <enter> to quit.\n";
-	std::cin.get( input );
+	std::cout << "\nMaximilian is playing (using RTAudio RTAUDIO_FLOAT64) ... press <enter> to quit.\n";
+	
+    //FIXME: I think this is the line that stops the main loop for looping!!!
+    std::cin.get( input );
 	
 	try {
 		// Stop the stream
