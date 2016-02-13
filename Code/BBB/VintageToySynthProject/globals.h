@@ -59,11 +59,11 @@
 #define PARAM_OSC_PULSE_LEVEL 17
 #define PARAM_OSC_PULSE_AMOUNT 3
 #define PARAM_OSC_SQUARE_LEVEL 18
-#define PARAM_OSC_SINE_NOTE 32
-#define PARAM_OSC_TRI_NOTE 33
-#define PARAM_OSC_SAW_NOTE 34
-#define PARAM_OSC_PULSE_NOTE 35
-#define PARAM_OSC_SQUARE_NOTE 36
+#define PARAM_OSC_SINE_NOTE 33
+#define PARAM_OSC_TRI_NOTE 34
+#define PARAM_OSC_SAW_NOTE 35
+#define PARAM_OSC_PULSE_NOTE 36
+#define PARAM_OSC_SQUARE_NOTE 37
 #define PARAM_OSC_PHASE_SPREAD 20
 
 //Filter
@@ -151,13 +151,13 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //11
     {}, //12
     {0, 0, 127, true, true, 0, 0., 1.}, //13 - PARAM_FX_DISTORTION_AMOUNT
-    {127, 0, 127, true, true, 1., 0., 1.}, //14 - PARAM_OSC_SINE_LEVEL
-    {127, 0, 127, true, true, 1., 0., 1.}, //15 - PARAM_OSC_TRI_LEVEL
+    {127, 0, 127, true, true, 0., 0., 1.}, //14 - PARAM_OSC_SINE_LEVEL
+    {127, 0, 127, true, true, 0., 0., 1.}, //15 - PARAM_OSC_TRI_LEVEL
     {127, 0, 127, true, true, 1., 0., 1.}, //16 - PARAM_OSC_SAW_LEVEL
-    {127, 0, 127, true, true, 1., 0., 1.}, //17 - PARAM_OSC_PULSE_LEVEL
-    {127, 0, 127, true, true, 1., 0., 1.}, //18 - PARAM_OSC_SQUARE_LEVEL
+    {127, 0, 127, true, true, 0., 0., 1.}, //17 - PARAM_OSC_PULSE_LEVEL
+    {127, 0, 127, true, true, 0., 0., 1.}, //18 - PARAM_OSC_SQUARE_LEVEL
     {5, 0, 127, true, true, 0.1, 0.1, 50.}, //19 - PARAM_FILTER_RESO
-    {0, 0, 127, true, true, 0, 0, 100}, //20 - PARAM_OSC_PHASE_SPREAD //TODO: Check this CC is OK to use
+    {0, 0, 127, true, true, 10, 0, 100}, //20 - PARAM_OSC_PHASE_SPREAD //TODO: Check this CC is OK to use
     {}, //21
     {0, 0, 127, true, true, 0, 0, 5000}, //22 - PARAM_FEG_ATTACK
     {2, 0, 127, true, true, 400, 0, 5000}, //23 - PARAM_FEG_DECAY
@@ -169,12 +169,12 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {0, 0, 127, true, true, 0., 0, 1.}, //29 - PARAM_FILTER_NOTCH_MIX
     {}, //30
     {}, //31
-    {64, 40, 88, true, true, 64, 40, 88}, //32 - PARAM_OSC_SINE_NOTE //TODO: Check this CC is OK to use
-    {64, 40, 88, true, true, 64, 40, 88}, //33 - PARAM_OSC_TRI_NOTE //TODO: Check this CC is OK to use
-    {64, 40, 88, true, true, 64, 40, 88}, //34 - PARAM_OSC_SAW_NOTE //TODO: Check this CC is OK to use
-    {64, 40, 88, true, true, 64, 40, 88}, //35 - PARAM_OSC_PULSE_NOTE //TODO: Check this CC is OK to use
-    {52, 40, 88, true, true, 52, 40, 88}, //36 - PARAM_OSC_SQUARE_NOTE //TODO: Check this CC is OK to use
-    {}, //37
+    {}, //32
+    {64, 40, 88, true, true, 64, 40, 88}, //33 - PARAM_OSC_SINE_NOTE //TODO: Check this CC is OK to use
+    {64, 40, 88, true, true, 64, 40, 88}, //34 - PARAM_OSC_TRI_NOTE //TODO: Check this CC is OK to use
+    {64, 40, 88, true, true, 64, 40, 88}, //35 - PARAM_OSC_SAW_NOTE //TODO: Check this CC is OK to use
+    {64, 40, 88, true, true, 64, 40, 88}, //36 - PARAM_OSC_PULSE_NOTE //TODO: Check this CC is OK to use
+    {52, 40, 88, true, true, 52, 40, 88}, //37 - PARAM_OSC_SQUARE_NOTE //TODO: Check this CC is OK to use
     {}, //38
     {}, //39
     {}, //40
@@ -200,7 +200,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //60
     {}, //61
     {}, //62
-    {127, 0, 127, true, true, 1., -1., 1.}, //63 - PARAM_MOD_VEL_AMP
+    {127, 0, 127, true, true, 0., -1., 1.}, //63 - PARAM_MOD_VEL_AMP
     {}, //64
     {}, //65
     {}, //66

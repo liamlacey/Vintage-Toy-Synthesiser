@@ -73,8 +73,7 @@ void VintageVoice::processAudio (double *output)
     // - random frequency and amounts of osc detuning when a note is pressed
     // - random frequency and amounts of filter cutoff offset when a note is pressed
     // - random frequency and amounts of noise added when a note is pressed
-    // - detuning of the 5 oscillators on each voice
-    // - changing the phase of the oscs so they're different
+    // - detuning of the 5 oscillators on each voice?
     //possible the above three but added periodically throughout a note, not just when pressed.
     
     //==========================================================
@@ -100,20 +99,22 @@ void VintageVoice::processAudio (double *output)
     //==========================================================
     //Amp envelope stuff...
     
-    //process amp envelope with note velocity
-    envAmpOut = envAmp.adsr (patchParameterData[PARAM_AEG_AMOUNT].voice_val * voiceVelocityValue, envAmp.trigger);
+    //process LFO->amp env modulation
+    double amp_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_AMP, PARAM_AEG_AMOUNT, lfoOut);
     
-    //process lfo->amp env depth modulation
-    //FIXME: if patchParameterData[PARAM_MOD_LFO_AMP].voice_val is negative it will double the signal which not what we want.
-    //What do we want a negative depth value to do, and how should it do it?
-    envAmpOut = envAmpOut * (1.0 - (lfoOut * patchParameterData[PARAM_MOD_LFO_AMP].voice_val));
+    //process vel->amp env modulation
+    double amp_vel_mod_val = getModulatedParamValue (PARAM_MOD_VEL_AMP, PARAM_AEG_AMOUNT, voiceVelocityValue);
+    
+    //Add the amp modulation values to the patch value, making sure the produced value is in range
+    double amp_val = patchParameterData[PARAM_AEG_AMOUNT].voice_val + amp_lfo_mod_val + amp_vel_mod_val;
+    amp_val = boundValue (amp_val, patchParameterData[PARAM_AEG_AMOUNT].voice_min_val, patchParameterData[PARAM_AEG_AMOUNT].voice_max_val);
+    
+    //generate the amp evelope output using amp_val as the envelope amount
+    envAmpOut = envAmp.adsr (amp_val, envAmp.trigger);
     
     //==========================================================
     //process filter envelope
     envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
-    
-    //==========================================================
-    //TODO: implement all lfo modulation
     
     //TODO: implement all aftertouch modulation
     
@@ -137,25 +138,25 @@ void VintageVoice::processAudio (double *output)
     //process LFO->cutoff modulation
     double cutoff_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_FREQ, PARAM_FILTER_FREQ, lfoOut);
     //process AT->cutoff modulation
-    double cutoff_at_mod_val = getModulatedParamValue (PARAM_MOD_AT_FREQ, PARAM_FILTER_FREQ, aftertouchValue);
+    //double cutoff_at_mod_val = getModulatedParamValue (PARAM_MOD_AT_FREQ, PARAM_FILTER_FREQ, aftertouchValue);
     
     //Add the cutoff modulation values to the patch value, making sure the produced value is in range
-    double cutoff_val = patchParameterData[PARAM_FILTER_FREQ].voice_val + cutoff_lfo_mod_val + cutoff_at_mod_val;
+    double cutoff_val = patchParameterData[PARAM_FILTER_FREQ].voice_val + cutoff_lfo_mod_val /* + cutoff_at_mod_val*/;
     cutoff_val = boundValue (cutoff_val, patchParameterData[PARAM_FILTER_FREQ].voice_min_val, patchParameterData[PARAM_FILTER_FREQ].voice_max_val);
     
     //set cutoff value, multipled by filter envelope
-    filterSvf.setCutoff (/*patchParameterData[PARAM_FILTER_FREQ].voice_val*/ cutoff_val * envFilterOut);
+    filterSvf.setCutoff (cutoff_val * envFilterOut);
     
     //================================
     //process LFO->reso modulation
     double reso_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_RESO, PARAM_FILTER_RESO, lfoOut);
     
-    //Add the reso modulation values to the patch value, making sure the produced value is in range
+    //Add the reso modulation value to the patch value, making sure the produced value is in range
     double reso_val = patchParameterData[PARAM_FILTER_RESO].voice_val + reso_lfo_mod_val;
     reso_val = boundValue (reso_val, patchParameterData[PARAM_FILTER_RESO].voice_min_val, patchParameterData[PARAM_FILTER_RESO].voice_max_val);
     
     //set resonance value
-    filterSvf.setResonance (/*patchParameterData[PARAM_FILTER_RESO].voice_val*/ reso_val);
+    filterSvf.setResonance (reso_val);
     
     //================================
     //Apply the filter
@@ -216,6 +217,13 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         lfo.phaseReset(0.0);
         
     } //if (note_status == true)
+    
+    //if a note-off
+    else if (note_status == false)
+    {
+        //reset aftertouch value
+        aftertouchValue = 0;
+    }
     
     //set trigger value of envelopes
     envAmp.trigger = note_status;
