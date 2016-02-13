@@ -51,7 +51,6 @@ extern "C" {
 float chandiv= 1;
 
 int maxiSettings::sampleRate = 44100;
-//FIXME: could I reduce CPU usage by dropping channels to 1? At the moment both channels are the same.
 int maxiSettings::channels = 2;
 //int maxiSettings::bufferSize = 1024;
 //int maxiSettings::bufferSize = 512;

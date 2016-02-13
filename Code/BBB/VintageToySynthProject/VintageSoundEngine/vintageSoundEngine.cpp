@@ -150,8 +150,10 @@ int routing	(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
         }
         
         //set output
-        output[0] = mix;
-        output[1] = mix;
+        for (uint8_t i = 0; i < maxiSettings::channels; i++)
+        {
+            output[i] = mix;
+        }
         
         //Trying out individual distortions per each voice to see if this sounds better.
         //May be too CPU intensive though.

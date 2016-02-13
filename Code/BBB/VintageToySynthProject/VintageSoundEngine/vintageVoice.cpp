@@ -78,6 +78,8 @@ void VintageVoice::processAudio (double *output)
     // - random frequency and amounts of noise added when a note is pressed
     // - detuning of the 5 oscillators on each voice?
     //possible the above three but added periodically throughout a note, not just when pressed.
+    //If the above things are only done when a note is pressed, they could probably
+    //be done within processNoteMessage instead of here
     
     //==========================================================
     //process LFO...
@@ -180,9 +182,11 @@ void VintageVoice::processAudio (double *output)
     effectsMixOut = (distortionOut * patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val) + (filterOut * (1.0 - patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val));
     
     //==========================================================
-    //apply amp envelope, making both the L and R channels the same (pass in filterOut, return output)
-    output[0] = effectsMixOut * envAmpOut;
-    output[1] = output[0];
+    //apply amp envelope, making all channels the same (pass in filterOut, return output)
+    for (uint8_t i = 0; i < maxiSettings::channels; i++)
+    {
+        output[i] = effectsMixOut * envAmpOut;
+    }
 }
 
 //==========================================================
