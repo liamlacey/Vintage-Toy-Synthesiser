@@ -189,7 +189,7 @@ void VintageVoice::processAudio (double *output)
 //Function that does everything that needs to be done when a new
 //note-on or note-off message is sent to the voice.
 
-void processNoteMessage (bool note_status, uint8_t note_num, uint8_t note_vel)
+void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8_t note_vel)
 {
     //if a note-on
     if (note_status == true)
@@ -218,8 +218,8 @@ void processNoteMessage (bool note_status, uint8_t note_num, uint8_t note_vel)
     } //if (note_status == true)
     
     //set trigger value of envelopes
-    envAmp.trigger = trigger_val;
-    envFilter.trigger = trigger_val;
+    envAmp.trigger = note_status;
+    envFilter.trigger = note_status;
 }
 
 //==========================================================
@@ -294,26 +294,31 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
     
     else if (param_num == PARAM_OSC_SINE_NOTE)
     {
+        convert mtof;
         oscSinePitch = mtof.mtof (rootNoteNum + (patchParameterData[param_num].voice_val - 64));
     }
     
     else if (param_num == PARAM_OSC_TRI_NOTE)
     {
+        convert mtof;
         oscTriPitch = mtof.mtof (rootNoteNum + (patchParameterData[param_num].voice_val - 64));
     }
     
     else if (param_num == PARAM_OSC_SAW_NOTE)
     {
+        convert mtof;
         oscSawPitch = mtof.mtof (rootNoteNum + (patchParameterData[param_num].voice_val - 64));
     }
     
     else if (param_num == PARAM_OSC_PULSE_NOTE)
     {
+        convert mtof;
         oscPulsePitch = mtof.mtof (rootNoteNum + (patchParameterData[param_num].voice_val - 64));
     }
     
     else if (param_num == PARAM_OSC_SQUARE_NOTE)
     {
+        convert mtof;
         oscSquarePitch = mtof.mtof (rootNoteNum + (patchParameterData[param_num].voice_val - 64));
     }
     
@@ -394,7 +399,7 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
 //==========================================================
 //==========================================================
 
-double getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, double realtime_mod_val)
+double VintageVoice::getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, double realtime_mod_val)
 {
     double modulated_param_val = 0;
     
@@ -404,7 +409,7 @@ double getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, do
     }
     else if (patchParameterData[mod_depth_param].voice_val < 0)
     {
-        modulated_param_val = ((patchParameterData[source_param].voice_val - patchParameterData[source_param].voice_min_val) * (realtime_mod_val * patchParameterData[mod_depth_param].voice_val))
+        modulated_param_val = ((patchParameterData[source_param].voice_val - patchParameterData[source_param].voice_min_val) * (realtime_mod_val * patchParameterData[mod_depth_param].voice_val));
     }
     
     return modulated_param_val;
@@ -414,7 +419,7 @@ double getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, do
 //==========================================================
 //==========================================================
 
-double boundValue (double val, double min_val, double max_val)
+double VintageVoice::boundValue (double val, double min_val, double max_val)
 {
     if (val > max_val)
         val = max_val;
