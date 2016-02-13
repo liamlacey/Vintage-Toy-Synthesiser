@@ -468,7 +468,7 @@ int main()
 	err = Pa_OpenDefaultStream( &stream,
 							   0,          /* no input channels */
 							   maxiSettings::channels,          /* stereo output */
-							   paInt32/*paFloat32*/,  /* 64 bit floating point output */
+							   paFloat64,  /* 64 bit floating point output */
 							   maxiSettings::sampleRate,
 							   paFramesPerBufferUnspecified /*maxiSettings::bufferSize*/,        /* frames per buffer, i.e. the number
 												   of sample frames that PortAudio will

@@ -644,7 +644,7 @@ void ProcessPolyAftertouchMessage (uint8_t message_buffer[],
     for (uint8_t voice = 0; voice < num_of_voices; voice++)
     {
         //send the aftertouch message to the sound engine, using channel to signify voice number
-        uint8_t pat_buffer[3] = {MIDI_PAT + voice_list[voice], message_buffer[1], message_buffer[2]};
+        uint8_t pat_buffer[3] = {MIDI_PAT + voice_list[voice] - 1, message_buffer[1], message_buffer[2]};
         SendToSoundEngine (pat_buffer, 3, sock, sound_engine_sock_addr);
         
     } //for (uint8_t voice = 0; voice < num_of_voices; voice++)
@@ -879,6 +879,20 @@ int main (void)
                         #endif
                         
                         ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], &voice_alloc_data, true, sock, sound_engine_sock_addr);
+                        
+                    } //else if (input_message_flag == MIDI_NOTEOFF)
+                    
+                    else if (input_message_flag == MIDI_PAT)
+                    {
+                        #ifdef DEBUG
+                        printf ("[VB] Received poly aftertouch message from keyboard\r\n");
+                        #endif
+                        
+                        ProcessPolyAftertouchMessage (input_message_buffer[INPUT_SRC_KEYBOARD],
+                                                      &voice_alloc_data,
+                                                      true,
+                                                      sock,
+                                                      sound_engine_sock_addr);
                         
                     } //else if (input_message_flag == MIDI_NOTEOFF)
                     
