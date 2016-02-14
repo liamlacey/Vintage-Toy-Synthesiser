@@ -77,9 +77,12 @@ private:
     
     //other parameters
     double oscSinePitch, oscTriPitch, oscSawPitch, oscPulsePitch, oscSquarePitch;
+    
     double voiceVelocityValue;
     uint8_t rootNoteNum;
     double aftertouchValue;
+    
+    double velAmpModVal, velFreqModVal, velResoModVal;
     
     //audio output variables
     double envAmpOut, oscSineOut, oscTriOut, oscSawOut, oscPulseOut, oscSquareOut, oscMixOut, filterOut, envFilterOut, lfoOut, distortionOut, effectsMixOut;

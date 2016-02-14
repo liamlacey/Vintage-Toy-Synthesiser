@@ -12,10 +12,6 @@
 
 //FIXME: do I need to do any thread locking when setting variables that are accessed in processAudio (called by the audio callback function)?
 
-//TODO: when implementing modulation, try and do it in such a way so that, if possible, it would be easy to add further modulation destinations.
-
-//FIXME: can we improve CPU usage by changing some doubles to floats?
-
 #include "vintageVoice.h"
 
 //==========================================================
@@ -36,9 +32,12 @@ VintageVoice::VintageVoice (uint8_t voice_num)
     }
     
     oscSinePitch = oscTriPitch = oscSawPitch = oscPulsePitch = oscSquarePitch = 200;
+    
     voiceVelocityValue = 1.0;
     rootNoteNum = 60;
     aftertouchValue = 0;
+    
+    velAmpModVal = velFreqModVal = velResoModVal = 0;
     
     //init objects
     envAmp.setAttack (patchParameterData[PARAM_AEG_ATTACK].voice_val);
@@ -68,18 +67,8 @@ void VintageVoice::processAudio (double *output)
     //==========================================================
     //FIXME: is there a way of only processing this function if the ampEnv is currently running?
     
-    //FIMXE: how much of this stuff can be done outside of this function (so that it isn't repeated over and over?),
-    //for example only when notes or param messages come in
-    
-    //TODO: implement vintage mode amount.
-    //This will involve adding things like:
-    // - random frequency and amounts of osc detuning when a note is pressed
-    // - random frequency and amounts of filter cutoff offset when a note is pressed
-    // - random frequency and amounts of noise added when a note is pressed
-    // - detuning of the 5 oscillators on each voice?
-    //possible the above three but added periodically throughout a note, not just when pressed.
-    //If the above things are only done when a note is pressed, they could probably
-    //be done within processNoteMessage instead of here
+    //FIXME: make sure only stuff that NEEDS to be done in here is done in here.
+    //If possibly do stuff on note and param input events instead
     
     //==========================================================
     //process LFO...
@@ -107,11 +96,8 @@ void VintageVoice::processAudio (double *output)
     //process LFO->amp env modulation
     double amp_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_AMP, PARAM_AEG_AMOUNT, lfoOut);
     
-    //process vel->amp env modulation
-    double amp_vel_mod_val = getModulatedParamValue (PARAM_MOD_VEL_AMP, PARAM_AEG_AMOUNT, voiceVelocityValue);
-    
     //Add the amp modulation values to the patch value, making sure the produced value is in range
-    double amp_val = patchParameterData[PARAM_AEG_AMOUNT].voice_val + amp_lfo_mod_val + amp_vel_mod_val;
+    double amp_val = patchParameterData[PARAM_AEG_AMOUNT].voice_val + amp_lfo_mod_val + velAmpModVal;
     amp_val = boundValue (amp_val, patchParameterData[PARAM_AEG_AMOUNT].voice_min_val, patchParameterData[PARAM_AEG_AMOUNT].voice_max_val);
     
     //generate the amp evelope output using amp_val as the envelope amount
@@ -120,8 +106,6 @@ void VintageVoice::processAudio (double *output)
     //==========================================================
     //process filter envelope
     envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
-    
-    //TODO: implement all aftertouch modulation
     
     //==========================================================
     //process oscillators
@@ -140,11 +124,9 @@ void VintageVoice::processAudio (double *output)
     //================================
     //process LFO->cutoff modulation
     double cutoff_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_FREQ, PARAM_FILTER_FREQ, lfoOut);
-    //process AT->cutoff modulation
-    //double cutoff_at_mod_val = getModulatedParamValue (PARAM_MOD_AT_FREQ, PARAM_FILTER_FREQ, aftertouchValue);
     
     //Add the cutoff modulation values to the patch value, making sure the produced value is in range
-    double cutoff_val = patchParameterData[PARAM_FILTER_FREQ].voice_val + cutoff_lfo_mod_val /* + cutoff_at_mod_val*/;
+    double cutoff_val = patchParameterData[PARAM_FILTER_FREQ].voice_val + cutoff_lfo_mod_val + velFreqModVal;
     cutoff_val = boundValue (cutoff_val, patchParameterData[PARAM_FILTER_FREQ].voice_min_val, patchParameterData[PARAM_FILTER_FREQ].voice_max_val);
     
     //set cutoff value, multipled by filter envelope
@@ -154,8 +136,8 @@ void VintageVoice::processAudio (double *output)
     //process LFO->reso modulation
     double reso_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_RESO, PARAM_FILTER_RESO, lfoOut);
     
-    //Add the reso modulation value to the patch value, making sure the produced value is in range
-    double reso_val = patchParameterData[PARAM_FILTER_RESO].voice_val + reso_lfo_mod_val;
+    //Add the reso modulation values to the patch value, making sure the produced value is in range
+    double reso_val = patchParameterData[PARAM_FILTER_RESO].voice_val + reso_lfo_mod_val + velResoModVal;
     reso_val = boundValue (reso_val, patchParameterData[PARAM_FILTER_RESO].voice_min_val, patchParameterData[PARAM_FILTER_RESO].voice_max_val);
     
     //set resonance value
@@ -197,12 +179,15 @@ void VintageVoice::processAudio (double *output)
 
 void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8_t note_vel)
 {
+    //==========================================================
     //if a note-on
     if (note_status == true)
     {
+        //============================
         //store the root note num
         rootNoteNum = note_num;
         
+        //============================
         //set the oscillator pitches
         convert mtof;
         oscSinePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_SINE_NOTE].voice_val - 64));
@@ -211,14 +196,32 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         oscPulsePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_PULSE_NOTE].voice_val - 64));
         oscSquarePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_SQUARE_NOTE].voice_val - 64));
         
+        //TODO: vintage amount paramater - randomly detune each oscillator and/or the overall voice tuning
+        //on each note press, with the vintage amount value determining the amount of detuning.
+        
+        //============================
         //set the note velocity
         voiceVelocityValue = scaleValue (note_vel, 0, 127, 0., 1.);
         
+        //============================
+        //work out velocity modulation values
+        
+        //vel->amp env modulation
+        velAmpModVal = getModulatedParamValue (PARAM_MOD_VEL_AMP, PARAM_AEG_AMOUNT, voiceVelocityValue);
+        
+        //vel->cutoff modulation
+        velFreqModVal = getModulatedParamValue (PARAM_MOD_VEL_FREQ, PARAM_FILTER_FREQ, voiceVelocityValue);
+        
+        //vel->resonance modulation
+        velResoModVal = getModulatedParamValue (PARAM_MOD_VEL_RESO, PARAM_FILTER_RESO, voiceVelocityValue);
+        
+        //============================
         //reset LFO osc phase
         lfo.phaseReset(0.0);
         
     } //if (note_status == true)
     
+    //==========================================================
     //if a note-off
     else if (note_status == false)
     {
@@ -226,6 +229,7 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         aftertouchValue = 0;
     }
     
+    //==========================================================
     //set trigger value of envelopes
     envAmp.trigger = note_status;
     envFilter.trigger = note_status;
@@ -342,6 +346,24 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
         oscSaw.phaseReset (patchParameterData[param_num].voice_val * 0.004);
         oscPulse.phaseReset (patchParameterData[param_num].voice_val * 0.006);
         oscSquare.phaseReset (patchParameterData[param_num].voice_val * 0.008);
+    }
+    
+    else if (param_num == PARAM_MOD_VEL_AMP)
+    {
+        //vel->amp env modulation
+        velAmpModVal = getModulatedParamValue (param_num, PARAM_AEG_AMOUNT, voiceVelocityValue);
+    }
+    
+    else if (param_num == PARAM_MOD_VEL_FREQ)
+    {
+        //vel->amp env modulation
+        velAmpModVal = getModulatedParamValue (param_num, PARAM_FILTER_FREQ, voiceVelocityValue);
+    }
+    
+    else if (param_num == PARAM_MOD_VEL_RESO)
+    {
+        //vel->amp env modulation
+        velAmpModVal = getModulatedParamValue (param_num, PARAM_FILTER_RESO, voiceVelocityValue);
     }
 }
 

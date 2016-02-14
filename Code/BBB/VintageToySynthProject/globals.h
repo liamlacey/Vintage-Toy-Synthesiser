@@ -102,9 +102,12 @@
 
 //Modulation depths
 #define PARAM_MOD_VEL_AMP 63
+#define PARAM_MOD_VEL_FREQ 109
+#define PARAM_MOD_VEL_RESO 110
 #define PARAM_MOD_LFO_AMP 58
 #define PARAM_MOD_LFO_FREQ 112
 #define PARAM_MOD_LFO_RESO 56
+//Not currently used
 #define PARAM_MOD_AT_FREQ 90
 #define PARAM_MOD_AT_LFO_DEPTH 89
 
@@ -144,7 +147,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //4
     {}, //5
     {}, //6
-    {127, 0, 127, true, true, 1., 0., 1.}, //7 - PARAM_AEG_AMOUNT
+    {127, 0, 127, true, true, 0.6, 0., 1.}, //7 - PARAM_AEG_AMOUNT
     {}, //8
     {64, 0, 127, false, false, 50, 0, 100}, //9 - PARAM_GLOBAL_VOLUME
     {}, //10
@@ -200,7 +203,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //60
     {}, //61
     {}, //62
-    {127, 0, 127, true, true, 0., -1., 1.}, //63 - PARAM_MOD_VEL_AMP
+    {64, 0, 127, true, true, 0., -1., 1.}, //63 - PARAM_MOD_VEL_AMP
     {}, //64
     {}, //65
     {}, //66
@@ -246,8 +249,8 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {64, 58, 70, false, true, 0, 0, 0}, //106 - PARAM_KEYS_TRANSPOSE
     {0, 0, 127, false, true, 0, 0, 0}, //107 - PARAM_GLOBAL_VINTAGE_AMOUNT
     {}, //108
-    {}, //109
-    {}, //110
+    {64, 0, 127, true, true, 0., -1., 1.}, //109 - PARAM_MOD_VEL_FREQ
+    {64, 0, 127, true, true, 0., -1., 1.}, //110 - PARAM_MOD_VEL_RESO
     {}, //111
     {64, 0, 127, true, true, 0., -1., 1.}, //112 - PARAM_MOD_LFO_FREQ
     {}, //113
