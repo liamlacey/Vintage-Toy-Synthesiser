@@ -64,8 +64,6 @@ VintageVoice::~VintageVoice()
 
 void VintageVoice::processAudio (double *output)
 {
-    //==========================================================
-    //FIXME: is there a way of only processing this function if the ampEnv is currently running?
     
     //FIXME: make sure only stuff that NEEDS to be done in here is done in here.
     //If possibly do stuff on note and param input events instead
@@ -103,72 +101,81 @@ void VintageVoice::processAudio (double *output)
     //generate the amp evelope output using amp_val as the envelope amount
     envAmpOut = envAmp.adsr (amp_val, envAmp.trigger);
     
-    //==========================================================
-    //process filter envelope
-    envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
+    //if the output of the amp envelope is above 0, continue processing audio.
+    //else don't, as it is just silence.
+    //FIXME: will this work? What if LFO is creating tremolo that causes this to be true even when the note isn't over - will this make weird things happen?
     
-    //==========================================================
-    //process oscillators
-    oscSineOut = oscSine.sinewave (oscSinePitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;
-    oscTriOut = (oscTri.triangle (oscTriPitch) * patchParameterData[PARAM_OSC_TRI_LEVEL].voice_val);
-    oscSawOut = (oscSaw.saw (oscSawPitch) * patchParameterData[PARAM_OSC_SAW_LEVEL].voice_val);
-    oscPulseOut = (oscPulse.pulse (oscPulsePitch, patchParameterData[PARAM_OSC_PULSE_AMOUNT].voice_val) * patchParameterData[PARAM_OSC_PULSE_LEVEL].voice_val);
-    oscSquareOut = (oscSquare.square (oscSquarePitch) * patchParameterData[PARAM_OSC_SQUARE_LEVEL].voice_val);
-    
-    //mix oscillators together
-    oscMixOut = (oscSineOut + oscTriOut + oscSawOut + oscPulseOut + oscSquareOut) / 5.;
-    
-    //==========================================================
-    //process filter (pass in oscOut, return filterOut)
-    
-    //================================
-    //process LFO->cutoff modulation
-    double cutoff_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_FREQ, PARAM_FILTER_FREQ, lfoOut);
-    
-    //Add the cutoff modulation values to the patch value, making sure the produced value is in range
-    double cutoff_val = patchParameterData[PARAM_FILTER_FREQ].voice_val + cutoff_lfo_mod_val + velFreqModVal;
-    cutoff_val = boundValue (cutoff_val, patchParameterData[PARAM_FILTER_FREQ].voice_min_val, patchParameterData[PARAM_FILTER_FREQ].voice_max_val);
-    
-    //set cutoff value, multipled by filter envelope
-    filterSvf.setCutoff (cutoff_val * envFilterOut);
-    
-    //================================
-    //process LFO->reso modulation
-    double reso_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_RESO, PARAM_FILTER_RESO, lfoOut);
-    
-    //Add the reso modulation values to the patch value, making sure the produced value is in range
-    double reso_val = patchParameterData[PARAM_FILTER_RESO].voice_val + reso_lfo_mod_val + velResoModVal;
-    reso_val = boundValue (reso_val, patchParameterData[PARAM_FILTER_RESO].voice_min_val, patchParameterData[PARAM_FILTER_RESO].voice_max_val);
-    
-    //set resonance value
-    filterSvf.setResonance (reso_val);
-    
-    //================================
-    //Apply the filter
-    
-    filterOut = filterSvf.play (oscMixOut,
-                                patchParameterData[PARAM_FILTER_LP_MIX].voice_val,
-                                patchParameterData[PARAM_FILTER_BP_MIX].voice_val,
-                                patchParameterData[PARAM_FILTER_HP_MIX].voice_val,
-                                patchParameterData[PARAM_FILTER_NOTCH_MIX].voice_val);
-    
-    
-    //==========================================================
-    //process distortion...
-    //FIXME: should PARAM_FX_DISTORTION_AMOUNT also change the shape of the distortion?
-    distortionOut = distortion.atanDist (filterOut, 200.0);
-    
-    //process distortion mix
-    //FIXME: is this (mixing dry and wet) the best way to apply distortion? Or should I just always be running the main output through the distortion function?
-    //FIXME: probably need to reduce the disortionOut value so bringing in disortion doesn't increase the overall volume too much
-    effectsMixOut = (distortionOut * patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val) + (filterOut * (1.0 - patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val));
-    
-    //==========================================================
-    //apply amp envelope, making all channels the same (pass in filterOut, return output)
-    for (uint8_t i = 0; i < maxiSettings::channels; i++)
+    if (envAmpOut > 0)
     {
-        output[i] = effectsMixOut * envAmpOut;
-    }
+        //==========================================================
+        //process filter envelope
+        envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
+        
+        //==========================================================
+        //process oscillators
+        oscSineOut = oscSine.sinewave (oscSinePitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;
+        oscTriOut = (oscTri.triangle (oscTriPitch) * patchParameterData[PARAM_OSC_TRI_LEVEL].voice_val);
+        oscSawOut = (oscSaw.saw (oscSawPitch) * patchParameterData[PARAM_OSC_SAW_LEVEL].voice_val);
+        oscPulseOut = (oscPulse.pulse (oscPulsePitch, patchParameterData[PARAM_OSC_PULSE_AMOUNT].voice_val) * patchParameterData[PARAM_OSC_PULSE_LEVEL].voice_val);
+        oscSquareOut = (oscSquare.square (oscSquarePitch) * patchParameterData[PARAM_OSC_SQUARE_LEVEL].voice_val);
+        
+        //mix oscillators together
+        oscMixOut = (oscSineOut + oscTriOut + oscSawOut + oscPulseOut + oscSquareOut) / 5.;
+        
+        //==========================================================
+        //process filter (pass in oscOut, return filterOut)
+        
+        //================================
+        //process LFO->cutoff modulation
+        double cutoff_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_FREQ, PARAM_FILTER_FREQ, lfoOut);
+        
+        //Add the cutoff modulation values to the patch value, making sure the produced value is in range
+        double cutoff_val = patchParameterData[PARAM_FILTER_FREQ].voice_val + cutoff_lfo_mod_val + velFreqModVal;
+        cutoff_val = boundValue (cutoff_val, patchParameterData[PARAM_FILTER_FREQ].voice_min_val, patchParameterData[PARAM_FILTER_FREQ].voice_max_val);
+        
+        //set cutoff value, multipled by filter envelope
+        filterSvf.setCutoff (cutoff_val * envFilterOut);
+        
+        //================================
+        //process LFO->reso modulation
+        double reso_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_RESO, PARAM_FILTER_RESO, lfoOut);
+        
+        //Add the reso modulation values to the patch value, making sure the produced value is in range
+        double reso_val = patchParameterData[PARAM_FILTER_RESO].voice_val + reso_lfo_mod_val + velResoModVal;
+        reso_val = boundValue (reso_val, patchParameterData[PARAM_FILTER_RESO].voice_min_val, patchParameterData[PARAM_FILTER_RESO].voice_max_val);
+        
+        //set resonance value
+        filterSvf.setResonance (reso_val);
+        
+        //================================
+        //Apply the filter
+        
+        filterOut = filterSvf.play (oscMixOut,
+                                    patchParameterData[PARAM_FILTER_LP_MIX].voice_val,
+                                    patchParameterData[PARAM_FILTER_BP_MIX].voice_val,
+                                    patchParameterData[PARAM_FILTER_HP_MIX].voice_val,
+                                    patchParameterData[PARAM_FILTER_NOTCH_MIX].voice_val);
+        
+        
+        //==========================================================
+        //process distortion...
+        //FIXME: should PARAM_FX_DISTORTION_AMOUNT also change the shape of the distortion?
+        distortionOut = distortion.atanDist (filterOut, 200.0);
+        
+        //process distortion mix
+        //FIXME: is this (mixing dry and wet) the best way to apply distortion? Or should I just always be running the main output through the distortion function?
+        //FIXME: probably need to reduce the disortionOut value so bringing in disortion doesn't increase the overall volume too much
+        effectsMixOut = (distortionOut * patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val) + (filterOut * (1.0 - patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val));
+        
+        //==========================================================
+        //apply amp envelope, making all channels the same (pass in effectsMixOut, return output)
+        for (uint8_t i = 0; i < maxiSettings::channels; i++)
+        {
+            output[i] = effectsMixOut * envAmpOut;
+        }
+        
+    } // if (envAmpOut > 0)
+    
 }
 
 //==========================================================
