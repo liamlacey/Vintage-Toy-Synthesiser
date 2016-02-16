@@ -23,7 +23,7 @@
 //==========================================
 
 //The number of pots/switches attached
-const byte NUM_OF_CONTROLS = 39;
+const byte NUM_OF_CONTROLS = 1;
 
 //The previous anologue value received from each control
 int prevAnalogueValue[NUM_OF_CONTROLS] = {0};
@@ -47,9 +47,8 @@ ControlParamData controlParamData[NUM_OF_CONTROLS] =
 {
   //TODO: for each control/input, lists the param data
   
-   {.cc_num = 24, .cc_min_val = 0, .cc_max_val = 127}, //1 - example param
+   {.cc_num = 74, .cc_min_val = 0, .cc_max_val = 127}, //1 - example param
 };
-
 
 void setup()
 {
@@ -178,7 +177,7 @@ byte ConvertControlValToParamVal (byte control_num)
 {
   byte result;
 
-  result = (((controlParamData[control_num].cc_max_val - controlParamData[control_num].cc_min_val) * prevAnalogueValue[control_num]) / 1023.0) + controlParamData[control_num].cc_min_val;
+  result = ((((float)controlParamData[control_num].cc_max_val - (float)controlParamData[control_num].cc_min_val) * (float)prevAnalogueValue[control_num]) / 1023.0) + (float)controlParamData[control_num].cc_min_val;
 
   return result;
 }
@@ -191,6 +190,7 @@ byte ConvertControlValToParamVal (byte control_num)
 void SendMidiMessage (byte cmd_byte, byte data_byte_1, byte data_byte_2) 
 {
   byte buf[3] = {cmd_byte, data_byte_1, data_byte_2};
+  
   Serial.write (buf, 3);
   
 //  Serial.print(buf[0]);
