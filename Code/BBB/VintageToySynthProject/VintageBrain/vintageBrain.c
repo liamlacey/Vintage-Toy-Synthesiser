@@ -50,11 +50,13 @@
 
 #define KEYBOARD_SERIAL_PATH "/dev/ttyO1"
 #define MIDI_SERIAL_PATH "/dev/ttyO2"
+#define PANEL_SERIAL_PATH "/dev/ttyO4"
 
 enum InputSourceTypes
 {
     INPUT_SRC_KEYBOARD = 0,
     INPUT_SRC_MIDI_IN,
+    INPUT_SRC_PANEL,
 
     NUM_OF_INPUT_SRC_TYPES
 };
@@ -62,7 +64,7 @@ enum InputSourceTypes
 #define NUM_OF_POLL_FDS NUM_OF_INPUT_SRC_TYPES
 #define POLL_TIME -1
 
-int keyboard_fd, midi_fd;
+int keyboard_fd, midi_fd, panel_fd;
 
 //Struct that stores info about the current/previous note for a voice
 typedef struct
@@ -791,6 +793,9 @@ int main (void)
     //open UART2 device file for read/write to MIDI interface with baud rate of 31250
     midi_fd = SetupSerialPort (MIDI_SERIAL_PATH, 31250, true);
     
+    //open UART4 device file for read/write to panel with baud rate of 38400
+    panel_fd = SetupSerialPort (PANEL_SERIAL_PATH, 38400, true);
+    
     //===============================================================
     //Set up sockets for comms with the vintageSoundEngine application
     
@@ -816,11 +821,12 @@ int main (void)
     //===============================================================
     //Set up poll() stuff for waiting for events on file descriptors
     
-    //Change #define NUM_OF_POLL_FDS if adding more things to poll
     poll_fds[INPUT_SRC_KEYBOARD].fd = keyboard_fd;
     poll_fds[INPUT_SRC_KEYBOARD].events = POLLIN;
     poll_fds[INPUT_SRC_MIDI_IN].fd = midi_fd;
     poll_fds[INPUT_SRC_MIDI_IN].events = POLLIN;
+    poll_fds[INPUT_SRC_PANEL].fd = panel_fd;
+    poll_fds[INPUT_SRC_PANEL].events = POLLIN;
     
     //==========================================================
     //Enter main loop, and just read any data that comes in over the serial ports
@@ -974,6 +980,50 @@ int main (void)
             } //if (ret)
             
         } //if (poll_fds[INPUT_SRC_MIDI_IN].revents & POLLIN)
+        
+        //==========================================================
+        //Reading data from the panel serial port
+        
+        //if an event has happened on the panel serial file descriptor
+        //FIXME: can this be an else if?
+        if (poll_fds[INPUT_SRC_PANEL].revents & POLLIN)
+        {
+            //attempt to read a byte from the panel device file
+            ret = read (panel_fd, serial_input_buf, 1);
+            
+            //if read something
+            if (ret != -1)
+            {
+                //display the read byte
+                //printf ("[VB] Byte read from panel: %d\n", serial_input_buf[0]);
+                
+                //process the read byte
+                uint8_t input_message_flag = ProcInputByte (serial_input_buf[0],
+                                                            input_message_buffer[INPUT_SRC_PANEL],
+                                                            &input_message_counter[INPUT_SRC_PANEL],
+                                                            &input_message_running_status_value[INPUT_SRC_PANEL],
+                                                            &input_message_prev_cc_num[INPUT_SRC_PANEL]);
+                
+                //if we have received a full MIDI message
+                if (input_message_flag)
+                {
+                    //printf ("[VB] Received full MIDI message from panel with status byte %d\n", input_message_buffer[INPUT_SRC_PANEL][0]);
+                    
+                    if (input_message_flag == MIDI_CC)
+                    {
+                        #ifdef DEBUG
+                        printf ("[VB] Received CC message from panel\r\n");
+                        #endif
+                        
+                        ProcessCcMessage (input_message_buffer[INPUT_SRC_PANEL], patchParameterData, true, sock, sound_engine_sock_addr);
+                        
+                    } //else if (input_message_flag == MIDI_CC)
+                    
+                } //if (input_message_flag)
+                
+            } //if (ret)
+            
+        } //if (poll_fds[INPUT_SRC_PANEL].revents & POLLIN)
         
         
         //test sending data to socket
