@@ -868,25 +868,42 @@ int main (void)
                 {
                     //printf ("[VB] Received full MIDI message from keyboard with status byte %d\n", input_message_buffer[INPUT_SRC_KEYBOARD][0]);
                     
-                    if (input_message_flag == MIDI_NOTEON)
+                    if (input_message_flag == MIDI_NOTEON || input_message_flag == MIDI_NOTEOFF)
                     {
                         #ifdef DEBUG
-                        printf ("[VB] Received note-on message from keyboard\r\n");
+                        printf ("[VB] Received note-on/off message from keyboard\r\n");
                         #endif
                         
+                        //Set note number based on keyboard scale, octave, and transpose settings...
+                        int16_t note_num;
+                        
+                        //apply scale value
+                        //Note numbers come from the keyboard in the range of 0 - KEYBOARD_NUM_OF_KEYS-1,
+                        //and are used to select an index of keyboardScales[patchParameterData[PARAM_KEYS_SCALE].user_val]
+                        uint8_t note_index = input_message_buffer[INPUT_SRC_KEYBOARD][1];
+                        note_num = keyboardScales[patchParameterData[PARAM_KEYS_SCALE].user_val][note_index];
+                        
+                        //apply octave value
+                        //if octave value is 64 bottom key is note 48
+                        note_num = (note_num + 48) + ((patchParameterData[PARAM_KEYS_OCTAVE].user_val - 64) * 12);
+                        
+                        //apply tranpose
+                        //a value of 64 means no transpose
+                        note_num += patchParameterData[PARAM_KEYS_TRANSPOSE].user_val - 64;
+                        
+                        //make sure note number is still in range
+                        if (note_num > 127)
+                            note_num = 127;
+                        else if (note_num < 0)
+                            note_num = 0;
+                        
+                        //put new note number back into input_message_buffer buffer
+                        input_message_buffer[INPUT_SRC_KEYBOARD][1] = note_num;
+                        
+                        //Process the note message
                         ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], &voice_alloc_data, true, sock, sound_engine_sock_addr);
                         
                     } //if (input_message_flag == MIDI_NOTEON)
-                    
-                    else if (input_message_flag == MIDI_NOTEOFF)
-                    {
-                        #ifdef DEBUG
-                        printf ("[VB] Received note-off message from keyboard\r\n");
-                        #endif
-                        
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], &voice_alloc_data, true, sock, sound_engine_sock_addr);
-                        
-                    } //else if (input_message_flag == MIDI_NOTEOFF)
                     
                     else if (input_message_flag == MIDI_PAT)
                     {
