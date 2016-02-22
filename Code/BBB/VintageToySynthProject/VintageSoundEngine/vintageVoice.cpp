@@ -223,8 +223,11 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         velResoModVal = getModulatedParamValue (PARAM_MOD_VEL_RESO, PARAM_FILTER_RESO, voiceVelocityValue);
         
         //============================
-        //reset LFO osc phase
-        lfo.phaseReset(0.0);
+        //Reset LFO osc phase, but only if the amp envelope is currently closed.
+        //This means that the phase won't be reset in mono mode when triggering stacked notes.
+        
+        if (envAmp.trigger == 0)
+            lfo.phaseReset(0.0);
         
     } //if (note_status == true)
     
