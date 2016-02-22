@@ -10,6 +10,8 @@
  
  */
 
+//FIXME: TRY MOVING ALL OF THIS CODE INTO THE MAIN THREAD OF VINTAGESOUNDENGINE TO SEE IF THAT STOPS THE GLITCHES
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
