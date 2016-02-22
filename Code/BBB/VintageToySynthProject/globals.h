@@ -20,6 +20,13 @@
 #define NUM_OF_VOICES 2
 
 //==========================================================================
+#define VOICE_MONO_BUFFER_SIZE 18
+#define VOICE_NO_NOTE -1
+
+//this value must not be smaller than NUM_OF_VOICES or VOICE_MONO_BUFFER_SIZE
+#define VOICE_ALLOC_NOTE_BUFFER_SIZE 18
+
+//==========================================================================
 //MIDI defines
 
 #define MIDI_NOTEOFF 0x80
@@ -267,7 +274,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //100
     {}, //101
     {0, 0, KEYBOARD_NUM_OF_SCALES-1, false, true, 0, 0, 0}, //102 - PARAM_KEYS_SCALE
-    {0, 0, 127, false, true, 0, 0, 0}, //103 - PARAM_VOICE_MODE
+    {127, 0, 127, false, true, 0, 0, 0}, //103 - PARAM_VOICE_MODE
     {}, //104
     {}, //105
     {64, 58, 70, false, true, 0, 0, 0}, //106 - PARAM_KEYS_TRANSPOSE
