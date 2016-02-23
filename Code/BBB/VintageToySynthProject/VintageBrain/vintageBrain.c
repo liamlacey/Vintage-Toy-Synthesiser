@@ -207,6 +207,38 @@ int SetupSerialPort (const char path[], int speed, bool should_be_blocking)
 //        return fd;
 }
 
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//Kills all voices
+
+void KillAllVoices (PatchParameterData patch_param_data[],
+                    VoiceAllocData *voice_alloc_data,
+                    int sock,
+                    struct sockaddr_un sound_engine_sock_addr)
+{
+    //kill all voices in the sound engine...
+    
+    uint8_t cc_buf[3] = {MIDI_CC, PARAM_CMD, CMD_KILL_ALL_VOICES};
+    SendToSoundEngine (cc_buf, 3, sock, sound_engine_sock_addr);
+    
+    //reset voice allocation and note data...
+    
+    for (uint8_t i = 0; i < NUM_OF_VOICES; i++)
+    {
+        voice_alloc_data.free_voices[i] = i + 1;
+    }
+    
+    for (uint8_t i = 0; i < VOICE_ALLOC_NOTE_BUFFER_SIZE; i++)
+    {
+        voice_alloc_data.note_data[i].note_num = VOICE_NO_NOTE;
+        voice_alloc_data.note_data[i].note_vel = VOICE_NO_NOTE;
+    }
+    
+    voice_alloc_data.mono_note_stack_pointer = 0;
+    voice_alloc_data.last_voice = 0;
+}
+
 //==========================================================
 //==========================================================
 //==========================================================
@@ -830,23 +862,8 @@ void ProcessCcMessage (uint8_t message_buffer[],
     //if voice mode has changed
     if (param_num == PARAM_VOICE_MODE && patch_param_data[param_num].user_val != param_val)
     {
-        //TODO: kill all voices...
-        
-        //reset voice allocation and note data...
-        
-        for (uint8_t i = 0; i < NUM_OF_VOICES; i++)
-        {
-            voice_alloc_data.free_voices[i] = i + 1;
-        }
-        
-        for (uint8_t i = 0; i < VOICE_ALLOC_NOTE_BUFFER_SIZE; i++)
-        {
-            voice_alloc_data.note_data[i].note_num = VOICE_NO_NOTE;
-            voice_alloc_data.note_data[i].note_vel = VOICE_NO_NOTE;
-        }
-        
-        voice_alloc_data.mono_note_stack_pointer = 0;
-        voice_alloc_data.last_voice = 0;
+        //kill all voices
+        KillAllVoices (patch_param_data, voice_alloc_data, sock, sound_engine_sock_addr);
 
     } //if (param_num == PARAM_VOICE_MODE && patch_param_data[param_num].user_val != param_val)
     

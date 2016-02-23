@@ -125,6 +125,9 @@
 #define PARAM_GLOBAL_VINTAGE_AMOUNT 107
 #define PARAM_GLOBAL_VOLUME 9
 
+//special CC num used for sending commands rather than settings
+#define PARAM_CMD 127
+
 //==========================================================================
 #define KEYBOARD_NUM_OF_KEYS 18
 #define KEYBOARD_NUM_OF_SCALES 8
@@ -148,6 +151,11 @@ const keyboardScales[KEYBOARD_NUM_OF_SCALES][KEYBOARD_NUM_OF_KEYS] =
     //blues
     {0, 3, 5, 6, 7, 10, 12, 15, 17, 18, 19, 22, 24, 27, 29, 30, 31, 34}
 };
+
+//==========================================================================
+//command parameter (127) values
+
+#define CMD_KILL_ALL_VOICES 0
 
 
 //==========================================================================
