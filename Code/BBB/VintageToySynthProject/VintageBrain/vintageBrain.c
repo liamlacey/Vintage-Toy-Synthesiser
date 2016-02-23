@@ -867,6 +867,30 @@ void ProcessCcMessage (uint8_t message_buffer[],
 
     } //if (param_num == PARAM_VOICE_MODE && patch_param_data[param_num].user_val != param_val)
     
+    //if keyboard scale has changed
+    else if (param_num == PARAM_KEYS_SCALE && patch_param_data[param_num].user_val != param_val)
+    {
+        //kill all voices
+        KillAllVoices (patch_param_data, voice_alloc_data, sock, sound_engine_sock_addr);
+        
+    } //if (param_num == PARAM_KEYS_SCALE && patch_param_data[param_num].user_val != param_val)
+    
+    //if keyboard octave has changed
+    else if (param_num == PARAM_KEYS_OCTAVE && patch_param_data[param_num].user_val != param_val)
+    {
+        //kill all voices
+        KillAllVoices (patch_param_data, voice_alloc_data, sock, sound_engine_sock_addr);
+        
+    } //if (param_num == PARAM_KEYS_OCTAVE && patch_param_data[param_num].user_val != param_val)
+    
+    //if keyboard transpose has changed
+    else if (param_num == PARAM_KEYS_TRANSPOSE && patch_param_data[param_num].user_val != param_val)
+    {
+        //kill all voices
+        KillAllVoices (patch_param_data, voice_alloc_data, sock, sound_engine_sock_addr);
+        
+    } //if (param_num == PARAM_KEYS_TRANSPOSE && patch_param_data[param_num].user_val != param_val)
+    
     //====================================================================================
     //Store the new param value, and bounding it if needed...
     
