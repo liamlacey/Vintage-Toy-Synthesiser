@@ -156,7 +156,7 @@ const keyboardScales[KEYBOARD_NUM_OF_SCALES][KEYBOARD_NUM_OF_KEYS] =
 //command parameter (127) values
 
 #define CMD_KILL_ALL_VOICES 0
-
+#define CMD_SOUND_ENGINE_READY 1
 
 //==========================================================================
 //structure that stores info about a patch parameter

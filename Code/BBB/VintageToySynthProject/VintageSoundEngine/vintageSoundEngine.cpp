@@ -528,6 +528,8 @@ int main()
     
     std::cout << "[VSE] Maximilian sound engine has started (using RTAudio)" << std::endl;
     
+    //TODO: send command CC to vintageBrain saying that the sound engine is ready and needs the current panel settings.
+    
     #endif
 	
     //===============================================================
