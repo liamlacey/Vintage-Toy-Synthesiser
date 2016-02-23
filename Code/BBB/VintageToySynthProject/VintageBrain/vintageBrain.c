@@ -816,6 +816,7 @@ void ProcessPolyAftertouchMessage (uint8_t message_buffer[],
 
 void ProcessCcMessage (uint8_t message_buffer[],
                        PatchParameterData patch_param_data[],
+                       VoiceAllocData *voice_alloc_data,
                        bool send_to_midi_out,
                        int sock,
                        struct sockaddr_un sound_engine_sock_addr)
@@ -823,6 +824,33 @@ void ProcessCcMessage (uint8_t message_buffer[],
     uint8_t param_num = message_buffer[1];
     uint8_t param_val = message_buffer[2];
     
+    //====================================================================================
+    //Process certain parameter changes
+    
+    //if voice mode has changed
+    if (param_num == PARAM_VOICE_MODE && patch_param_data[param_num].user_val != param_val)
+    {
+        //TODO: kill all voices...
+        
+        //reset voice allocation and note data...
+        
+        for (uint8_t i = 0; i < NUM_OF_VOICES; i++)
+        {
+            voice_alloc_data.free_voices[i] = i + 1;
+        }
+        
+        for (uint8_t i = 0; i < VOICE_ALLOC_NOTE_BUFFER_SIZE; i++)
+        {
+            voice_alloc_data.note_data[i].note_num = VOICE_NO_NOTE;
+            voice_alloc_data.note_data[i].note_vel = VOICE_NO_NOTE;
+        }
+        
+        voice_alloc_data.mono_note_stack_pointer = 0;
+        voice_alloc_data.last_voice = 0;
+
+    } //if (param_num == PARAM_VOICE_MODE && patch_param_data[param_num].user_val != param_val)
+    
+    //====================================================================================
     //Store the new param value, and bounding it if needed...
     
     if (param_val > patch_param_data[param_num].user_max_val)
@@ -833,6 +861,7 @@ void ProcessCcMessage (uint8_t message_buffer[],
     patch_param_data[param_num].user_val = param_val;
     message_buffer[2] = param_val;
     
+    //====================================================================================
     //Send to the sound engine if needed
     if (patch_param_data[param_num].sound_param)
     {
@@ -842,6 +871,7 @@ void ProcessCcMessage (uint8_t message_buffer[],
         SendToSoundEngine (message_buffer, 3, sock, sound_engine_sock_addr);
     }
     
+    //====================================================================================
     //Send to MIDI out if needed
     if (send_to_midi_out && patch_param_data[param_num].patch_param)
     {
@@ -912,14 +942,16 @@ int main (void)
     for (uint8_t i = 0; i < NUM_OF_VOICES; i++)
     {
         voice_alloc_data.free_voices[i] = i + 1;
-        
-        mono_note_stack_pointer = 0;
-        
+    }
+    
+    for (uint8_t i = 0; i < VOICE_ALLOC_NOTE_BUFFER_SIZE; i++)
+    {
         voice_alloc_data.note_data[i].note_num = VOICE_NO_NOTE;
         voice_alloc_data.note_data[i].note_vel = VOICE_NO_NOTE;
-        
-        last_voice = 0;
     }
+    
+    voice_alloc_data.mono_note_stack_pointer = 0;
+    voice_alloc_data.last_voice = 0;
     
     //==========================================================
     //Set up SIGINT and SIGTERM so that the process can be shutdown
@@ -1136,7 +1168,7 @@ int main (void)
                         //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_CC;
                         
-                        ProcessCcMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, false, sock, sound_engine_sock_addr);
+                        ProcessCcMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr);
                         
                     } //else if (input_message_flag == MIDI_CC)
                     
@@ -1180,7 +1212,7 @@ int main (void)
                         printf ("[VB] Received CC message from panel\r\n");
                         #endif
                         
-                        ProcessCcMessage (input_message_buffer[INPUT_SRC_PANEL], patchParameterData, true, sock, sound_engine_sock_addr);
+                        ProcessCcMessage (input_message_buffer[INPUT_SRC_PANEL], patchParameterData, &voice_alloc_data, true, sock, sound_engine_sock_addr);
                         
                     } //else if (input_message_flag == MIDI_CC)
                     
