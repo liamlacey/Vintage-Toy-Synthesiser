@@ -281,7 +281,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //99
     {}, //100
     {}, //101
-    {0, 0, KEYBOARD_NUM_OF_SCALES-1, false, true, 0, 0, 0}, //102 - PARAM_KEYS_SCALE
+    {1, 0, KEYBOARD_NUM_OF_SCALES-1, false, true, 0, 0, 0}, //102 - PARAM_KEYS_SCALE
     {127, 0, 127, false, true, 0, 0, 0}, //103 - PARAM_VOICE_MODE
     {}, //104
     {}, //105
