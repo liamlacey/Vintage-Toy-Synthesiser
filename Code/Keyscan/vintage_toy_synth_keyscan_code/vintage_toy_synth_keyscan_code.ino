@@ -45,15 +45,17 @@ void setup()
   //serial output rather than a MIDI-specific output.
   Serial.begin(38400);
 
+  //pinMode(1, OUTPUT);   
+
   pinMode(2, OUTPUT);    // mux1 s0
   pinMode(3, OUTPUT);    // mux1 s1
   pinMode(4, OUTPUT);    // mux1 s2
   
-  pinMode(10, OUTPUT);    // mux2 s0
-  pinMode(9, OUTPUT);    // mux2 s1
-  pinMode(8, OUTPUT);    // mux2 s2
+  pinMode(5, OUTPUT);    // mux2 s0
+  pinMode(6, OUTPUT);    // mux2 s1
+  pinMode(7, OUTPUT);    // mux2 s2
   
-  pinMode(13, OUTPUT);    // t
+  pinMode(13, OUTPUT);    // LED
 }
 
 void loop()
@@ -61,6 +63,8 @@ void loop()
   //repeat the below code for each input/key
   for (int count; count < NUM_OF_KEYS; count++)
   {
+    triggerVal[count] = 0;
+    
     //==========================================
     //==========================================
     //==========================================
@@ -100,12 +104,12 @@ void loop()
       int r0 = bitRead (mux_input, 0);   
       int r1 = bitRead (mux_input, 1);     
       int r2 = bitRead (mux_input, 2); 
-      digitalWrite (10, r0);
-      digitalWrite (9, r1);
-      digitalWrite (8, r2);
+      digitalWrite (5, r0);
+      digitalWrite (6, r1);
+      digitalWrite (7, r2);
 
       //read the input value
-      triggerVal[count] = analogRead(A5);
+      triggerVal[count] = analogRead(A3);
     }
 
     //      if (triggerVal[count] > 0)
@@ -278,6 +282,7 @@ void loop()
 void SendMidiMessage (int cmd_byte, int data_byte_1, int data_byte_2) 
 {
   byte buf[3] = {cmd_byte, data_byte_1, data_byte_2};
+  
   Serial.write (buf, 3);
   
 //  Serial.print(buf[0]);
