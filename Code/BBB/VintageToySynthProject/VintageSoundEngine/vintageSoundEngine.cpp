@@ -629,7 +629,7 @@ int main()
                             //if 'kill all voices' command
                             if (input_message_buffer[2] == CMD_KILL_ALL_VOICES)
                             {
-                                for (uint8_t voice; voice < NUM_OF_VOICES; voice++)
+                                for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
                                 {
                                     vintageVoice[voice]->processNoteMessage (0, 0, 0);
                                 }
