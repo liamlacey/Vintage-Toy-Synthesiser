@@ -188,7 +188,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //6
     {127, 0, 127, true, true, 0.6, 0., 1.}, //7 - PARAM_AEG_AMOUNT
     {}, //8
-    {64, 0, 127, false, false, 50, 0, 100}, //9 - PARAM_GLOBAL_VOLUME
+    {80, 0, 100, false, false, 80, 0, 100}, //9 - PARAM_GLOBAL_VOLUME
     {}, //10
     {}, //11
     {}, //12

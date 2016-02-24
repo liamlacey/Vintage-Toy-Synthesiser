@@ -903,6 +903,29 @@ void ProcessCcMessage (uint8_t message_buffer[],
         
     } //if (param_num == PARAM_KEYS_TRANSPOSE && patch_param_data[param_num].user_val != param_val)
     
+    //if global volume has changed
+    else if (param_num == PARAM_GLOBAL_VOLUME && patch_param_data[param_num].user_val != param_val)
+    {
+        //set the Linux system volume...
+        
+        //create start of amixer command to set 'Speaker' control value
+        uint8_t volume_cmd[64] = {"amixer sset Speaker "};
+        
+        //turn the param value into a percentage string
+        uint8_t volume_string[16];
+        sprintf(volume_string, "%d%%", param_val);
+        
+        //append the value string onto the command
+        strcat (volume_cmd, volume_string);
+        
+        //printf ("[VB] - volume command: %s\r\n", volume_cmd);
+        
+        //Send the command to the system
+        //FIXME: would be nice to call this without it outputing to the console to print glitches in the audio, somehow...
+        system (volume_cmd);
+        
+    } //if (param_num == PARAM_GLOBAL_VOLUME && patch_param_data[param_num].user_val != param_val)
+    
     //====================================================================================
     //Store the new param value
 
