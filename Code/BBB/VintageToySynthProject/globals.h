@@ -20,6 +20,13 @@
 #define NUM_OF_VOICES 2
 
 //==========================================================================
+#define VOICE_MONO_BUFFER_SIZE 18
+#define VOICE_NO_NOTE -1
+
+//this value must not be smaller than NUM_OF_VOICES or VOICE_MONO_BUFFER_SIZE
+#define VOICE_ALLOC_NOTE_BUFFER_SIZE 18
+
+//==========================================================================
 //MIDI defines
 
 #define MIDI_NOTEOFF 0x80
@@ -118,6 +125,38 @@
 #define PARAM_GLOBAL_VINTAGE_AMOUNT 107
 #define PARAM_GLOBAL_VOLUME 9
 
+//special CC num used for sending commands rather than settings
+#define PARAM_CMD 127
+
+//==========================================================================
+#define KEYBOARD_NUM_OF_KEYS 18
+#define KEYBOARD_NUM_OF_SCALES 8
+
+const keyboardScales[KEYBOARD_NUM_OF_SCALES][KEYBOARD_NUM_OF_KEYS] =
+{
+    //chromatic
+    {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17},
+    //major
+    {0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24, 26, 28, 29},
+    //major pentatonic
+    {0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26, 28, 31, 33, 36, 38, 40},
+    //minor
+    {0, 2, 3, 5, 7, 8, 10, 12, 14, 15, 17, 19, 20, 22, 24, 26, 27, 29},
+    //minor pentatonic
+    {0, 3, 5, 7, 10, 12, 15, 17, 19, 22, 24, 27, 29, 31, 34, 36, 39, 41},
+    //melodic minor
+    {0, 2, 3, 5, 7, 9, 11, 12, 14, 15, 17, 19, 21, 23, 24, 26, 27, 29},
+    //harmonic minor
+    {0, 2, 3, 5, 7, 8, 11, 12, 14, 15, 17, 19, 20, 23, 24, 26, 27, 29},
+    //blues
+    {0, 3, 5, 6, 7, 10, 12, 15, 17, 18, 19, 22, 24, 27, 29, 30, 31, 34}
+};
+
+//==========================================================================
+//command parameter (127) values
+
+#define CMD_KILL_ALL_VOICES 0
+#define CMD_SOUND_ENGINE_READY 1
 
 //==========================================================================
 //structure that stores info about a patch parameter
@@ -242,8 +281,8 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //99
     {}, //100
     {}, //101
-    {0, 0, 2, false, true, 0, 0, 0}, //102 - PARAM_KEYS_SCALE
-    {0, 0, 127, false, true, 0, 0, 0}, //103 - PARAM_VOICE_MODE
+    {0, 0, KEYBOARD_NUM_OF_SCALES-1, false, true, 0, 0, 0}, //102 - PARAM_KEYS_SCALE
+    {127, 0, 127, false, true, 0, 0, 0}, //103 - PARAM_VOICE_MODE
     {}, //104
     {}, //105
     {64, 58, 70, false, true, 0, 0, 0}, //106 - PARAM_KEYS_TRANSPOSE
@@ -254,7 +293,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //111
     {64, 0, 127, true, true, 0., -1., 1.}, //112 - PARAM_MOD_LFO_FREQ
     {}, //113
-    {64, 62, 66, false, true, 0, 0, 0}, //114 - PARAM_KEYS_OCTAVE
+    {64, 61, 67, false, true, 0, 0, 0}, //114 - PARAM_KEYS_OCTAVE
 };
 
 

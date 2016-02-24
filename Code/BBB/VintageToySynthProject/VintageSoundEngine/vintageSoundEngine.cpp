@@ -528,6 +528,8 @@ int main()
     
     std::cout << "[VSE] Maximilian sound engine has started (using RTAudio)" << std::endl;
     
+    //TODO: send command CC to vintageBrain saying that the sound engine is ready and needs the current panel settings.
+    
     #endif
 	
     //===============================================================
@@ -598,23 +600,42 @@ int main()
                     //Process CC/param messages
                     else if (input_message_flag == MIDI_CC)
                     {
-                        //channel relates to voice number. Channel 15 means send to all voices
-                        uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
-                        
-                        for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+                        //if a patch parameter
+                        if (input_message_buffer[1] != PARAM_CMD)
                         {
-                            //if we want to send this message to voice number 'voice'
-                            if (voice_num == 15 || voice_num == voice)
-                            {
-                                //TODO: check if this param/CC num is a sound param, and in range.
-                                //At this point it always should be, but it may be best to check anyway.
-                                
-                                //set the paramaters voice value
-                                vintageVoice[voice]->setPatchParamVoiceValue (input_message_buffer[1], input_message_buffer[2]);
-                                
-                            } //if (voice_num == 15 || voice_num == voice)
+                            //channel relates to voice number. Channel 15 means send to all voices
+                            uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
                             
-                        } //for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+                            for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+                            {
+                                //if we want to send this message to voice number 'voice'
+                                if (voice_num == 15 || voice_num == voice)
+                                {
+                                    //TODO: check if this param/CC num is a sound param, and in range.
+                                    //At this point it always should be, but it may be best to check anyway.
+                                    
+                                    //set the paramaters voice value
+                                    vintageVoice[voice]->setPatchParamVoiceValue (input_message_buffer[1], input_message_buffer[2]);
+                                    
+                                } //if (voice_num == 15 || voice_num == voice)
+                                
+                            } //for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+                            
+                        } //if (input_message_buffer[1] != PARAM_CMD)
+                        
+                        //if a command message
+                        else
+                        {
+                            //if 'kill all voices' command
+                            if (input_message_buffer[2] == CMD_KILL_ALL_VOICES)
+                            {
+                                for (uint8_t voice; voice < NUM_OF_VOICES; voice++)
+                                {
+                                    vintageVoice[voice]->processNoteMessage (0, 0, 0);
+                                }
+                            }
+                            
+                        } //if (input_message_buffer[1] == PARAM_CMD)
                         
                     } //if (input_message_flag == MIDI_CC)
                     

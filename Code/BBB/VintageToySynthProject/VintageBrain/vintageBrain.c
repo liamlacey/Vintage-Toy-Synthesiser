@@ -68,22 +68,31 @@ enum InputSourceTypes
 
 int keyboard_fd, midi_fd, panel_fd;
 
-//Struct that stores info about the current/previous note for a voice
+//Struct that stores info about playing notes.
+//In poly mode this is for each voice, but in mono mode this
+//is for each note in the note stack.
 typedef struct
 {
     int16_t note_num;
     int16_t note_vel;
     
-} VoiceNoteData;
+} NoteData;
 
-//Struct that stores info about the current/previous note for each voice,
-//as well as an ordered list of free voices
+//Struct that stores voice allocation data for both poly and mono mode.
+//TODO: when switching between mono and stack mode, make sure ALL of these variables are reset.
 typedef struct
 {
+    //for poly mode...
     uint8_t free_voices[NUM_OF_VOICES];
-    VoiceNoteData voice_note_data[NUM_OF_VOICES];
     
-    uint8_t last_voice; //for note stealing (last voice)
+    //for mono mode...
+    uint8_t mono_note_stack_pointer;
+    
+    //for both modes...
+    NoteData note_data[VOICE_ALLOC_NOTE_BUFFER_SIZE];
+    
+    //for note stealing (last voice)
+    uint8_t last_voice;
     
 } VoiceAllocData;
 
@@ -201,6 +210,38 @@ int SetupSerialPort (const char path[], int speed, bool should_be_blocking)
 //        }
 //    
 //        return fd;
+}
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//Kills all voices
+
+void KillAllVoices (PatchParameterData patch_param_data[],
+                    VoiceAllocData *voice_alloc_data,
+                    int sock,
+                    struct sockaddr_un sound_engine_sock_addr)
+{
+    //kill all voices in the sound engine...
+    
+    uint8_t cc_buf[3] = {MIDI_CC, PARAM_CMD, CMD_KILL_ALL_VOICES};
+    SendToSoundEngine (cc_buf, 3, sock, sound_engine_sock_addr);
+    
+    //reset voice allocation and note data...
+    
+    for (uint8_t i = 0; i < NUM_OF_VOICES; i++)
+    {
+        voice_alloc_data.free_voices[i] = i + 1;
+    }
+    
+    for (uint8_t i = 0; i < VOICE_ALLOC_NOTE_BUFFER_SIZE; i++)
+    {
+        voice_alloc_data.note_data[i].note_num = VOICE_NO_NOTE;
+        voice_alloc_data.note_data[i].note_vel = VOICE_NO_NOTE;
+    }
+    
+    voice_alloc_data.mono_note_stack_pointer = 0;
+    voice_alloc_data.last_voice = 0;
 }
 
 //==========================================================
@@ -485,7 +526,7 @@ uint8_t FreeVoiceOfNote (uint8_t note_num, VoiceAllocData *voice_alloc_data)
     
     for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
     {
-        if (note_num == voice_alloc_data->voice_note_data[voice].note_num)
+        if (note_num == voice_alloc_data->note_data[voice].note_num)
         {
             free_voice = voice + 1;
             break;
@@ -530,7 +571,7 @@ uint8_t GetVoicesOfNote (uint8_t note_num, VoiceAllocData *voice_alloc_data, uin
     
     for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
     {
-        if (note_num == voice_alloc_data->voice_note_data[voice].note_num)
+        if (note_num == voice_alloc_data->note_data[voice].note_num)
         {
             voice_list[num_of_voices] = voice + 1;
             num_of_voices++;
@@ -541,6 +582,78 @@ uint8_t GetVoicesOfNote (uint8_t note_num, VoiceAllocData *voice_alloc_data, uin
     return num_of_voices;
 }
 
+//====================================================================================
+//====================================================================================
+//====================================================================================
+///Removes a note from the mono stack by shuffling a set of notes down
+
+void RemoveNoteFromMonoStack (uint8_t start_index, uint8_t end_index, VoiceAllocData *voice_alloc_data)
+{
+    //shuffle the notes in the stack down to remove the note
+    for (uint8_t index = start_index; index < end_index; index++)
+    {
+        voice_alloc_data->note_data[index].note_num = voice_alloc_data->note_data[index + 1].note_num;
+    }
+    
+    //set top of stack to empty
+    voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_num = VOICE_NO_NOTE;
+    voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_vel = VOICE_NO_NOTE;
+    
+    //decrement pointer if above 0
+    if (voice_alloc_data->mono_note_stack_pointer)
+    {
+        voice_alloc_data->mono_note_stack_pointer--;
+    }
+}
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//Adds a note to mono mode stack
+
+void AddNoteToMonoStack (uint8_t note_num, uint8_t note_vel, VoiceAllocData *voice_alloc_data)
+{
+    //add note to the top of the stack
+    voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_num = note_num;
+    voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_vel = note_vel;
+    
+    //increase stack pointer
+    voice_alloc_data->mono_note_stack_pointer++;
+    
+    //if the stack is full
+    if (voice_alloc_data->mono_note_stack_pointer >= VOICE_MONO_BUFFER_SIZE)
+    {
+        //remove the oldest note from the stack
+        RemoveNoteFromMonoStack (0, VOICE_MONO_BUFFER_SIZE, voice_alloc_data);
+    }
+}
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//Pulls a note from the mono stack
+
+void PullNoteFromMonoStack (uint8_t note_num, VoiceAllocData *voice_alloc_data)
+{
+    uint8_t note_index;
+    
+    //find the note in the stack buffer
+    if (uint8_t i = 0; i < voice_alloc_data->mono_note_stack_pointer; i++)
+    {
+        //if it matches
+        if (voice_alloc_data->note_data[i].note_num == note_num)
+        {
+            //store index
+            note_index = i;
+            //break from loop
+            break;
+        }
+        
+    } //if (uint8_t i = 0; i < voice_alloc_data->mono_note_stack_pointer; i++)
+    
+    //remove the note from the stack
+    RemoveNoteFromMonoStack (note_index, voice_alloc_data->mono_note_stack_pointer, voice_alloc_data);
+}
 
 //====================================================================================
 //====================================================================================
@@ -548,6 +661,7 @@ uint8_t GetVoicesOfNote (uint8_t note_num, VoiceAllocData *voice_alloc_data, uin
 //Processes a note message recieived from any source, sending it to the needed places
 
 void ProcessNoteMessage (uint8_t message_buffer[],
+                         PatchParameterData patch_param_data[],
                          VoiceAllocData *voice_alloc_data,
                          bool send_to_midi_out,
                          int sock,
@@ -557,65 +671,125 @@ void ProcessNoteMessage (uint8_t message_buffer[],
     //====================================================================================
     //Voice allocation for sound engine
     
-    //TODO: mono voice allocation
+    //TODO: test mono mode
+    //FIXME: it is kind of confusing how in mono mode the seperate functions handle the setting
+    //of voice_alloc_data, however in poly mode all of that is done within this function. It
+    //may be a good idea to rewrite the voice allocation stuff to make this neater.
     
+    //=========================================
     //if a note-on message
     if ((message_buffer[0] & MIDI_STATUS_BITS) == MIDI_NOTEON)
     {
-        //get next voice we can use
-        uint8_t free_voice = GetNextFreeVoice (voice_alloc_data);
-        
-        #ifdef DEBUG
-        printf ("[VB] Next free voice: %d\r\n", free_voice);
-        #endif
-        
-        //if we have a voice to use
-        if (free_voice > 0)
+        //====================
+        //if in poly mode
+        if (patch_param_data[PARAM_VOICE_MODE].user_val > 0)
         {
-            //put free_voice into the correct range
-            free_voice -= 1;
+            //get next voice we can use
+            uint8_t free_voice = GetNextFreeVoice (voice_alloc_data);
             
-            //store the note info for this voice
-            voice_alloc_data->voice_note_data[free_voice].note_num = message_buffer[1];
-            voice_alloc_data->voice_note_data[free_voice].note_vel = message_buffer[2];
+            #ifdef DEBUG
+            printf ("[VB] Next free voice: %d\r\n", free_voice);
+            #endif
             
-            //set the last played voice (for note stealing)
-            voice_alloc_data->last_voice = free_voice + 1;
+            //if we have a voice to use
+            if (free_voice > 0)
+            {
+                //put free_voice into the correct range
+                free_voice -= 1;
+                
+                //store the note info for this voice
+                voice_alloc_data->note_data[free_voice].note_num = message_buffer[1];
+                voice_alloc_data->note_data[free_voice].note_vel = message_buffer[2];
+                
+                //set the last played voice (for note stealing)
+                voice_alloc_data->last_voice = free_voice + 1;
+                
+                //Send to the sound engine...
+                
+                uint8_t note_buffer[3] = {MIDI_NOTEON + free_voice, message_buffer[1], message_buffer[2]};
+                SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+                
+            } //if (free_voice > 0)
             
-            //Send to the sound engine...
+        } //if (patch_param_data[PARAM_VOICE_MODE].user_val > 0)
+        
+        //====================
+        //if in mono mode
+        else
+        {
+            AddNoteToMonoStack (message_buffer[1], message_buffer[2], voice_alloc_data);
             
-            uint8_t note_buffer[3] = {MIDI_NOTEON + free_voice, message_buffer[1], message_buffer[2]};
+            //Send to the sound engine for voice 0...
+            uint8_t note_buffer[3] = {MIDI_NOTEON, message_buffer[1], message_buffer[2]};
             SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
             
-        } //if (free_voice > 0)
+        } //else (mono mode)
         
     } //((message_buffer[0] & MIDI_STATUS_BITS) == MIDI_NOTEON)
     
+    //=========================================
     //if a note-off message
     else
     {
-        //free used voice of this note
-        uint8_t freed_voice = FreeVoiceOfNote (message_buffer[1], voice_alloc_data);
-        
-        #ifdef DEBUG
-        printf ("[VB] freed voice: %d\r\n", freed_voice);
-        #endif
-        
-        //if we sucessfully freed a voice
-        if (freed_voice > 0)
+        //====================
+        //if in poly mode
+        if (patch_param_data[PARAM_VOICE_MODE].user_val > 0)
         {
-            //put freed_voice into the correct range
-            freed_voice -= 1;
+            //free used voice of this note
+            uint8_t freed_voice = FreeVoiceOfNote (message_buffer[1], voice_alloc_data);
             
-            //reset the note info for this voice
-            voice_alloc_data->voice_note_data[freed_voice].note_num = -1;
-            voice_alloc_data->voice_note_data[freed_voice].note_vel = -1;
+            #ifdef DEBUG
+            printf ("[VB] freed voice: %d\r\n", freed_voice);
+            #endif
             
-            //Send to the sound engine...
+            //if we sucessfully freed a voice
+            if (freed_voice > 0)
+            {
+                //put freed_voice into the correct range
+                freed_voice -= 1;
+                
+                //reset the note info for this voice
+                voice_alloc_data->note_data[freed_voice].note_num = VOICE_NO_NOTE;
+                voice_alloc_data->note_data[freed_voice].note_vel = VOICE_NO_NOTE;
+                
+                //Send to the sound engine...
+                
+                uint8_t note_buffer[3] = {MIDI_NOTEOFF + freed_voice, message_buffer[1], message_buffer[2]};
+                SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+                
+            } //if (freed_voice > 0)
             
-            uint8_t note_buffer[3] = {MIDI_NOTEOFF + freed_voice, message_buffer[1], message_buffer[2]};
-            SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
-        }
+        } //if (patch_param_data[PARAM_VOICE_MODE].user_val > 0)
+        
+        //====================
+        //if in mono mode
+        else
+        {
+            PullNoteFromMonoStack (message_buffer[1], voice_alloc_data);
+            
+            //if there is still atleast one note on the stack
+            if (voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_num != VOICE_NO_NOTE)
+            {
+                //Send a note-on message to the sound engine with the previous note on the stack...
+                
+                uint8_t note_num = voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_num;
+                uint8_t note_vel = voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_vel;
+                
+                uint8_t note_buffer[3] = {MIDI_NOTEON, note_num, note_vel};
+                SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+                
+            } //if (prev_stack_note != VOICE_NO_NOTE)
+            
+            //if this was the last note in the stack
+            else
+            {
+                //Send to the sound engine as a note off...
+                
+                uint8_t note_buffer[3] = {MIDI_NOTEOFF, message_buffer[1], message_buffer[2]};
+                SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+            }
+            
+        } //else (mono mode)
         
     } //else (note-off message)
     
@@ -679,6 +853,7 @@ void ProcessPolyAftertouchMessage (uint8_t message_buffer[],
 
 void ProcessCcMessage (uint8_t message_buffer[],
                        PatchParameterData patch_param_data[],
+                       VoiceAllocData *voice_alloc_data,
                        bool send_to_midi_out,
                        int sock,
                        struct sockaddr_un sound_engine_sock_addr)
@@ -686,6 +861,42 @@ void ProcessCcMessage (uint8_t message_buffer[],
     uint8_t param_num = message_buffer[1];
     uint8_t param_val = message_buffer[2];
     
+    //====================================================================================
+    //Process certain parameter changes
+    
+    //if voice mode has changed
+    if (param_num == PARAM_VOICE_MODE && patch_param_data[param_num].user_val != param_val)
+    {
+        //kill all voices
+        KillAllVoices (patch_param_data, voice_alloc_data, sock, sound_engine_sock_addr);
+
+    } //if (param_num == PARAM_VOICE_MODE && patch_param_data[param_num].user_val != param_val)
+    
+    //if keyboard scale has changed
+    else if (param_num == PARAM_KEYS_SCALE && patch_param_data[param_num].user_val != param_val)
+    {
+        //kill all voices
+        KillAllVoices (patch_param_data, voice_alloc_data, sock, sound_engine_sock_addr);
+        
+    } //if (param_num == PARAM_KEYS_SCALE && patch_param_data[param_num].user_val != param_val)
+    
+    //if keyboard octave has changed
+    else if (param_num == PARAM_KEYS_OCTAVE && patch_param_data[param_num].user_val != param_val)
+    {
+        //kill all voices
+        KillAllVoices (patch_param_data, voice_alloc_data, sock, sound_engine_sock_addr);
+        
+    } //if (param_num == PARAM_KEYS_OCTAVE && patch_param_data[param_num].user_val != param_val)
+    
+    //if keyboard transpose has changed
+    else if (param_num == PARAM_KEYS_TRANSPOSE && patch_param_data[param_num].user_val != param_val)
+    {
+        //kill all voices
+        KillAllVoices (patch_param_data, voice_alloc_data, sock, sound_engine_sock_addr);
+        
+    } //if (param_num == PARAM_KEYS_TRANSPOSE && patch_param_data[param_num].user_val != param_val)
+    
+    //====================================================================================
     //Store the new param value, and bounding it if needed...
     
     if (param_val > patch_param_data[param_num].user_max_val)
@@ -696,6 +907,7 @@ void ProcessCcMessage (uint8_t message_buffer[],
     patch_param_data[param_num].user_val = param_val;
     message_buffer[2] = param_val;
     
+    //====================================================================================
     //Send to the sound engine if needed
     if (patch_param_data[param_num].sound_param)
     {
@@ -705,6 +917,7 @@ void ProcessCcMessage (uint8_t message_buffer[],
         SendToSoundEngine (message_buffer, 3, sock, sound_engine_sock_addr);
     }
     
+    //====================================================================================
     //Send to MIDI out if needed
     if (send_to_midi_out && patch_param_data[param_num].patch_param)
     {
@@ -775,10 +988,16 @@ int main (void)
     for (uint8_t i = 0; i < NUM_OF_VOICES; i++)
     {
         voice_alloc_data.free_voices[i] = i + 1;
-        
-        voice_alloc_data.voice_note_data[i].note_num = -1;
-        voice_alloc_data.voice_note_data[i].note_vel = -1;
     }
+    
+    for (uint8_t i = 0; i < VOICE_ALLOC_NOTE_BUFFER_SIZE; i++)
+    {
+        voice_alloc_data.note_data[i].note_num = VOICE_NO_NOTE;
+        voice_alloc_data.note_data[i].note_vel = VOICE_NO_NOTE;
+    }
+    
+    voice_alloc_data.mono_note_stack_pointer = 0;
+    voice_alloc_data.last_voice = 0;
     
     //==========================================================
     //Set up SIGINT and SIGTERM so that the process can be shutdown
@@ -875,25 +1094,42 @@ int main (void)
                 {
                     //printf ("[VB] Received full MIDI message from keyboard with status byte %d\n", input_message_buffer[INPUT_SRC_KEYBOARD][0]);
                     
-                    if (input_message_flag == MIDI_NOTEON)
+                    if (input_message_flag == MIDI_NOTEON || input_message_flag == MIDI_NOTEOFF)
                     {
                         #ifdef DEBUG
-                        printf ("[VB] Received note-on message from keyboard\r\n");
+                        printf ("[VB] Received note-on/off message from keyboard\r\n");
                         #endif
                         
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], &voice_alloc_data, true, sock, sound_engine_sock_addr);
+                        //Set note number based on keyboard scale, octave, and transpose settings...
+                        int16_t note_num;
+                        
+                        //apply scale value
+                        //Note numbers come from the keyboard in the range of 0 - KEYBOARD_NUM_OF_KEYS-1,
+                        //and are used to select an index of keyboardScales[patchParameterData[PARAM_KEYS_SCALE].user_val]
+                        uint8_t note_index = input_message_buffer[INPUT_SRC_KEYBOARD][1];
+                        note_num = keyboardScales[patchParameterData[PARAM_KEYS_SCALE].user_val][note_index];
+                        
+                        //apply octave value
+                        //if octave value is 64 bottom key is note 48
+                        note_num = (note_num + 48) + ((patchParameterData[PARAM_KEYS_OCTAVE].user_val - 64) * 12);
+                        
+                        //apply tranpose
+                        //a value of 64 means no transpose
+                        note_num += patchParameterData[PARAM_KEYS_TRANSPOSE].user_val - 64;
+                        
+                        //make sure note number is still in range
+                        if (note_num > 127)
+                            note_num = 127;
+                        else if (note_num < 0)
+                            note_num = 0;
+                        
+                        //put new note number back into input_message_buffer buffer
+                        input_message_buffer[INPUT_SRC_KEYBOARD][1] = note_num;
+                        
+                        //Process the note message
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], patchParameterData, &voice_alloc_data, true, sock, sound_engine_sock_addr);
                         
                     } //if (input_message_flag == MIDI_NOTEON)
-                    
-                    else if (input_message_flag == MIDI_NOTEOFF)
-                    {
-                        #ifdef DEBUG
-                        printf ("[VB] Received note-off message from keyboard\r\n");
-                        #endif
-                        
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], &voice_alloc_data, true, sock, sound_engine_sock_addr);
-                        
-                    } //else if (input_message_flag == MIDI_NOTEOFF)
                     
                     else if (input_message_flag == MIDI_PAT)
                     {
@@ -952,7 +1188,7 @@ int main (void)
                         //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEON;
                         
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], &voice_alloc_data, false, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr);
                         
                     } //if (input_message_flag == MIDI_NOTEON)
                     
@@ -965,7 +1201,7 @@ int main (void)
                         //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEOFF;
                         
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], &voice_alloc_data, false, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr);
                         
                     } //else if (input_message_flag == MIDI_NOTEOFF)
                     
@@ -978,7 +1214,7 @@ int main (void)
                         //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_CC;
                         
-                        ProcessCcMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, false, sock, sound_engine_sock_addr);
+                        ProcessCcMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr);
                         
                     } //else if (input_message_flag == MIDI_CC)
                     
@@ -1022,7 +1258,7 @@ int main (void)
                         printf ("[VB] Received CC message from panel\r\n");
                         #endif
                         
-                        ProcessCcMessage (input_message_buffer[INPUT_SRC_PANEL], patchParameterData, true, sock, sound_engine_sock_addr);
+                        ProcessCcMessage (input_message_buffer[INPUT_SRC_PANEL], patchParameterData, &voice_alloc_data, true, sock, sound_engine_sock_addr);
                         
                     } //else if (input_message_flag == MIDI_CC)
                     
