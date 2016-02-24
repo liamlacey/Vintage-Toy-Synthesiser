@@ -1110,8 +1110,8 @@ int main (void)
                         note_num = keyboardScales[patchParameterData[PARAM_KEYS_SCALE].user_val][note_index];
                         
                         //apply octave value
-                        //if octave value is 64 bottom key is note 48
-                        note_num = (note_num + 48) + ((patchParameterData[PARAM_KEYS_OCTAVE].user_val - 64) * 12);
+                        //if octave value is 64 bottom key is note 60
+                        note_num = (note_num + 60) + ((patchParameterData[PARAM_KEYS_OCTAVE].user_val - 64) * 12);
                         
                         //apply tranpose
                         //a value of 64 means no transpose
