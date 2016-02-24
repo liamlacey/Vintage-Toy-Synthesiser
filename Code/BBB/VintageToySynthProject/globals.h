@@ -286,7 +286,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //104
     {}, //105
     {64, 58, 70, false, true, 0, 0, 0}, //106 - PARAM_KEYS_TRANSPOSE
-    {0, 0, 127, false, true, 0, 0, 0}, //107 - PARAM_GLOBAL_VINTAGE_AMOUNT
+    {0, 0, 127, true, true, 0, 0, 127}, //107 - PARAM_GLOBAL_VINTAGE_AMOUNT
     {}, //108
     {64, 0, 127, true, true, 0., -1., 1.}, //109 - PARAM_MOD_VEL_FREQ
     {64, 0, 127, true, true, 0., -1., 1.}, //110 - PARAM_MOD_VEL_RESO

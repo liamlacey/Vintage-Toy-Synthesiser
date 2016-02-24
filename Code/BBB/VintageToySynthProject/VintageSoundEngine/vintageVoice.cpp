@@ -195,16 +195,30 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         rootNoteNum = note_num;
         
         //============================
+        //Set 'vintage amount' pitch offset
+        //TODO: implement seperate pitches for each osc too/instead?
+        int16_t vintage_pitch_offset = 0;
+        
+        //if there is a vintage value
+        if (patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val != 0)
+        {
+            //get a random pitch value using the vintage amount as the max possible value
+            vintage_pitch_offset = rand() % (int)patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val;
+            //offset the random pitch value so that the offset could be negative
+            vintage_pitch_offset -= patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val / 2;
+            
+            //FIXME: the above algorithm will make higher notes sound less out of tune than higher notes - fix this.
+            
+        } //if (patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val != 0)
+        
+        //============================
         //set the oscillator pitches
         convert mtof;
-        oscSinePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_SINE_NOTE].voice_val - 64));
-        oscTriPitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_TRI_NOTE].voice_val - 64));
-        oscSawPitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_SAW_NOTE].voice_val - 64));
-        oscPulsePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_PULSE_NOTE].voice_val - 64));
-        oscSquarePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_SQUARE_NOTE].voice_val - 64));
-        
-        //TODO: vintage amount paramater - randomly detune each oscillator and/or the overall voice tuning
-        //on each note press, with the vintage amount value determining the amount of detuning.
+        oscSinePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_SINE_NOTE].voice_val - 64)) + vintage_pitch_offset;
+        oscTriPitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_TRI_NOTE].voice_val - 64)) + vintage_pitch_offset;
+        oscSawPitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_SAW_NOTE].voice_val - 64)) + vintage_pitch_offset;
+        oscPulsePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_PULSE_NOTE].voice_val - 64)) + vintage_pitch_offset;
+        oscSquarePitch = mtof.mtof (rootNoteNum + (patchParameterData[PARAM_OSC_SQUARE_NOTE].voice_val - 64)) + vintage_pitch_offset;
         
         //============================
         //set the note velocity
