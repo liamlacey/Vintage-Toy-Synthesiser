@@ -95,8 +95,13 @@ typedef struct
 
 void WriteToMidiOutFd (uint8_t data_buffer[], int data_buffer_size)
 {
-    if (write (midi_fd, data_buffer, data_buffer_size) == -1)
-        perror("[VB] Writing to MIDI output");
+    //FIXME: for some reason sending to MIDI-out causes frequent glitches in the audio in vintageSoundEngine.
+    //Not sure why this is yet. If I can't figure it out before the end of the project, I could just only allow
+    //sending to MIDI-out of system volume is 0, as to demo I won't need to be triggering both the sound engine
+    //and MIDI gear at the same time.
+    
+//    if (write (midi_fd, data_buffer, data_buffer_size) == -1)
+//        perror("[VB] Writing to MIDI output");
 }
 
 //==========================================================
