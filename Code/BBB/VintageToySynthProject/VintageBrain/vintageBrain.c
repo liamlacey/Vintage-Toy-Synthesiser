@@ -862,6 +862,12 @@ void ProcessCcMessage (uint8_t message_buffer[],
     uint8_t param_num = message_buffer[1];
     uint8_t param_val = message_buffer[2];
     
+    //bound the param val if needed
+    if (param_val > patch_param_data[param_num].user_max_val)
+        param_val = patch_param_data[param_num].user_max_val;
+    else if (param_val < patch_param_data[param_num].user_min_val)
+        param_val = patch_param_data[param_num].user_min_val;
+    
     //====================================================================================
     //Process certain parameter changes
     
@@ -898,13 +904,8 @@ void ProcessCcMessage (uint8_t message_buffer[],
     } //if (param_num == PARAM_KEYS_TRANSPOSE && patch_param_data[param_num].user_val != param_val)
     
     //====================================================================================
-    //Store the new param value, and bounding it if needed...
-    
-    if (param_val > patch_param_data[param_num].user_max_val)
-        param_val = patch_param_data[param_num].user_max_val;
-    else if (param_val < patch_param_data[param_num].user_min_val)
-        param_val = patch_param_data[param_num].user_min_val;
-    
+    //Store the new param value
+
     patch_param_data[param_num].user_val = param_val;
     message_buffer[2] = param_val;
     
