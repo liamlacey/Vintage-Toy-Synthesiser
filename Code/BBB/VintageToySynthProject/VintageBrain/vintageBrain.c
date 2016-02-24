@@ -231,17 +231,17 @@ void KillAllVoices (PatchParameterData patch_param_data[],
     
     for (uint8_t i = 0; i < NUM_OF_VOICES; i++)
     {
-        voice_alloc_data.free_voices[i] = i + 1;
+        voice_alloc_data->free_voices[i] = i + 1;
     }
     
     for (uint8_t i = 0; i < VOICE_ALLOC_NOTE_BUFFER_SIZE; i++)
     {
-        voice_alloc_data.note_data[i].note_num = VOICE_NO_NOTE;
-        voice_alloc_data.note_data[i].note_vel = VOICE_NO_NOTE;
+        voice_alloc_data->note_data[i].note_num = VOICE_NO_NOTE;
+        voice_alloc_data->note_data[i].note_vel = VOICE_NO_NOTE;
     }
     
-    voice_alloc_data.mono_note_stack_pointer = 0;
-    voice_alloc_data.last_voice = 0;
+    voice_alloc_data->mono_note_stack_pointer = 0;
+    voice_alloc_data->last_voice = 0;
 }
 
 //==========================================================
@@ -638,7 +638,7 @@ void PullNoteFromMonoStack (uint8_t note_num, VoiceAllocData *voice_alloc_data)
     uint8_t note_index;
     
     //find the note in the stack buffer
-    if (uint8_t i = 0; i < voice_alloc_data->mono_note_stack_pointer; i++)
+    for (uint8_t i = 0; i < voice_alloc_data->mono_note_stack_pointer; i++)
     {
         //if it matches
         if (voice_alloc_data->note_data[i].note_num == note_num)
