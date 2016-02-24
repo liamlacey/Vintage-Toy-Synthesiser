@@ -645,6 +645,7 @@ void PullNoteFromMonoStack (uint8_t note_num, VoiceAllocData *voice_alloc_data)
         {
             //store index
             note_index = i;
+            
             //break from loop
             break;
         }
@@ -768,12 +769,12 @@ void ProcessNoteMessage (uint8_t message_buffer[],
             PullNoteFromMonoStack (message_buffer[1], voice_alloc_data);
             
             //if there is still atleast one note on the stack
-            if (voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_num != VOICE_NO_NOTE)
+            if (voice_alloc_data->mono_note_stack_pointer != 0)
             {
                 //Send a note-on message to the sound engine with the previous note on the stack...
                 
-                uint8_t note_num = voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_num;
-                uint8_t note_vel = voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_vel;
+                uint8_t note_num = voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer - 1].note_num;
+                uint8_t note_vel = voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer - 1].note_vel;
                 
                 uint8_t note_buffer[3] = {MIDI_NOTEON, note_num, note_vel};
                 SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
