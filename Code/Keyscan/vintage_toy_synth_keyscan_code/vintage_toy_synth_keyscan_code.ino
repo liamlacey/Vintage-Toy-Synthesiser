@@ -19,7 +19,7 @@ const int midiChan = 0;
 
 //Change these numbers to set what MIDI note number each key will send.
 //TODO: eventually the keys should just send 0-17, so this array won't be needed
-const int midiNote[NUM_OF_KEYS] = {60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89};
+//const int midiNote[NUM_OF_KEYS] = {60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89};
 
 //=======================================================================================
 
@@ -197,7 +197,7 @@ void loop()
       //if (velocity > 0)
       //{
       //Send MIDI note-on message
-      SendMidiMessage (0x90 + midiChan, midiNote[count], velocity); 
+      SendMidiMessage (0x90 + midiChan, count, velocity); 
 
       //flag that the note is on
       noteIsOn[count] = true;
@@ -216,7 +216,7 @@ void loop()
     else if (triggerVal[count] == 0 && noteIsOn[count] == true)
     {
       //Send MIDI note-on message
-      SendMidiMessage (0x80 + midiChan, midiNote[count], 0); 
+      SendMidiMessage (0x80 + midiChan, count, 0); 
       
       noteIsOn[count] = false;
       
