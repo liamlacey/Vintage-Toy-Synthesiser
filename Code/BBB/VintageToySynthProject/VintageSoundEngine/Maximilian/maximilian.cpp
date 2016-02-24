@@ -53,8 +53,8 @@ float chandiv= 1;
 int maxiSettings::sampleRate = 44100;
 int maxiSettings::channels = 2;
 //int maxiSettings::bufferSize = 1024;
-//int maxiSettings::bufferSize = 512;
-int maxiSettings::bufferSize = 512 + 128;
+int maxiSettings::bufferSize = 512;
+//int maxiSettings::bufferSize = 512 + 128;
 
 
 //this is a 514-point sinewave table that has many uses. 
