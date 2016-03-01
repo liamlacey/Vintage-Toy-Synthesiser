@@ -1387,57 +1387,128 @@ double maxiEnv::adsr(double input, double attack, double decay, double sustain, 
     return output;
 }
 
-double maxiEnv::adsr(double input, int trigger) {
-    
-    if (trigger==1 && attackphase!=1 && holdphase!=1 && decayphase!=1){
-        holdcount=0;
-        decayphase=0;
-        sustainphase=0;
-        releasephase=0;
-        attackphase=1;
+double maxiEnv::adsr(double input, int trigger)
+{
+    //if get a trigger value of 1 while in no phase or the release phase
+    if (trigger == 1 && attackphase != 1 && holdphase != 1 && decayphase != 1)
+    {
+        //reset variables and start the attack phase
+        holdcount = 0;
+        decayphase = 0;
+        sustainphase = 0;
+        releasephase = 0;
+        attackphase = 1;
     }
     
-    if (attackphase==1) {
-        releasephase=0;
-        amplitude+=(1*attack);
-        output=input*amplitude;
+    //if get a trigger value of 0 while in the attack, decay, or sustain ohase
+    else if (trigger == 0 && (attackphase == 1 || decayphase == 1 || holdphase == 1))
+    {
+        //start the release phase
+        holdcount = 0;
+        attackphase = 0;
+        decayphase = 0;
+        sustainphase = 0;
+        releasephase = 1;
+    }
+    
+    //if in the attack phase
+    if (attackphase == 1 && trigger == 1)
+    {
+        //increment the output value
+        amplitude += (1 * attack);
+        output = input * amplitude;
         
-        if (amplitude>=1) {
-            amplitude=1;
-            attackphase=0;
-            decayphase=1;
+        //if reached the end of the attack phase
+        if (amplitude >= 1)
+        {
+            //start the decay phase
+            amplitude = 1;
+            attackphase = 0;
+            decayphase = 1;
         }
     }
     
-    
-    if (decayphase==1) {
-        output=input*(amplitude*=decay);
-        if (amplitude<=sustain) {
-            decayphase=0;
-            holdphase=1;
+    //if in the decay phase
+    if (decayphase == 1 && trigger == 1)
+    {
+        //increment the output value
+        output = input * (amplitude *= decay);
+        
+        //if reached the start of the sustain phase
+        if (amplitude <= sustain)
+        {
+            //start the sustain phase
+            decayphase = 0;
+            holdphase = 1;
         }
     }
     
-    if (holdcount<holdtime && holdphase==1) {
-        output=input*amplitude;
-        holdcount++;
+    //if in the sustain phase
+    if (holdphase == 1 && trigger == 1)
+    {
+        //keep the output value at the sustain value
+        output = input * amplitude;
     }
     
-    if (holdcount>=holdtime && trigger==1) {
-        output=input*amplitude;
-    }
-    
-    if (holdcount>=holdtime && trigger!=1) {
-        holdphase=0;
-        releasephase=1;
-    }
-    
-    if (releasephase==1 && amplitude>0.) {
-        output=input*(amplitude*=release);
-        
+    //if in the release phase
+    if (releasephase == 1 && amplitude > 0.)
+    {
+        //increment the output value
+        output = input * (amplitude *= release);
     }
     
     return output;
+    
+    
+//    if (trigger==1 && attackphase!=1 && holdphase!=1 && decayphase!=1){
+//        holdcount=0;
+//        decayphase=0;
+//        sustainphase=0;
+//        releasephase=0;
+//        attackphase=1;
+//    }
+//    
+//    if (attackphase==1) {
+//        releasephase=0;
+//        amplitude+=(1*attack);
+//        output=input*amplitude;
+//        
+//        if (amplitude>=1) {
+//            amplitude=1;
+//            attackphase=0;
+//            decayphase=1;
+//        }
+//    }
+//    
+//    
+//    if (decayphase==1) {
+//        output=input*(amplitude*=decay);
+//        if (amplitude<=sustain) {
+//            decayphase=0;
+//            holdphase=1;
+//        }
+//    }
+//    
+//    if (holdcount<holdtime && holdphase==1) {
+//        output=input*amplitude;
+//        holdcount++;
+//    }
+//    
+//    if (holdcount>=holdtime && trigger==1) {
+//        output=input*amplitude;
+//    }
+//    
+//    if (holdcount>=holdtime && trigger!=1) {
+//        holdphase=0;
+//        releasephase=1;
+//    }
+//    
+//    if (releasephase==1 && amplitude>0.) {
+//        output=input*(amplitude*=release);
+//        
+//    }
+//    
+//    return output;
 }
 
 
