@@ -10,8 +10,8 @@
 
 */
 
-#ifndef __APPHEADERFILE_KFPUEG__
-#define __APPHEADERFILE_KFPUEG__
+#ifndef __APPHEADERFILE_ZTXUYU__
+#define __APPHEADERFILE_ZTXUYU__
 
 #include "AppConfig.h"
 #include "modules/juce_audio_basics/juce_audio_basics.h"
@@ -37,10 +37,10 @@
 #if ! JUCE_DONT_DECLARE_PROJECTINFO
 namespace ProjectInfo
 {
-    const char* const  projectName    = "PatchManagerDesktopApp";
+    const char* const  projectName    = "VtsEditor";
     const char* const  versionString  = "0.0.1";
     const int          versionNumber  = 0x1;
 }
 #endif
 
-#endif   // __APPHEADERFILE_KFPUEG__
+#endif   // __APPHEADERFILE_ZTXUYU__

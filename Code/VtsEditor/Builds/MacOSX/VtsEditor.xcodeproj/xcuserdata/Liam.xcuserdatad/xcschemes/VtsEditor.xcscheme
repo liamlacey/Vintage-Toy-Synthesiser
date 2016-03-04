@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E88BE9D630DA9F79C4740D1E"
-               BuildableName = "PatchManagerDesktopApp.app"
-               BlueprintName = "PatchManagerDesktopApp"
-               ReferencedContainer = "container:PatchManagerDesktopApp.xcodeproj">
+               BlueprintIdentifier = "36F17CF8E7D46109B636FFCA"
+               BuildableName = "VtsEditor.app"
+               BlueprintName = "VtsEditor"
+               ReferencedContainer = "container:VtsEditor.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E88BE9D630DA9F79C4740D1E"
-            BuildableName = "PatchManagerDesktopApp.app"
-            BlueprintName = "PatchManagerDesktopApp"
-            ReferencedContainer = "container:PatchManagerDesktopApp.xcodeproj">
+            BlueprintIdentifier = "36F17CF8E7D46109B636FFCA"
+            BuildableName = "VtsEditor.app"
+            BlueprintName = "VtsEditor"
+            ReferencedContainer = "container:VtsEditor.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </TestAction>
@@ -52,10 +52,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E88BE9D630DA9F79C4740D1E"
-            BuildableName = "PatchManagerDesktopApp.app"
-            BlueprintName = "PatchManagerDesktopApp"
-            ReferencedContainer = "container:PatchManagerDesktopApp.xcodeproj">
+            BlueprintIdentifier = "36F17CF8E7D46109B636FFCA"
+            BuildableName = "VtsEditor.app"
+            BlueprintName = "VtsEditor"
+            ReferencedContainer = "container:VtsEditor.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -71,10 +71,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E88BE9D630DA9F79C4740D1E"
-            BuildableName = "PatchManagerDesktopApp.app"
-            BlueprintName = "PatchManagerDesktopApp"
-            ReferencedContainer = "container:PatchManagerDesktopApp.xcodeproj">
+            BlueprintIdentifier = "36F17CF8E7D46109B636FFCA"
+            BuildableName = "VtsEditor.app"
+            BlueprintName = "VtsEditor"
+            ReferencedContainer = "container:VtsEditor.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

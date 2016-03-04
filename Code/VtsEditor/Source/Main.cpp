@@ -13,11 +13,11 @@
 
 
 //==============================================================================
-class PatchManagerDesktopAppApplication  : public JUCEApplication
+class VtsEditorApplication  : public JUCEApplication
 {
 public:
     //==============================================================================
-    PatchManagerDesktopAppApplication() {}
+    VtsEditorApplication() {}
 
     const String getApplicationName() override       { return ProjectInfo::projectName; }
     const String getApplicationVersion() override    { return ProjectInfo::versionString; }
@@ -97,4 +97,4 @@ private:
 
 //==============================================================================
 // This macro generates the main() routine that launches the app.
-START_JUCE_APPLICATION (PatchManagerDesktopAppApplication)
+START_JUCE_APPLICATION (VtsEditorApplication)

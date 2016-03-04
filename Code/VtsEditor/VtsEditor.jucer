@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="KfPUEg" name="PatchManagerDesktopApp" projectType="guiapp"
-              version="0.0.1" bundleIdentifier="com.yourcompany.PatchManagerDesktopApp"
-              includeBinaryInAppConfig="1" jucerVersion="4.1.0">
-  <MAINGROUP id="UH502G" name="PatchManagerDesktopApp">
-    <GROUP id="{22B9A241-0023-97D5-3321-B96183BDB0DB}" name="Source">
-      <FILE id="jpookp" name="MainComponent.cpp" compile="1" resource="0"
+<JUCERPROJECT id="ztXuYU" name="VtsEditor" projectType="guiapp" version="0.0.1"
+              bundleIdentifier="com.yourcompany.VtsEditor" includeBinaryInAppConfig="1"
+              jucerVersion="4.1.0">
+  <MAINGROUP id="haRVNY" name="VtsEditor">
+    <GROUP id="{7365D1C2-E03C-E141-8B14-800261B37958}" name="Source">
+      <FILE id="mJz5Uk" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
-      <FILE id="DPfYlR" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
-      <FILE id="NlIFWy" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="Hu0L6k" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="PXxLmG" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" osxSDK="default" osxCompatibility="default" osxArchitecture="default"
-                       isDebug="1" optimisation="1" targetName="PatchManagerDesktopApp"/>
+                       isDebug="1" optimisation="1" targetName="VtsEditor"/>
         <CONFIGURATION name="Release" osxSDK="default" osxCompatibility="default" osxArchitecture="default"
-                       isDebug="0" optimisation="3" targetName="PatchManagerDesktopApp"/>
+                       isDebug="0" optimisation="3" targetName="VtsEditor"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="../../../Software Libraries/JUCE/modules"/>

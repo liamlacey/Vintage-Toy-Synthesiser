@@ -4,7 +4,7 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>PatchManagerDesktopApp.xcscheme</key>
+		<key>VtsEditor.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
@@ -12,7 +12,7 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>E88BE9D630DA9F79C4740D1E</key>
+		<key>36F17CF8E7D46109B636FFCA</key>
 		<dict>
 			<key>primary</key>
 			<true/>

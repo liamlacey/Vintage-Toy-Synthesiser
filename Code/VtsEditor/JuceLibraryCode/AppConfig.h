@@ -11,8 +11,8 @@
 
 */
 
-#ifndef __JUCE_APPCONFIG_KFPUEG__
-#define __JUCE_APPCONFIG_KFPUEG__
+#ifndef __JUCE_APPCONFIG_ZTXUYU__
+#define __JUCE_APPCONFIG_ZTXUYU__
 
 //==============================================================================
 // [BEGIN_USER_CODE_SECTION]
@@ -206,4 +206,4 @@
 #endif
 
 
-#endif  // __JUCE_APPCONFIG_KFPUEG__
+#endif  // __JUCE_APPCONFIG_ZTXUYU__
