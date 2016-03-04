@@ -10,9 +10,14 @@
 
 
 //==============================================================================
+//==============================================================================
+//==============================================================================
+//Constructor
+
 MainContentComponent::MainContentComponent()
                     :   timeSliceThread ("contents list thread")
 {
+    //==============================================================================
     //backend...
     
     timeSliceThread.startThread();
@@ -39,10 +44,7 @@ MainContentComponent::MainContentComponent()
     patchFileDirContentsList = new DirectoryContentsList (patchFileFilter, timeSliceThread);
     patchFileDirContentsList->setDirectory (patchDir, false, true);
     
-    std::cout << patchFileDirContentsList->getDirectory().getFullPathName() << std::endl;
-    std::cout << patchFileDirContentsList->getNumFiles() << std::endl;
-    
-    
+    //==============================================================================
     //GUI
     addAndMakeVisible (audioDeviceSelectorComponent = new AudioDeviceSelectorComponent (audioDeviceManager, 0, 0, 0, 0, true, true, false, false));
     
@@ -72,12 +74,20 @@ MainContentComponent::MainContentComponent()
 }
 
 //==============================================================================
+//==============================================================================
+//==============================================================================
+//Destructor
+
 MainContentComponent::~MainContentComponent()
 {
     
 }
 
 //==============================================================================
+//==============================================================================
+//==============================================================================
+//JUCE Component function called to position all components
+
 void MainContentComponent::resized()
 {
     requestPatchDataButton->setBounds(0, 0, getWidth(), 20);
@@ -92,12 +102,20 @@ void MainContentComponent::resized()
 }
 
 //==============================================================================
+//==============================================================================
+//==============================================================================
+//JUCE Component function called to paint/draw GUI elements
+
 void MainContentComponent::paint (Graphics& g)
 {
     g.fillAll (Colours::grey);
 }
 
 //==============================================================================
+//==============================================================================
+//==============================================================================
+//JUCE button callback function called when a button is clicked
+
 void MainContentComponent::buttonClicked (Button *button)
 {
     if (button == saveButton)
@@ -117,6 +135,10 @@ void MainContentComponent::buttonClicked (Button *button)
 }
 
 //==============================================================================
+//==============================================================================
+//==============================================================================
+//JUCE FileBrowserComponent callback functions called when there is interaction with a file browser component
+
 void MainContentComponent::selectionChanged()
 {
     
@@ -129,6 +151,7 @@ void MainContentComponent::fileClicked (const File &file, const MouseEvent &e)
 
 void MainContentComponent::fileDoubleClicked (const File &file)
 {
+    //trigger a load of the clicked file
     loadPatchFile (file);
 }
 
@@ -138,6 +161,11 @@ void MainContentComponent::browserRootChanged (const File &newRoot)
 }
 
 //==============================================================================
+//==============================================================================
+//==============================================================================
+//JUCE MidiInput callback function called whenever a MIDI message is received
+
+
 void MainContentComponent::handleIncomingMidiMessage (MidiInput *source, const MidiMessage &message)
 {
 //    //debugging raw message
@@ -176,6 +204,10 @@ void MainContentComponent::handleIncomingMidiMessage (MidiInput *source, const M
 }
 
 //==============================================================================
+//==============================================================================
+//==============================================================================
+//Function that sends a MIDI message to the MIDI output set by the audio device manager object
+
 void MainContentComponent::sendMidiMessage (MidiMessage midiMessage)
 {
     //If midi output exists (it won't if the user hasn't chosen an output device...)
@@ -193,10 +225,13 @@ void MainContentComponent::sendMidiMessage (MidiMessage midiMessage)
 }
 
 //==============================================================================
+//==============================================================================
+//==============================================================================
+//Function that saves a set of patch data to file
+
 void MainContentComponent::savePatchFile()
 {
     std::cout << "Saving patch file with name: " << patchNameEditor->getText() << std::endl;
-    
     eventLabel->setText("Saving patch to file...", dontSendNotification);
     
     //create patch file object
@@ -229,6 +264,7 @@ void MainContentComponent::savePatchFile()
 //==============================================================================
 //==============================================================================
 //==============================================================================
+//Function that loads and reads data from a patch file, sending data to the synth via MIDI
 
 void MainContentComponent::loadPatchFile (const File file)
 {
