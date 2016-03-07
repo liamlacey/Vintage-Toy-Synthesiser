@@ -921,11 +921,40 @@ void ProcessCcMessage (uint8_t message_buffer[],
         
     } //if (param_num == PARAM_GLOBAL_VOLUME && patch_param_data[param_num].user_val != param_val)
     
+    //if a command CC (not a patch param)
+    else if (param_num == PARAM_CMD)
+    {
+        //if got a request for all current patch data from the VTS Editor via MIDI-out
+        if (param_val == CMD_REQUEST_ALL_PATCH_DATA)
+        {
+            //send back all patch data to the MIDI-out
+            for (uint8_t i = 0; i < 127; i++)
+            {
+                if (patch_param_data[i].patch_param == true)
+                {
+                    uint8_t cc_buf[3] = {MIDI_CC, i, patch_param_data[i].user_val};
+                    WriteToMidiOutFd (cc_buf, 3);
+                }
+                
+            } //for (uint8_t i = 0; i < 127; i++)
+            
+            //send a command CC to flag that all patch data has been sent
+            uint8_t cc_buf[3] = {MIDI_CC, PARAM_CMD, CMD_SENT_ALL_PATCH_DATA};
+            WriteToMidiOutFd (cc_buf, 3);
+            
+        } //if (param_val == CMD_REQUEST_ALL_PATCH_DATA)
+        
+    } //else if (param_num == PARAM_CMD)
+    
+    
     //====================================================================================
     //Store the new param value
 
-    patch_param_data[param_num].user_val = param_val;
-    message_buffer[2] = param_val;
+    if (param_num != PARAM_CMD)
+    {
+        patch_param_data[param_num].user_val = param_val;
+        message_buffer[2] = param_val;
+    }
     
     //====================================================================================
     //Send to the sound engine if needed

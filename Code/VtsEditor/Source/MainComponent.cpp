@@ -7,6 +7,7 @@
 */
 
 #include "MainComponent.h"
+#include "../../BBB/VintageToySynthProject/globals.h"
 
 
 //==============================================================================
@@ -93,7 +94,7 @@ void MainContentComponent::resized()
     requestPatchDataButton->setBounds(0, 0, getWidth(), 20);
     patchNameEditor->setBounds(0, 20, getWidth() - 50, 20);
     saveButton->setBounds(getWidth()-50, 20, 50, 20);
-    
+ 
     patchDirFileListComponent->setBounds(0, getHeight()/2, getWidth()/2, getHeight()/2);
     audioDeviceSelectorComponent->setBounds(getWidth()/2, getHeight()/2, getWidth()/2, getHeight()/2);
     
@@ -128,8 +129,9 @@ void MainContentComponent::buttonClicked (Button *button)
         printf("Requesting patch data from synth\r\n");
         eventLabel->setText("Requesting patch data from synth...", dontSendNotification);
         
-        //TODO: send a specific command CC to the synth via MIDI to request it to send back all patch data.
-        //The synth then needs to send back a different command CC at the end which this application uses to flag that all patch data has vee received
+        //send patch data request command CC to synth via MIDI
+        MidiMessage message = MidiMessage::controllerEvent(1, PARAM_CMD, CMD_REQUEST_ALL_PATCH_DATA);
+        sendMidiMessage (message);
         
     } //else if (button == requestPatchDataButton)
 }
@@ -199,6 +201,18 @@ void MainContentComponent::handleIncomingMidiMessage (MidiInput *source, const M
             eventLabel->setText(output_string, dontSendNotification);
             
         } //if (message.getControllerNumber() < 127)
+        
+        //if a command CC (127)
+        else
+        {
+            if (message.getControllerValue() == CMD_SENT_ALL_PATCH_DATA)
+            {
+                MessageManagerLock mmlock;
+                eventLabel->setText("Got all patch data from synth!", dontSendNotification);
+                
+            } //if (message.getControllerValue() == CMD_SENT_ALL_PATCH_DATA)
+            
+        } //else
         
     } //if (message.isController())
 }

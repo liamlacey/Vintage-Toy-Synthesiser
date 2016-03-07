@@ -157,6 +157,8 @@ const int keyboardScales[KEYBOARD_NUM_OF_SCALES][KEYBOARD_NUM_OF_KEYS] =
 
 #define CMD_KILL_ALL_VOICES 0
 #define CMD_SOUND_ENGINE_READY 1
+#define CMD_REQUEST_ALL_PATCH_DATA 2
+#define CMD_SENT_ALL_PATCH_DATA 3
 
 //==========================================================================
 //structure that stores info about a patch parameter
