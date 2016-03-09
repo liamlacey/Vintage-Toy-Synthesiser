@@ -23,7 +23,11 @@
 //==========================================
 
 //The number of pots/switches attached
-const byte NUM_OF_CONTROLS = 1;
+const byte NUM_OF_CONTROLS = 43;
+
+//for dev
+const byte FIRST_CONTROL = 0;
+const byte LAST_CONTROL = 42;
 
 //The previous anologue value received from each control
 int prevAnalogueValue[NUM_OF_CONTROLS] = {0};
@@ -43,12 +47,101 @@ struct ControlParamData
   const byte cc_max_val;
 };
 
-ControlParamData controlParamData[NUM_OF_CONTROLS] = 
+ControlParamData controlParamData[NUM_OF_CONTROLS] =
 {
-  //TODO: for each control/input, lists the param data
-  
-   {.cc_num = 74, .cc_min_val = 0, .cc_max_val = 127}, //1 - example param
+   {.cc_num = 74, .cc_min_val = 0, .cc_max_val = 127}, //0 - PARAM_FILTER_CUTOFF
+   {.cc_num = 19, .cc_min_val = 0, .cc_max_val = 127}, //1 - PARAM_FILTER_RESO
+   {.cc_num = 26, .cc_min_val = 0, .cc_max_val = 127}, //2 - PARAM_FILTER_LP_MIX
+   {.cc_num = 28, .cc_min_val = 0, .cc_max_val = 127}, //3 - PARAM_FILTER_HP_MIX
+   {.cc_num = 27, .cc_min_val = 0, .cc_max_val = 127}, //4 - PARAM_FILTER_BP_MIX
+   {.cc_num = 29, .cc_min_val = 0, .cc_max_val = 127}, //5 - PARAM_FILTER_NOTCH_MIX
+   {.cc_num = 50, .cc_min_val = 0, .cc_max_val = 3}, //6 - PARAM_LFO_SHAPE
+   {.cc_num = 47, .cc_min_val = 0, .cc_max_val = 127}, //7 - PARAM_LFO_RATE
+   {.cc_num = 48, .cc_min_val = 0, .cc_max_val = 127}, //8 - PARAM_LFO_DEPTH
+   {.cc_num = 14, .cc_min_val = 0, .cc_max_val = 127}, //9 - PARAM_OSC_SINE_LEVEL
+   {.cc_num = 15, .cc_min_val = 0, .cc_max_val = 127}, //10 - PARAM_OSC_TRI_LEVEL
+   {.cc_num = 16, .cc_min_val = 0, .cc_max_val = 127}, //11 - PARAM_OSC_SAW_LEVEL
+   {.cc_num = 18, .cc_min_val = 0, .cc_max_val = 127}, //12 - PARAM_OSC_SQUARE_LEVEL
+   {.cc_num = 17, .cc_min_val = 0, .cc_max_val = 127}, //13 - PARAM_OSC_PULSE_LEVEL
+   {.cc_num = 3, .cc_min_val = 0, .cc_max_val = 127}, //14 - PARAM_OSC_PULSE_AMOUNT
+   {.cc_num = 7, .cc_min_val = 0, .cc_max_val = 127}, //15 - PARAM_AEG_AMOUNT
+   {.cc_num = 73, .cc_min_val = 0, .cc_max_val = 127}, //16 - PARAM_AEG_ATTACK
+   {.cc_num = 75, .cc_min_val = 0, .cc_max_val = 127}, //17 - PARAM_AEG_DECAY
+   {.cc_num = 79, .cc_min_val = 0, .cc_max_val = 127}, //18 - PARAM_AEG_SUSTAIN
+   {.cc_num = 72, .cc_min_val = 0, .cc_max_val = 127}, //19 - PARAM_AEG_RELEASE
+   {.cc_num = 13, .cc_min_val = 0, .cc_max_val = 127}, //20 - PARAM_FX_DISTORTION_AMOUNT
+   {.cc_num = 33, .cc_min_val = 40, .cc_max_val = 88}, //21 - PARAM_OSC_SINE_NOTE
+   {.cc_num = 34, .cc_min_val = 40, .cc_max_val = 88}, //22 - PARAM_OSC_TRI_NOTE
+   {.cc_num = 35, .cc_min_val = 40, .cc_max_val = 88}, //23 - PARAM_OSC_SAW_NOTE
+   {.cc_num = 37, .cc_min_val = 40, .cc_max_val = 88}, //24 - PARAM_OSC_SQUARE_NOTE
+   {.cc_num = 36, .cc_min_val = 40, .cc_max_val = 88}, //25 - PARAM_OSC_PULSE_NOTE
+   {.cc_num = 20, .cc_min_val = 0, .cc_max_val = 127}, //26 - PARAM_OSC_PHASE_SPREAD
+   {.cc_num = 22, .cc_min_val = 0, .cc_max_val = 127}, //27 - PARAM_FEG_ATTACK
+   {.cc_num = 23, .cc_min_val = 0, .cc_max_val = 127}, //28 - PARAM_FEG_DECAY
+   {.cc_num = 24, .cc_min_val = 0, .cc_max_val = 127}, //29 - PARAM_FEG_SUSTAIN
+   {.cc_num = 25, .cc_min_val = 0, .cc_max_val = 127}, //30 - PARAM_FEG_RELEASE
+   {.cc_num = 107, .cc_min_val = 0, .cc_max_val = 127}, //31 - PARAM_GLOBAL_VINTAGE_AMOUNT
+   {.cc_num = 102, .cc_min_val = 0, .cc_max_val = 7}, //32 - PARAM_KEYS_SCALE
+   {.cc_num = 114, .cc_min_val = 61, .cc_max_val = 67}, //33 - PARAM_KEYS_OCTAVE
+   {.cc_num = 106, .cc_min_val = 58, .cc_max_val = 70}, //34 - PARAM_KEYS_TRANSPOSE
+   {.cc_num = 103, .cc_min_val = 0, .cc_max_val = 127}, //35 - PARAM_VOICE_MODE
+   {.cc_num = 58, .cc_min_val = 0, .cc_max_val = 127}, //36 - PARAM_MOD_LFO_AMP
+   {.cc_num = 112, .cc_min_val = 0, .cc_max_val = 127}, //37 - PARAM_MOD_LFO_CUTOFF
+   {.cc_num = 56, .cc_min_val = 0, .cc_max_val = 127}, //38 - PARAM_MOD_LFO_RESO
+   {.cc_num = 9, .cc_min_val = 0, .cc_max_val = 100}, //39 - PARAM_GLOBAL_VOLUME
+   {.cc_num = 63, .cc_min_val = 0, .cc_max_val = 127}, //40 - PARAM_MOD_VEL_AMP
+   {.cc_num = 109, .cc_min_val = 0, .cc_max_val = 127}, //41 - PARAM_MOD_VEL_CUTOFF
+   {.cc_num = 110, .cc_min_val = 0, .cc_max_val = 127}, //42 - PARAM_MOD_VEL_RESO
 };
+
+//FOR DEVELOPMENT
+//ControlParamData controlParamData[NUM_OF_CONTROLS] =
+//{
+//
+//   {.cc_num = 0, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 1, .cc_min_val = 0, .cc_max_val = 127}, 
+//   {.cc_num = 2, .cc_min_val = 0, .cc_max_val = 127}, 
+//   {.cc_num = 3, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 4, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 5, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 6, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 7, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 8, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 9, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 10, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 11, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 12, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 13, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 14, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 15, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 16, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 17, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 18, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 19, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 20, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 21, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 22, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 23, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 24, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 25, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 26, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 27, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 28, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 29, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 30, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 31, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 32, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 33, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 34, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 35, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 36, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 37, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 38, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 39, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 40, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 41, .cc_min_val = 0, .cc_max_val = 127},
+//   {.cc_num = 42, .cc_min_val = 0, .cc_max_val = 127},
+//};
 
 void setup()
 {
@@ -77,7 +170,7 @@ void loop()
   byte first_select_pin;
   
   //for each control
-  for (byte control_num; control_num < NUM_OF_CONTROLS; control_num++)
+  for (byte control_num = FIRST_CONTROL; control_num <= LAST_CONTROL; control_num++)
   {
     //==========================================
     //==========================================
@@ -100,7 +193,7 @@ void loop()
     }
     else if (control_num < 48)
     {
-      input_to_read = A3;
+      input_to_read = A2;
       mux_input_pin = control_num - 32;
       first_select_pin = 10;
     }
@@ -116,11 +209,11 @@ void loop()
       int b0 = bitRead (mux_input_pin, 0);   
       int b1 = bitRead (mux_input_pin, 1);     
       int b2 = bitRead (mux_input_pin, 2); 
-      int b3 = bitRead (mux_input_pin, 2); 
+      int b3 = bitRead (mux_input_pin, 3); 
       digitalWrite (first_select_pin, b0);
       digitalWrite (first_select_pin + 1, b1);
       digitalWrite (first_select_pin + 2, b2);
-      digitalWrite (first_select_pin + 3, b2);
+      digitalWrite (first_select_pin + 3, b3);
 
       //read the input value
       int read_val = analogRead (input_to_read);
@@ -130,9 +223,19 @@ void loop()
       //==========================================
       //Process analogue control input...
 
-      //if the read control value is different from it's last reading
-      if (prevAnalogueValue[control_num] != read_val)
+      //if the read control value is greater that +/-5 from the last value
+      //this is a quick dirty hack to prevent jitter
+      if ((read_val > prevAnalogueValue[control_num] + 5) || 
+          (read_val < prevAnalogueValue[control_num] - 5) || 
+          (read_val == 0 && prevAnalogueValue[control_num] != 0) ||
+          (read_val == 1023 && prevAnalogueValue[control_num] != 1023)/* ||
+          (read_val == 512 && prevAnalogueValue[control_num] != 512)*/)
       {
+
+        // Serial.print(control_num);
+        // Serial.print(" ");
+        // Serial.println(read_val);
+        
         //store the value
         prevAnalogueValue[control_num] = read_val;
 
@@ -151,6 +254,8 @@ void loop()
         } //if (prevParamValue[control_num] != param_val)
         
       } //if (prevAnalogueValue[control_num] != read_val)
+
+      delay (1);
 
   } //for (byte control_num; control_num < NUM_OF_CONTROLS; control_num++)
 
