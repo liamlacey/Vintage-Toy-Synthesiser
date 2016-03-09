@@ -17,10 +17,6 @@ const int NUM_OF_KEYS = 18;
 //MIDI channel we want to use
 const int midiChan = 0;
 
-//Change these numbers to set what MIDI note number each key will send.
-//TODO: eventually the keys should just send 0-17, so this array won't be needed
-//const int midiNote[NUM_OF_KEYS] = {60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89};
-
 //=======================================================================================
 
 int INIT_PHASE_TIME = 10;
@@ -180,12 +176,13 @@ void loop()
         //Serial.println(velocity);
       }
 
-      else if (velocity <= 0)
-      {
-        velocity = 5;
+      //else if (velocity <= 0)
+      //{
+      //  velocity = 5;
         //Serial.print("Velocity: ");
         //Serial.println(velocity);
-      }
+      //}
+      
       else
       {
         //Serial.print("Velocity: ");
@@ -194,8 +191,8 @@ void loop()
       
       inInitPhase[count] = false;
 
-      //if (velocity > 0)
-      //{
+      if (velocity > 0)
+      {
       //Send MIDI note-on message
       SendMidiMessage (0x90 + midiChan, count, velocity); 
 
@@ -204,11 +201,11 @@ void loop()
       
       //test feedback
       digitalWrite (13, HIGH);
-      //}
-      //else
-      //{
+      }
+      else
+      {
         //???
-      //}
+      }
     }
 
     //========================
