@@ -104,13 +104,8 @@ typedef struct
 
 void WriteToMidiOutFd (uint8_t data_buffer[], int data_buffer_size)
 {
-    //FIXME: for some reason sending to MIDI-out causes frequent glitches in the audio in vintageSoundEngine.
-    //Not sure why this is yet. If I can't figure it out before the end of the project, I could just only allow
-    //sending to MIDI-out of system volume is 0, as to demo I won't need to be triggering both the sound engine
-    //and MIDI gear at the same time.
-    
-//    if (write (midi_fd, data_buffer, data_buffer_size) == -1)
-//        perror("[VB] Writing to MIDI output");
+    if (write (midi_fd, data_buffer, data_buffer_size) == -1)
+        perror("[VB] Writing to MIDI output");
 }
 
 //==========================================================
@@ -926,11 +921,40 @@ void ProcessCcMessage (uint8_t message_buffer[],
         
     } //if (param_num == PARAM_GLOBAL_VOLUME && patch_param_data[param_num].user_val != param_val)
     
+    //if a command CC (not a patch param)
+    else if (param_num == PARAM_CMD)
+    {
+        //if got a request for all current patch data from the VTS Editor via MIDI-out
+        if (param_val == CMD_REQUEST_ALL_PATCH_DATA)
+        {
+            //send back all patch data to the MIDI-out
+            for (uint8_t i = 0; i < 127; i++)
+            {
+                if (patch_param_data[i].patch_param == true)
+                {
+                    uint8_t cc_buf[3] = {MIDI_CC, i, patch_param_data[i].user_val};
+                    WriteToMidiOutFd (cc_buf, 3);
+                }
+                
+            } //for (uint8_t i = 0; i < 127; i++)
+            
+            //send a command CC to flag that all patch data has been sent
+            uint8_t cc_buf[3] = {MIDI_CC, PARAM_CMD, CMD_SENT_ALL_PATCH_DATA};
+            WriteToMidiOutFd (cc_buf, 3);
+            
+        } //if (param_val == CMD_REQUEST_ALL_PATCH_DATA)
+        
+    } //else if (param_num == PARAM_CMD)
+    
+    
     //====================================================================================
     //Store the new param value
 
-    patch_param_data[param_num].user_val = param_val;
-    message_buffer[2] = param_val;
+    if (param_num != PARAM_CMD)
+    {
+        patch_param_data[param_num].user_val = param_val;
+        message_buffer[2] = param_val;
+    }
     
     //====================================================================================
     //Send to the sound engine if needed
@@ -994,6 +1018,8 @@ int main (void)
     uint8_t input_message_running_status_value[NUM_OF_INPUT_SRC_TYPES] = {0};
     //don't init this to 0, incase the first CC we get is 32, causing it to be ignored!
     uint8_t input_message_prev_cc_num[NUM_OF_INPUT_SRC_TYPES] = {127};
+    
+    bool send_to_midi_out = false;
     
     //==========================================================
     //'patch' parameter data stuff
@@ -1089,6 +1115,14 @@ int main (void)
     
     while (true)
     {
+        //for now only send data from keyboard/panel to MIDI-out if global volume is 0,
+        //due to the issue where sending to MIDI-out causes glitches in the audio.
+        //FIXME: this MIDI-out audio glitch issue
+        if (patchParameterData[PARAM_GLOBAL_VOLUME].user_val == 0)
+            send_to_midi_out = true;
+        else
+            send_to_midi_out = false;
+        
         //Wait for an event to happen on one of the file descriptors
         int ret = poll (poll_fds, NUM_OF_POLL_FDS, POLL_TIME);
         
@@ -1152,7 +1186,7 @@ int main (void)
                         input_message_buffer[INPUT_SRC_KEYBOARD][1] = note_num;
                         
                         //Process the note message
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], patchParameterData, &voice_alloc_data, true, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], patchParameterData, &voice_alloc_data, send_to_midi_out, sock, sound_engine_sock_addr);
                         
                     } //if (input_message_flag == MIDI_NOTEON)
                     
@@ -1164,7 +1198,7 @@ int main (void)
                         
                         ProcessPolyAftertouchMessage (input_message_buffer[INPUT_SRC_KEYBOARD],
                                                       &voice_alloc_data,
-                                                      true,
+                                                      send_to_midi_out,
                                                       sock,
                                                       sound_engine_sock_addr);
                         
@@ -1283,7 +1317,7 @@ int main (void)
                         printf ("[VB] Received CC message from panel\r\n");
                         #endif
                         
-                        ProcessCcMessage (input_message_buffer[INPUT_SRC_PANEL], patchParameterData, &voice_alloc_data, true, sock, sound_engine_sock_addr);
+                        ProcessCcMessage (input_message_buffer[INPUT_SRC_PANEL], patchParameterData, &voice_alloc_data, send_to_midi_out, sock, sound_engine_sock_addr);
                         
                     } //else if (input_message_flag == MIDI_CC)
                     
