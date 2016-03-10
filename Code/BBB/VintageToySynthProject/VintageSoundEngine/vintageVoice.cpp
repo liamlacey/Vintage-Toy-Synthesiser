@@ -184,19 +184,23 @@ void VintageVoice::processAudio (double *output)
         
         //==========================================================
         //process distortion...
-        //FIXME: should PARAM_FX_DISTORTION_AMOUNT also change the shape of the distortion?
-        distortionOut = distortion.atanDist (filterOut, 200.0);
+        //Use patchParameterData[PARAM_FX_DISTORTION_AMOUNT] to set the distortion shape
+        //FIXME: what should be the min shape value be? Is 1 no distortion or just soft distortion? Try something like 0.1/
+        distortionOut = distortion.atanDist (filterOut, 1 + (patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val * 200.0));
+        //Apply gain reduction
+        //FIXME: will be a bit of trial and error getting algorithm correct. Change the last value to set how low it goes.
+        distortionOut = distortionOut * (1.0 - (patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val * 0.5));
         
         //process distortion mix
         //FIXME: is this (mixing dry and wet) the best way to apply distortion? Or should I just always be running the main output through the distortion function?
         //FIXME: probably need to reduce the disortionOut value so bringing in disortion doesn't increase the overall volume too much
-        effectsMixOut = (distortionOut * patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val) + (filterOut * (1.0 - patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val));
+//        effectsMixOut = (distortionOut * patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val) + (filterOut * (1.0 - patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val));
         
         //==========================================================
         //apply amp envelope, making all channels the same (pass in effectsMixOut, return output)
         for (uint8_t i = 0; i < maxiSettings::channels; i++)
         {
-            output[i] = effectsMixOut * envAmpOut;
+            output[i] = distortionOut * envAmpOut;
         }
         
     } // if (envAmpOut > 0)
