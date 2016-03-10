@@ -77,6 +77,7 @@ private:
     
     //other parameters
     double oscSinePitch, oscTriPitch, oscSawPitch, oscPulsePitch, oscSquarePitch;
+    double filterCutoffRealtimeVal;
     
     double voiceVelocityValue;
     uint8_t rootNoteNum;

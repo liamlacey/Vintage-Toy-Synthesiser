@@ -39,6 +39,8 @@ VintageVoice::VintageVoice (uint8_t voice_num)
     
     velAmpModVal = velFreqModVal = velResoModVal = 0;
     
+    filterCutoffRealtimeVal = 100.0;
+    
     //init objects
     envAmp.setAttack (patchParameterData[PARAM_AEG_ATTACK].voice_val);
     envAmp.setDecay (patchParameterData[PARAM_AEG_DECAY].voice_val);
@@ -92,7 +94,7 @@ void VintageVoice::processAudio (double *output)
     //Amp envelope stuff...
     
     //process LFO->amp env modulation
-    double amp_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_AMP, PARAM_AEG_AMOUNT, lfoOut);
+    double amp_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_AMP, PARAM_AEG_AMOUNT, patchParameterData[PARAM_AEG_AMOUNT].voice_val, lfoOut);
     
     //Add the amp modulation values to the patch value, making sure the produced value is in range
     double amp_val = patchParameterData[PARAM_AEG_AMOUNT].voice_val + amp_lfo_mod_val + velAmpModVal;
@@ -126,11 +128,34 @@ void VintageVoice::processAudio (double *output)
         //process filter (pass in oscOut, return filterOut)
         
         //================================
+        //process cutoff value
+        //In order to prevent cutoff stepping when changing the value via the panel/MIDI-in,
+        //I use a seperate cutoff value from that within patchParameterData to set the filter,
+        //which is set to the patchParameterData value by incrementing/decrementing the value
+        //by a small amount each time this function is called until the values match.
+        
+        if (filterCutoffRealtimeVal < patchParameterData[PARAM_FILTER_FREQ].voice_val)
+        {
+            filterCutoffRealtimeVal += 1.0;
+            
+            if (filterCutoffRealtimeVal > patchParameterData[PARAM_FILTER_FREQ].voice_val)
+                filterCutoffRealtimeVal = patchParameterData[PARAM_FILTER_FREQ].voice_val;
+        }
+        
+        else if (filterCutoffRealtimeVal > patchParameterData[PARAM_FILTER_FREQ].voice_val)
+        {
+            filterCutoffRealtimeVal -= 1.0;
+            
+            if (filterCutoffRealtimeVal < patchParameterData[PARAM_FILTER_FREQ].voice_val)
+                filterCutoffRealtimeVal = patchParameterData[PARAM_FILTER_FREQ].voice_val;
+        }
+        
+        //================================
         //process LFO->cutoff modulation
-        double cutoff_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_FREQ, PARAM_FILTER_FREQ, lfoOut);
+        double cutoff_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_FREQ, PARAM_FILTER_FREQ, filterCutoffRealtimeVal, lfoOut);
         
         //Add the cutoff modulation values to the patch value, making sure the produced value is in range
-        double cutoff_val = patchParameterData[PARAM_FILTER_FREQ].voice_val + cutoff_lfo_mod_val + velFreqModVal;
+        double cutoff_val = filterCutoffRealtimeVal + cutoff_lfo_mod_val + velFreqModVal;
         cutoff_val = boundValue (cutoff_val, patchParameterData[PARAM_FILTER_FREQ].voice_min_val, patchParameterData[PARAM_FILTER_FREQ].voice_max_val);
         
         //set cutoff value, multipled by filter envelope
@@ -138,7 +163,7 @@ void VintageVoice::processAudio (double *output)
         
         //================================
         //process LFO->reso modulation
-        double reso_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_RESO, PARAM_FILTER_RESO, lfoOut);
+        double reso_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_RESO, PARAM_FILTER_RESO, patchParameterData[PARAM_FILTER_RESO].voice_val, lfoOut);
         
         //Add the reso modulation values to the patch value, making sure the produced value is in range
         double reso_val = patchParameterData[PARAM_FILTER_RESO].voice_val + reso_lfo_mod_val + velResoModVal;
@@ -228,13 +253,13 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         //work out velocity modulation values
         
         //vel->amp env modulation
-        velAmpModVal = getModulatedParamValue (PARAM_MOD_VEL_AMP, PARAM_AEG_AMOUNT, voiceVelocityValue);
+        velAmpModVal = getModulatedParamValue (PARAM_MOD_VEL_AMP, PARAM_AEG_AMOUNT, patchParameterData[PARAM_AEG_AMOUNT].voice_val, voiceVelocityValue);
         
         //vel->cutoff modulation
-        velFreqModVal = getModulatedParamValue (PARAM_MOD_VEL_FREQ, PARAM_FILTER_FREQ, voiceVelocityValue);
+        velFreqModVal = getModulatedParamValue (PARAM_MOD_VEL_FREQ, PARAM_FILTER_FREQ, patchParameterData[PARAM_FILTER_FREQ].voice_val, voiceVelocityValue);
         
         //vel->resonance modulation
-        velResoModVal = getModulatedParamValue (PARAM_MOD_VEL_RESO, PARAM_FILTER_RESO, voiceVelocityValue);
+        velResoModVal = getModulatedParamValue (PARAM_MOD_VEL_RESO, PARAM_FILTER_RESO, patchParameterData[PARAM_FILTER_RESO].voice_val, voiceVelocityValue);
         
         //============================
         //Reset LFO osc phase, but only if the amp envelope is currently closed.
@@ -375,19 +400,19 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
     else if (param_num == PARAM_MOD_VEL_AMP)
     {
         //vel->amp env modulation
-        velAmpModVal = getModulatedParamValue (param_num, PARAM_AEG_AMOUNT, voiceVelocityValue);
+        velAmpModVal = getModulatedParamValue (param_num, PARAM_AEG_AMOUNT, patchParameterData[PARAM_AEG_AMOUNT].voice_val, voiceVelocityValue);
     }
     
     else if (param_num == PARAM_MOD_VEL_FREQ)
     {
         //vel->amp env modulation
-        velAmpModVal = getModulatedParamValue (param_num, PARAM_FILTER_FREQ, voiceVelocityValue);
+        velAmpModVal = getModulatedParamValue (param_num, PARAM_FILTER_FREQ, patchParameterData[PARAM_FILTER_FREQ].voice_val, voiceVelocityValue);
     }
     
     else if (param_num == PARAM_MOD_VEL_RESO)
     {
         //vel->amp env modulation
-        velAmpModVal = getModulatedParamValue (param_num, PARAM_FILTER_RESO, voiceVelocityValue);
+        velAmpModVal = getModulatedParamValue (param_num, PARAM_FILTER_RESO, patchParameterData[PARAM_FILTER_RESO].voice_val, voiceVelocityValue);
     }
 }
 
@@ -395,17 +420,17 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
 //==========================================================
 //==========================================================
 
-double VintageVoice::getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, double realtime_mod_val)
+double VintageVoice::getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, double source_val, double realtime_mod_val)
 {
     double modulated_param_val = 0;
     
     if (patchParameterData[mod_depth_param].voice_val > 0)
     {
-        modulated_param_val = ((patchParameterData[source_param].voice_max_val - patchParameterData[source_param].voice_val) * (realtime_mod_val * patchParameterData[mod_depth_param].voice_val));
+        modulated_param_val = ((patchParameterData[source_param].voice_max_val - source_val) * (realtime_mod_val * patchParameterData[mod_depth_param].voice_val));
     }
     else if (patchParameterData[mod_depth_param].voice_val < 0)
     {
-        modulated_param_val = ((patchParameterData[source_param].voice_val - patchParameterData[source_param].voice_min_val) * (realtime_mod_val * patchParameterData[mod_depth_param].voice_val));
+        modulated_param_val = ((source_val - patchParameterData[source_param].voice_min_val) * (realtime_mod_val * patchParameterData[mod_depth_param].voice_val));
     }
     
     return modulated_param_val;
