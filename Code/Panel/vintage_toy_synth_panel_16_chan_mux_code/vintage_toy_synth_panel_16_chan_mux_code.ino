@@ -268,9 +268,22 @@ void loop()
   if (Serial.available()) 
   {
       Serial.println ("Received messages from serial input");
+
+     byte midi_in_buf[64];
       
-    //TODO: process message for sending back all current control values.
- 
+    int num_of_bytes = Serial.readBytes (midi_in_buf, 64);
+
+    //if received a request for all panel control values
+    if (num_of_bytes == 3 && midi_in_buf[0] == 0xB0 && midi_in_buf[1] == 127 && midi_in_buf[2] == 1)
+    {
+      //send back all control values
+      for (byte control_num = 0; control_num < NUM_OF_CONTROLS; control_num++)
+      {
+          SendMidiMessage (0xB0 + midiChan, controlParamData[control_num].cc_num, prevParamValue[control_num]); 
+      }
+      
+    } //if (num_of_bytes == 3 && midi_in_buf[0] == 0xB0 && midi_in_buf[1] = 127 && midi_in_buf[2] == 1)
+    
   } //if (Serial.available()) 
 
 }
