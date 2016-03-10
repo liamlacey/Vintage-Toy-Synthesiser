@@ -34,6 +34,30 @@ byte prevPressureVal[NUM_OF_KEYS] = {0};
 
 bool testLedState = false;
 
+//array that holds the max analogue values they each sensor key can reach
+//TODO: create this list
+const int maxSensorVals[NUM_OF_KEYS] = 
+{
+  700, //0
+  700, //1
+  700, //2
+  700, //3
+  700, //4
+  700, //5
+  700, //6
+  700, //7
+  700, //8
+  700, //9
+  700, //10
+  700, //11
+  700, //12
+  700, //13
+  700, //14
+  700, //15
+  700, //16
+  700 //17
+};
+
 void setup()
 {
   //For sending MIDI messages to BBB. 
@@ -167,7 +191,7 @@ void loop()
       //Serial.print("Init val: ");
       //Serial.println(triggerInitVal[count]);
 
-      int velocity = (127.0 * triggerInitVal[count]) / 700.0;
+      int velocity = (127.0 * triggerInitVal[count]) / (float)maxSensorVals[count];
 
       if (velocity > 127)
       {
@@ -237,7 +261,7 @@ void loop()
 //
 //      int init_pressure = triggerInitVal[count] + PRESSURE_OFFSET;
 //
-//      int pressure = (((127.0 - 0) * (triggerVal[count] - init_pressure)) / (800.0 - init_pressure)) + 0;
+//      int pressure = (((127.0 - 0) * (triggerVal[count] - init_pressure)) / ((float)maxSensorVals[count] - init_pressure)) + 0;
 //
 //      if (pressure > 127)
 //      {
