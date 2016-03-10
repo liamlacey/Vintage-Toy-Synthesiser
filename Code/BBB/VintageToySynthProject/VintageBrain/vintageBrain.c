@@ -904,7 +904,8 @@ void ProcessCcMessage (uint8_t message_buffer[],
         //set the Linux system volume...
         
         //create start of amixer command to set 'Speaker' control value
-        uint8_t volume_cmd[64] = {"amixer sset Speaker "};
+        //See http://linux.die.net/man/1/amixer for more options
+        uint8_t volume_cmd[64] = {"amixer -q sset Speaker "};
         
         //turn the param value into a percentage string
         uint8_t volume_string[16];
