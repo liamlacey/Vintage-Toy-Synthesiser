@@ -81,7 +81,7 @@ void play(double *output);
 //==========================================================
 //Sends data to the vintageBrain application via a socket
 
-void sendToVintageBrainSocket (int sock, uint8_t data_buffer, uint8_t data_buffer_size)
+void sendToVintageBrainSocket (int sock, uint8_t data_buffer[], uint8_t data_buffer_size)
 {
     if (send (sock, data_buffer, data_buffer_size, 0) == -1)
     {

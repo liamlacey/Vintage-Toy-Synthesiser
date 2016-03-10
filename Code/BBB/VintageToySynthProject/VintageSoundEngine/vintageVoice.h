@@ -58,7 +58,7 @@ public:
     
     void processAftertouchMessage (uint8_t aftertouch_val);
     
-    double getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, double realtime_mod_val);
+    double getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, double source_val, double realtime_mod_val);
     double boundValue (double val, double min_val, double max_val);
     
 private:
