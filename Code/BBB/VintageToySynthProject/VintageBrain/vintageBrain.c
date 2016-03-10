@@ -1367,18 +1367,18 @@ int main (void)
         // Data available to be read from socket
         if (poll_fds[INPUT_SRC_SOCKETS].revents & POLLIN)
         {
-            //reset fromaddr.sun_path so that I'll get a clean path string below
+            //reset from_addr.sun_path so that I'll get a clean path string below
             //I think 104 is the max size of sun_path
-            memset (fromaddr.sun_path, 0, 104);
+            memset (from_addr.sun_path, 0, 104);
             
             // fill the buffer and get the source
-            ret = recvfrom (sock, socket_input_buf, sizeof(socket_input_buf), 0, (struct sockaddr *) &fromaddr, &len);
+            ret = recvfrom (sock, socket_input_buf, sizeof(socket_input_buf), 0, (struct sockaddr *) &from_addr, &len);
             
             //====================================================================================
             // Data available to be read from vintageSoundEngine
             
-            if (strncmp (fromaddr.sun_path, SOCK_SOUND_ENGINE_FILENAME, strlen(fromaddr.sun_path)) == 0)
-                
+            if (strncmp (from_addr.sun_path, SOCK_SOUND_ENGINE_FILENAME, strlen(from_addr.sun_path)) == 0)
+            {
                 //for each received byte
                 for (uint8_t i = 0; i < ret; i++)
                 {
@@ -1408,16 +1408,16 @@ int main (void)
                                               sock,
                                               sound_engine_sock_addr);
                             
-                        } //else if (input_message_flag == MIDI_CC)
+                        } //if (input_message_flag == MIDI_CC)
                         
                     } // if (input_message_flag)
                     
                 } //for (uint8_t i = 0; i < nr; i++)
                 
-            } //if (strncmp (fromaddr.sun_path, SOCK_SOUND_ENGINE_FILENAME, strlen(fromaddr.sun_path)) == 0)
+            } //if (strncmp (from_addr.sun_path, SOCK_SOUND_ENGINE_FILENAME, strlen(from_addr.sun_path)) == 0)
             
         } //if (poll_fds[INPUT_SRC_SOCKETS].revents & POLLIN)
-        
+    
         //test sending data to socket
 //        uint8_t test_buf[3] = {MIDI_NOTEON, test_num, test_vel};
 //        SendToSoundEngine (test_buf, 3, sock, sound_engine_sock_addr);
@@ -1438,6 +1438,7 @@ int main (void)
 //            test_vel = 20;
         
     } ///while (true)
+
     
     return 0;
 }
