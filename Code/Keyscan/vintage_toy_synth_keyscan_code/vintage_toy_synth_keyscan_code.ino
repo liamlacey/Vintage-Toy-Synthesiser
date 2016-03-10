@@ -63,9 +63,7 @@ void setup()
   //For sending MIDI messages to BBB. 
   //We don't need to use the MIDI baud rate (31250) here, as we're sending the messages to a general
   //serial output rather than a MIDI-specific output.
-  Serial.begin(38400);
-
-  //pinMode(1, OUTPUT);   
+  Serial.begin(38400); 
 
   pinMode(2, OUTPUT);    // mux1 s0
   pinMode(3, OUTPUT);    // mux1 s1
@@ -196,40 +194,23 @@ void loop()
       if (velocity > 127)
       {
         velocity = 127;
-        //Serial.print("Velocity: ");
-        //Serial.println(velocity);
       }
 
-      //else if (velocity <= 0)
-      //{
-      //  velocity = 5;
-        //Serial.print("Velocity: ");
-        //Serial.println(velocity);
-      //}
-      
-      else
-      {
-        //Serial.print("Velocity: ");
-        //Serial.println(velocity);
-      }
-      
       inInitPhase[count] = false;
 
       if (velocity > 0)
       {
-      //Send MIDI note-on message
-      SendMidiMessage (0x90 + midiChan, count, velocity); 
+        //Send MIDI note-on message
+        SendMidiMessage (0x90 + midiChan, count, velocity); 
 
-      //flag that the note is on
-      noteIsOn[count] = true;
+        //flag that the note is on
+        noteIsOn[count] = true;
       
-      //test feedback
-      digitalWrite (13, HIGH);
-      }
-      else
-      {
-        //???
-      }
+        //test feedback
+        digitalWrite (13, HIGH);
+      
+      } //if (velocity > 0)
+      
     }
 
     //========================
