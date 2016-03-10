@@ -1314,7 +1314,9 @@ int main (void)
                     if (input_message_flag == MIDI_CC)
                     {
                         #ifdef DEBUG
-                        printf ("[VB] Received CC message from panel\r\n");
+                        printf ("[VB] Received CC message from panel - num: %d, val %d\r\n",
+                                input_message_buffer[INPUT_SRC_PANEL][1],
+                                input_message_buffer[INPUT_SRC_PANEL][2]);
                         #endif
                         
                         ProcessCcMessage (input_message_buffer[INPUT_SRC_PANEL], patchParameterData, &voice_alloc_data, send_to_midi_out, sock, sound_engine_sock_addr);
