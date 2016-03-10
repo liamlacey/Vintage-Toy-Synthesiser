@@ -296,6 +296,19 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {64, 0, 127, true, true, 0., -1., 1.}, //112 - PARAM_MOD_LFO_FREQ
     {}, //113
     {64, 61, 67, false, true, 0, 0, 0}, //114 - PARAM_KEYS_OCTAVE
+    {}, //115
+    {}, //116
+    {}, //117
+    {}, //118
+    {}, //119
+    {}, //120
+    {}, //121
+    {}, //122
+    {}, //123
+    {}, //124
+    {}, //125
+    {}, //126
+    {0, 0, 127, false, false, 0, 0, 0}  //127 - PARAM_CMD
 };
 
 
