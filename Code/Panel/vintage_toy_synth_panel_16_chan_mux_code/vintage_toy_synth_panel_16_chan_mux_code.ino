@@ -267,6 +267,8 @@ void loop()
   //if there is something to read on the serial port
   if (Serial.available()) 
   {
+      Serial.println ("Received messages from serial input");
+      
     //TODO: process message for sending back all current control values.
  
   } //if (Serial.available()) 

@@ -54,13 +54,22 @@
 #define MIDI_SERIAL_PATH "/dev/ttyO2"
 #define PANEL_SERIAL_PATH "/dev/ttyO4"
 
-enum InputSourceTypes
+enum InputSources
 {
+    //Add any source TYPES here
     INPUT_SRC_KEYBOARD = 0,
     INPUT_SRC_MIDI_IN,
     INPUT_SRC_PANEL,
+    INPUT_SRC_SOCKETS,
 
-    NUM_OF_INPUT_SRC_TYPES
+    //use this when setting up polling stuff
+    NUM_OF_INPUT_SRC_TYPES,
+    
+    //add SOCKET types here
+    INPUT_SOCK_SRC_VOICE,
+    
+    //use this when setting up input buffers
+    NUM_OF_INPUT_SRCS
 };
 
 #define NUM_OF_POLL_FDS NUM_OF_INPUT_SRC_TYPES
@@ -96,8 +105,6 @@ typedef struct
     
 } VoiceAllocData;
 
-//TODO: parameters that need implementing here - all key ones, the voice one, and the global volume one
-
 //==========================================================
 //==========================================================
 //==========================================================
@@ -106,6 +113,16 @@ void WriteToMidiOutFd (uint8_t data_buffer[], int data_buffer_size)
 {
     if (write (midi_fd, data_buffer, data_buffer_size) == -1)
         perror("[VB] Writing to MIDI output");
+}
+
+//==========================================================
+//==========================================================
+//==========================================================
+
+void WriteToPanelFd (uint8_t data_buffer[], int data_buffer_size)
+{
+    if (write (panel_fd, data_buffer, data_buffer_size) == -1)
+        perror("[VB] Writing to panel");
 }
 
 //==========================================================
@@ -945,6 +962,14 @@ void ProcessCcMessage (uint8_t message_buffer[],
             
         } //if (param_val == CMD_REQUEST_ALL_PATCH_DATA)
         
+        //if got a request for all current panel patch data settings, most probably from the vintageSoundEngine
+        else if (param_val == CMD_REQUEST_PANEL_PARAM_DATA)
+        {
+            //forward the message to the panel
+            WriteToPanelFd (message_buffer, 3);
+            
+        } //else if (param_val == CMD_REQUEST_PANEL_PARAM_DATA)
+        
     } //else if (param_num == PARAM_CMD)
     
     
@@ -991,6 +1016,8 @@ static void SignalHandler (int sig)
         perror("[VB] Closing keyboard_fd file descriptor");
     if (close (midi_fd) == -1)
         perror("[VB] Closing midi_fd file descriptor");
+    if (close (panel_fd) == -1)
+        perror("[VB] Closing panel_fd file descriptor");
     
     exit(0);
 }
@@ -1005,8 +1032,9 @@ int main (void)
     printf ("[VB] Running vintageBrain...\n");
     
     uint8_t serial_input_buf[1] = {0};
+    uint8_t socket_input_buf[64] = {0};
     
-    struct sockaddr_un brain_sock_addr, sound_engine_sock_addr;
+    struct sockaddr_un brain_sock_addr, sound_engine_sock_addr, from_addr;
     int sock;
     
     struct pollfd poll_fds[NUM_OF_POLL_FDS];
@@ -1014,11 +1042,11 @@ int main (void)
     //FIXME: group these variables into a struct, and have an array of that struct instead,
     //passing in a reference to the struct instance into ProcInputByte.
     //If I get this working, do the same within vintageSoundEngine
-    uint8_t input_message_buffer[NUM_OF_INPUT_SRC_TYPES][1024] = {{0}}; //stores any MIDI message (including NRPN and sysex).
-    uint8_t input_message_counter[NUM_OF_INPUT_SRC_TYPES] = {0};
-    uint8_t input_message_running_status_value[NUM_OF_INPUT_SRC_TYPES] = {0};
+    uint8_t input_message_buffer[NUM_OF_INPUT_SRCS][1024] = {{0}}; //stores any MIDI message (including NRPN and sysex).
+    uint8_t input_message_counter[NUM_OF_INPUT_SRCS] = {0};
+    uint8_t input_message_running_status_value[NUM_OF_INPUT_SRCS] = {0};
     //don't init this to 0, incase the first CC we get is 32, causing it to be ignored!
-    uint8_t input_message_prev_cc_num[NUM_OF_INPUT_SRC_TYPES] = {127};
+    uint8_t input_message_prev_cc_num[NUM_OF_INPUT_SRCS] = {127};
     
     bool send_to_midi_out = false;
     
@@ -1097,7 +1125,7 @@ int main (void)
     }
     
     //===============================================================
-    //Set up poll() stuff for waiting for events on file descriptors
+    //Set up poll() stuff for waiting for events on file descriptors and sockets
     
     poll_fds[INPUT_SRC_KEYBOARD].fd = keyboard_fd;
     poll_fds[INPUT_SRC_KEYBOARD].events = POLLIN;
@@ -1105,9 +1133,14 @@ int main (void)
     poll_fds[INPUT_SRC_MIDI_IN].events = POLLIN;
     poll_fds[INPUT_SRC_PANEL].fd = panel_fd;
     poll_fds[INPUT_SRC_PANEL].events = POLLIN;
+    poll_fds[INPUT_SRC_SOCKETS].fd = sock;
+    poll_fds[INPUT_SRC_SOCKETS].events = POLLIN;
+    
+    //Variable to hold the size of a struct sockaddr_un.
+    socklen_t len = (socklen_t)sizeof(struct sockaddr_un);
     
     //==========================================================
-    //Enter main loop, and just read any data that comes in over the serial ports
+    //Enter main loop, and just read any data that comes in over the serial ports or sockets
     
     printf ("[VB] Starting reading data from serial ports...\n");
     
@@ -1328,6 +1361,60 @@ int main (void)
             
         } //if (poll_fds[INPUT_SRC_PANEL].revents & POLLIN)
         
+        //====================================================================================
+        // Data available to be read from socket
+        if (poll_fds[INPUT_SRC_SOCKETS].revents & POLLIN)
+        {
+            //reset fromaddr.sun_path so that I'll get a clean path string below
+            //I think 104 is the max size of sun_path
+            memset (fromaddr.sun_path, 0, 104);
+            
+            // fill the buffer and get the source
+            ret = recvfrom (sock, socket_input_buf, sizeof(socket_input_buf), 0, (struct sockaddr *) &fromaddr, &len);
+            
+            //====================================================================================
+            // Data available to be read from vintageSoundEngine
+            
+            if (strncmp (fromaddr.sun_path, SOCK_SOUND_ENGINE_FILENAME, strlen(fromaddr.sun_path)) == 0)
+                
+                //for each received byte
+                for (uint8_t i = 0; i < ret; i++)
+                {
+                    //display the read byte
+                    printf ("[VB] Byte read from vintageSoundEngine: %d\n", socket_input_buf[i]);
+                    
+                    //process the read byte
+                    uint8_t input_message_flag = ProcInputByte (socket_input_buf[i],
+                                                                input_message_buffer[INPUT_SOCK_SRC_VOICE],
+                                                                &input_message_counter[INPUT_SOCK_SRC_VOICE],
+                                                                &input_message_running_status_value[INPUT_SOCK_SRC_VOICE],
+                                                                &input_message_prev_cc_num[INPUT_SOCK_SRC_VOICE]);
+                    
+                    //if we have received a full MIDI message
+                    if (input_message_flag)
+                    {
+                        if (input_message_flag == MIDI_CC)
+                        {
+                            #ifdef DEBUG
+                            printf ("[VB] Received CC message from vintageSoundEngine\r\n");
+                            #endif
+                            
+                            ProcessCcMessage (input_message_buffer[INPUT_SOCK_SRC_VOICE],
+                                              patchParameterData,
+                                              &voice_alloc_data,
+                                              send_to_midi_out,
+                                              sock,
+                                              sound_engine_sock_addr);
+                            
+                        } //else if (input_message_flag == MIDI_CC)
+                        
+                    } // if (input_message_flag)
+                    
+                } //for (uint8_t i = 0; i < nr; i++)
+                
+            } //if (strncmp (fromaddr.sun_path, SOCK_SOUND_ENGINE_FILENAME, strlen(fromaddr.sun_path)) == 0)
+            
+        } //if (poll_fds[INPUT_SRC_SOCKETS].revents & POLLIN)
         
         //test sending data to socket
 //        uint8_t test_buf[3] = {MIDI_NOTEON, test_num, test_vel};

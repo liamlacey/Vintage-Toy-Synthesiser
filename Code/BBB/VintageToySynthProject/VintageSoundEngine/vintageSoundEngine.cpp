@@ -79,6 +79,19 @@ void play(double *output);
 //==========================================================
 //==========================================================
 //==========================================================
+//Sends data to the vintageBrain application via a socket
+
+void sendToVintageBrainSocket (int sock, uint8_t data_buffer, uint8_t data_buffer_size)
+{
+    if (send (sock, data_buffer, data_buffer_size, 0) == -1)
+    {
+        printf ("[VSE] ERROR: Sending data to vintageBrain socket\r\n");
+    }
+}
+
+//==========================================================
+//==========================================================
+//==========================================================
 
 #ifdef MAXIMILIAN_PORTAUDIO
 int routing(const void *inputBuffer,
@@ -528,7 +541,11 @@ int main()
     
     std::cout << "[VSE] Maximilian sound engine has started (using RTAudio)" << std::endl;
     
-    //TODO: send command CC to vintageBrain saying that the sound engine is ready and needs the current panel settings.
+    //===============================================================
+    //Send a command CC to vintageBrain to request current panel parameter settings
+    
+    uint8_t ready_cc_buf[3] = {MIDI_CC, PARAM_CMD, CMD_REQUEST_PANEL_PARAM_DATA};
+    sendToVintageBrainSocket (sock, ready_cc_buf, 3);
     
     #endif
 	
