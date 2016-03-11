@@ -45,53 +45,54 @@ struct ControlParamData
   const byte cc_num;
   const byte cc_min_val;
   const byte cc_max_val;
+  const bool is_bipolar_param;
 };
 
 ControlParamData controlParamData[NUM_OF_CONTROLS] =
 {
-   {.cc_num = 74, .cc_min_val = 0, .cc_max_val = 127}, //0 - PARAM_FILTER_CUTOFF
-   {.cc_num = 19, .cc_min_val = 0, .cc_max_val = 127}, //1 - PARAM_FILTER_RESO
-   {.cc_num = 26, .cc_min_val = 0, .cc_max_val = 127}, //2 - PARAM_FILTER_LP_MIX
-   {.cc_num = 28, .cc_min_val = 0, .cc_max_val = 127}, //3 - PARAM_FILTER_HP_MIX
-   {.cc_num = 27, .cc_min_val = 0, .cc_max_val = 127}, //4 - PARAM_FILTER_BP_MIX
-   {.cc_num = 29, .cc_min_val = 0, .cc_max_val = 127}, //5 - PARAM_FILTER_NOTCH_MIX
-   {.cc_num = 50, .cc_min_val = 0, .cc_max_val = 3}, //6 - PARAM_LFO_SHAPE
-   {.cc_num = 47, .cc_min_val = 0, .cc_max_val = 127}, //7 - PARAM_LFO_RATE
-   {.cc_num = 48, .cc_min_val = 0, .cc_max_val = 127}, //8 - PARAM_LFO_DEPTH
-   {.cc_num = 14, .cc_min_val = 0, .cc_max_val = 127}, //9 - PARAM_OSC_SINE_LEVEL
-   {.cc_num = 15, .cc_min_val = 0, .cc_max_val = 127}, //10 - PARAM_OSC_TRI_LEVEL
-   {.cc_num = 16, .cc_min_val = 0, .cc_max_val = 127}, //11 - PARAM_OSC_SAW_LEVEL
-   {.cc_num = 18, .cc_min_val = 0, .cc_max_val = 127}, //12 - PARAM_OSC_SQUARE_LEVEL
-   {.cc_num = 17, .cc_min_val = 0, .cc_max_val = 127}, //13 - PARAM_OSC_PULSE_LEVEL
-   {.cc_num = 3, .cc_min_val = 0, .cc_max_val = 127}, //14 - PARAM_OSC_PULSE_AMOUNT
-   {.cc_num = 7, .cc_min_val = 0, .cc_max_val = 127}, //15 - PARAM_AEG_AMOUNT
-   {.cc_num = 73, .cc_min_val = 0, .cc_max_val = 127}, //16 - PARAM_AEG_ATTACK
-   {.cc_num = 75, .cc_min_val = 0, .cc_max_val = 127}, //17 - PARAM_AEG_DECAY
-   {.cc_num = 79, .cc_min_val = 0, .cc_max_val = 127}, //18 - PARAM_AEG_SUSTAIN
-   {.cc_num = 72, .cc_min_val = 0, .cc_max_val = 127}, //19 - PARAM_AEG_RELEASE
-   {.cc_num = 13, .cc_min_val = 0, .cc_max_val = 127}, //20 - PARAM_FX_DISTORTION_AMOUNT
-   {.cc_num = 33, .cc_min_val = 40, .cc_max_val = 88}, //21 - PARAM_OSC_SINE_NOTE
-   {.cc_num = 34, .cc_min_val = 40, .cc_max_val = 88}, //22 - PARAM_OSC_TRI_NOTE
-   {.cc_num = 35, .cc_min_val = 40, .cc_max_val = 88}, //23 - PARAM_OSC_SAW_NOTE
-   {.cc_num = 37, .cc_min_val = 40, .cc_max_val = 88}, //24 - PARAM_OSC_SQUARE_NOTE
-   {.cc_num = 36, .cc_min_val = 40, .cc_max_val = 88}, //25 - PARAM_OSC_PULSE_NOTE
-   {.cc_num = 20, .cc_min_val = 0, .cc_max_val = 127}, //26 - PARAM_OSC_PHASE_SPREAD
-   {.cc_num = 22, .cc_min_val = 0, .cc_max_val = 127}, //27 - PARAM_FEG_ATTACK
-   {.cc_num = 23, .cc_min_val = 0, .cc_max_val = 127}, //28 - PARAM_FEG_DECAY
-   {.cc_num = 24, .cc_min_val = 0, .cc_max_val = 127}, //29 - PARAM_FEG_SUSTAIN
-   {.cc_num = 25, .cc_min_val = 0, .cc_max_val = 127}, //30 - PARAM_FEG_RELEASE
-   {.cc_num = 107, .cc_min_val = 0, .cc_max_val = 127}, //31 - PARAM_GLOBAL_VINTAGE_AMOUNT
-   {.cc_num = 102, .cc_min_val = 0, .cc_max_val = 7}, //32 - PARAM_KEYS_SCALE
-   {.cc_num = 114, .cc_min_val = 61, .cc_max_val = 67}, //33 - PARAM_KEYS_OCTAVE
-   {.cc_num = 106, .cc_min_val = 58, .cc_max_val = 70}, //34 - PARAM_KEYS_TRANSPOSE
-   {.cc_num = 103, .cc_min_val = 0, .cc_max_val = 127}, //35 - PARAM_VOICE_MODE
-   {.cc_num = 58, .cc_min_val = 0, .cc_max_val = 127}, //36 - PARAM_MOD_LFO_AMP
-   {.cc_num = 112, .cc_min_val = 0, .cc_max_val = 127}, //37 - PARAM_MOD_LFO_CUTOFF
-   {.cc_num = 56, .cc_min_val = 0, .cc_max_val = 127}, //38 - PARAM_MOD_LFO_RESO
-   {.cc_num = 9, .cc_min_val = 0, .cc_max_val = 100}, //39 - PARAM_GLOBAL_VOLUME
-   {.cc_num = 63, .cc_min_val = 0, .cc_max_val = 127}, //40 - PARAM_MOD_VEL_AMP
-   {.cc_num = 109, .cc_min_val = 0, .cc_max_val = 127}, //41 - PARAM_MOD_VEL_CUTOFF
-   {.cc_num = 110, .cc_min_val = 0, .cc_max_val = 127}, //42 - PARAM_MOD_VEL_RESO
+   {.cc_num = 74, .cc_min_val = 0, .cc_max_val = 127, false}, //0 - PARAM_FILTER_CUTOFF
+   {.cc_num = 19, .cc_min_val = 0, .cc_max_val = 127, false}, //1 - PARAM_FILTER_RESO
+   {.cc_num = 26, .cc_min_val = 0, .cc_max_val = 127, false}, //2 - PARAM_FILTER_LP_MIX
+   {.cc_num = 28, .cc_min_val = 0, .cc_max_val = 127, false}, //3 - PARAM_FILTER_HP_MIX
+   {.cc_num = 27, .cc_min_val = 0, .cc_max_val = 127, false}, //4 - PARAM_FILTER_BP_MIX
+   {.cc_num = 29, .cc_min_val = 0, .cc_max_val = 127, false}, //5 - PARAM_FILTER_NOTCH_MIX
+   {.cc_num = 50, .cc_min_val = 0, .cc_max_val = 3, false}, //6 - PARAM_LFO_SHAPE
+   {.cc_num = 47, .cc_min_val = 0, .cc_max_val = 127, false}, //7 - PARAM_LFO_RATE
+   {.cc_num = 48, .cc_min_val = 0, .cc_max_val = 127, true}, //8 - PARAM_LFO_DEPTH
+   {.cc_num = 14, .cc_min_val = 0, .cc_max_val = 127, false}, //9 - PARAM_OSC_SINE_LEVEL
+   {.cc_num = 15, .cc_min_val = 0, .cc_max_val = 127, false}, //10 - PARAM_OSC_TRI_LEVEL
+   {.cc_num = 16, .cc_min_val = 0, .cc_max_val = 127, false}, //11 - PARAM_OSC_SAW_LEVEL
+   {.cc_num = 18, .cc_min_val = 0, .cc_max_val = 127, false}, //12 - PARAM_OSC_SQUARE_LEVEL
+   {.cc_num = 17, .cc_min_val = 0, .cc_max_val = 127, false}, //13 - PARAM_OSC_PULSE_LEVEL
+   {.cc_num = 3, .cc_min_val = 0, .cc_max_val = 127, false}, //14 - PARAM_OSC_PULSE_AMOUNT
+   {.cc_num = 7, .cc_min_val = 0, .cc_max_val = 127, false}, //15 - PARAM_AEG_AMOUNT
+   {.cc_num = 73, .cc_min_val = 0, .cc_max_val = 127, false}, //16 - PARAM_AEG_ATTACK
+   {.cc_num = 75, .cc_min_val = 0, .cc_max_val = 127, false}, //17 - PARAM_AEG_DECAY
+   {.cc_num = 79, .cc_min_val = 0, .cc_max_val = 127, false}, //18 - PARAM_AEG_SUSTAIN
+   {.cc_num = 72, .cc_min_val = 0, .cc_max_val = 127, false}, //19 - PARAM_AEG_RELEASE
+   {.cc_num = 13, .cc_min_val = 0, .cc_max_val = 127, false}, //20 - PARAM_FX_DISTORTION_AMOUNT
+   {.cc_num = 33, .cc_min_val = 40, .cc_max_val = 88, true}, //21 - PARAM_OSC_SINE_NOTE
+   {.cc_num = 34, .cc_min_val = 40, .cc_max_val = 88, true}, //22 - PARAM_OSC_TRI_NOTE
+   {.cc_num = 35, .cc_min_val = 40, .cc_max_val = 88, true}, //23 - PARAM_OSC_SAW_NOTE
+   {.cc_num = 37, .cc_min_val = 40, .cc_max_val = 88, true}, //24 - PARAM_OSC_SQUARE_NOTE
+   {.cc_num = 36, .cc_min_val = 40, .cc_max_val = 88, true}, //25 - PARAM_OSC_PULSE_NOTE
+   {.cc_num = 20, .cc_min_val = 0, .cc_max_val = 127, false}, //26 - PARAM_OSC_PHASE_SPREAD
+   {.cc_num = 22, .cc_min_val = 0, .cc_max_val = 127, false}, //27 - PARAM_FEG_ATTACK
+   {.cc_num = 23, .cc_min_val = 0, .cc_max_val = 127, false}, //28 - PARAM_FEG_DECAY
+   {.cc_num = 24, .cc_min_val = 0, .cc_max_val = 127, false}, //29 - PARAM_FEG_SUSTAIN
+   {.cc_num = 25, .cc_min_val = 0, .cc_max_val = 127, false}, //30 - PARAM_FEG_RELEASE
+   {.cc_num = 107, .cc_min_val = 0, .cc_max_val = 127, false}, //31 - PARAM_GLOBAL_VINTAGE_AMOUNT
+   {.cc_num = 102, .cc_min_val = 0, .cc_max_val = 7, false}, //32 - PARAM_KEYS_SCALE
+   {.cc_num = 114, .cc_min_val = 61, .cc_max_val = 67, true}, //33 - PARAM_KEYS_OCTAVE
+   {.cc_num = 106, .cc_min_val = 58, .cc_max_val = 70, true}, //34 - PARAM_KEYS_TRANSPOSE
+   {.cc_num = 103, .cc_min_val = 0, .cc_max_val = 127, false}, //35 - PARAM_VOICE_MODE
+   {.cc_num = 58, .cc_min_val = 0, .cc_max_val = 127, true}, //36 - PARAM_MOD_LFO_AMP
+   {.cc_num = 112, .cc_min_val = 0, .cc_max_val = 127, true}, //37 - PARAM_MOD_LFO_CUTOFF
+   {.cc_num = 56, .cc_min_val = 0, .cc_max_val = 127, true}, //38 - PARAM_MOD_LFO_RESO
+   {.cc_num = 9, .cc_min_val = 0, .cc_max_val = 100, false}, //39 - PARAM_GLOBAL_VOLUME
+   {.cc_num = 63, .cc_min_val = 0, .cc_max_val = 127, true}, //40 - PARAM_MOD_VEL_AMP
+   {.cc_num = 109, .cc_min_val = 0, .cc_max_val = 127, true}, //41 - PARAM_MOD_VEL_CUTOFF
+   {.cc_num = 110, .cc_min_val = 0, .cc_max_val = 127, true}, //42 - PARAM_MOD_VEL_RESO
 };
 
 //FOR DEVELOPMENT
@@ -228,8 +229,7 @@ void loop()
       if ((read_val > prevAnalogueValue[control_num] + 5) || 
           (read_val < prevAnalogueValue[control_num] - 5) || 
           (read_val == 0 && prevAnalogueValue[control_num] != 0) ||
-          (read_val == 1023 && prevAnalogueValue[control_num] != 1023)/* ||
-          (read_val == 512 && prevAnalogueValue[control_num] != 512)*/)
+          (read_val == 1023 && prevAnalogueValue[control_num] != 1023))
       {
 
         // Serial.print(control_num);
@@ -241,6 +241,28 @@ void loop()
 
         //convert the control value into a param/MIDI CC value 
         byte param_val = ConvertControlValToParamVal (control_num); 
+
+        //if this control is for a bipolar parameter
+        if (controlParamData[control_num].is_bipolar_param == true)
+        {
+          //make sure the control definietly centres on the centre value of the parameter
+          //by setting a certain window around the centre value to be set to the centre value
+          byte min_val = controlParamData[control_num].cc_min_val;
+          
+          if (min_val == 0)
+          {
+            min_val = 1;
+          }
+          
+          byte centre_val = min_val + ((controlParamData[control_num].cc_max_val - min_val) / 2.0);
+
+          if (param_val >= centre_val - 1 && param_val <= centre_val + 1)
+          {
+            param_val = centre_val;
+            
+          } //if (param_val >= centre_val - 1 && param_val <= centre_val + 1)
+          
+        } //if (controlParamData[control_num].is_bipolar_control == true)
 
         //if the param val is different from the last param val
         if (prevParamValue[control_num] != param_val)
