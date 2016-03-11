@@ -1,0 +1,7 @@
+[Unit]
+Description=Start Vintage Toy Synthesiser applications
+[Service]
+Type=simple
+ExecStart=/usr/bin/vintageToySynthStartup.sh
+[Install]
+WantedBy=multi-user.target
