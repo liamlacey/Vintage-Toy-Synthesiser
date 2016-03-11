@@ -1390,10 +1390,9 @@ double maxiEnv::adsr(double input, double attack, double decay, double sustain, 
 double maxiEnv::adsr(double input, int trigger)
 {
     //if get a trigger value of 1 while in no phase or the release phase
-    if (trigger == 1 && attackphase != 1 && holdphase != 1 && decayphase != 1)
+    if (trigger == 1 && attackphase != 1 && sustainphase != 1 && decayphase != 1)
     {
         //reset variables and start the attack phase
-        holdcount = 0;
         decayphase = 0;
         sustainphase = 0;
         releasephase = 0;
@@ -1401,10 +1400,9 @@ double maxiEnv::adsr(double input, int trigger)
     }
     
     //if get a trigger value of 0 while in the attack, decay, or sustain ohase
-    else if (trigger == 0 && (attackphase == 1 || decayphase == 1 || holdphase == 1))
+    else if (trigger == 0 && (attackphase == 1 || decayphase == 1 || sustainphase == 1))
     {
         //start the release phase
-        holdcount = 0;
         attackphase = 0;
         decayphase = 0;
         sustainphase = 0;
@@ -1439,12 +1437,12 @@ double maxiEnv::adsr(double input, int trigger)
         {
             //start the sustain phase
             decayphase = 0;
-            holdphase = 1;
+            sustainphase = 1;
         }
     }
     
     //if in the sustain phase
-    if (holdphase == 1 && trigger == 1)
+    if (sustainphase == 1 && trigger == 1)
     {
         //keep the output value at the sustain value
         output = input * amplitude;
