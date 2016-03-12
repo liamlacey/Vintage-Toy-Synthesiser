@@ -45,7 +45,7 @@ struct ControlParamData
   const byte cc_num;
   const byte cc_min_val;
   const byte cc_max_val;
-  const bool is_bipolar_param;
+  const bool is_depth_param;
 };
 
 ControlParamData controlParamData[NUM_OF_CONTROLS] =
@@ -71,11 +71,11 @@ ControlParamData controlParamData[NUM_OF_CONTROLS] =
    {.cc_num = 79, .cc_min_val = 0, .cc_max_val = 127, false}, //18 - PARAM_AEG_SUSTAIN
    {.cc_num = 72, .cc_min_val = 0, .cc_max_val = 127, false}, //19 - PARAM_AEG_RELEASE
    {.cc_num = 13, .cc_min_val = 0, .cc_max_val = 127, false}, //20 - PARAM_FX_DISTORTION_AMOUNT
-   {.cc_num = 33, .cc_min_val = 40, .cc_max_val = 88, true}, //21 - PARAM_OSC_SINE_NOTE
-   {.cc_num = 34, .cc_min_val = 40, .cc_max_val = 88, true}, //22 - PARAM_OSC_TRI_NOTE
-   {.cc_num = 35, .cc_min_val = 40, .cc_max_val = 88, true}, //23 - PARAM_OSC_SAW_NOTE
-   {.cc_num = 37, .cc_min_val = 40, .cc_max_val = 88, true}, //24 - PARAM_OSC_SQUARE_NOTE
-   {.cc_num = 36, .cc_min_val = 40, .cc_max_val = 88, true}, //25 - PARAM_OSC_PULSE_NOTE
+   {.cc_num = 33, .cc_min_val = 40, .cc_max_val = 88, false}, //21 - PARAM_OSC_SINE_NOTE
+   {.cc_num = 34, .cc_min_val = 40, .cc_max_val = 88, false}, //22 - PARAM_OSC_TRI_NOTE
+   {.cc_num = 35, .cc_min_val = 40, .cc_max_val = 88, false}, //23 - PARAM_OSC_SAW_NOTE
+   {.cc_num = 37, .cc_min_val = 40, .cc_max_val = 88, false}, //24 - PARAM_OSC_SQUARE_NOTE
+   {.cc_num = 36, .cc_min_val = 40, .cc_max_val = 88, false}, //25 - PARAM_OSC_PULSE_NOTE
    {.cc_num = 20, .cc_min_val = 0, .cc_max_val = 127, false}, //26 - PARAM_OSC_PHASE_SPREAD
    {.cc_num = 22, .cc_min_val = 0, .cc_max_val = 127, false}, //27 - PARAM_FEG_ATTACK
    {.cc_num = 23, .cc_min_val = 0, .cc_max_val = 127, false}, //28 - PARAM_FEG_DECAY
@@ -83,8 +83,8 @@ ControlParamData controlParamData[NUM_OF_CONTROLS] =
    {.cc_num = 25, .cc_min_val = 0, .cc_max_val = 127, false}, //30 - PARAM_FEG_RELEASE
    {.cc_num = 107, .cc_min_val = 0, .cc_max_val = 127, false}, //31 - PARAM_GLOBAL_VINTAGE_AMOUNT
    {.cc_num = 102, .cc_min_val = 0, .cc_max_val = 7, false}, //32 - PARAM_KEYS_SCALE
-   {.cc_num = 114, .cc_min_val = 61, .cc_max_val = 67, true}, //33 - PARAM_KEYS_OCTAVE
-   {.cc_num = 106, .cc_min_val = 58, .cc_max_val = 70, true}, //34 - PARAM_KEYS_TRANSPOSE
+   {.cc_num = 114, .cc_min_val = 61, .cc_max_val = 67, false}, //33 - PARAM_KEYS_OCTAVE
+   {.cc_num = 106, .cc_min_val = 58, .cc_max_val = 70, false}, //34 - PARAM_KEYS_TRANSPOSE
    {.cc_num = 103, .cc_min_val = 0, .cc_max_val = 127, false}, //35 - PARAM_VOICE_MODE
    {.cc_num = 58, .cc_min_val = 0, .cc_max_val = 127, true}, //36 - PARAM_MOD_LFO_AMP
    {.cc_num = 112, .cc_min_val = 0, .cc_max_val = 127, true}, //37 - PARAM_MOD_LFO_CUTOFF
@@ -242,25 +242,17 @@ void loop()
         //convert the control value into a param/MIDI CC value 
         byte param_val = ConvertControlValToParamVal (control_num); 
 
-        //if this control is for a bipolar parameter
-        if (controlParamData[control_num].is_bipolar_param == true)
+        //if this control is for a bipolar depth parameter
+        if (controlParamData[control_num].is_depth_param == true)
         {
           //make sure the control definietly centres on the centre value of the parameter
           //by setting a certain window around the centre value to be set to the centre value
-          byte min_val = controlParamData[control_num].cc_min_val;
-          
-          if (min_val == 0)
-          {
-            min_val = 1;
-          }
-          
-          byte centre_val = min_val + ((controlParamData[control_num].cc_max_val - min_val) / 2.0);
 
-          if (param_val >= centre_val - 1 && param_val <= centre_val + 1)
+          if (param_val >= 63 && param_val <= 65)
           {
-            param_val = centre_val;
+            param_val = 64;
             
-          } //if (param_val >= centre_val - 1 && param_val <= centre_val + 1)
+          } //if (param_val >= 63 && param_val <= 65)
           
         } //if (controlParamData[control_num].is_bipolar_control == true)
 
