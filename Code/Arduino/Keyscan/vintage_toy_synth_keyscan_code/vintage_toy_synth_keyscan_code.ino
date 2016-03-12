@@ -59,19 +59,19 @@ const int maxSensorVals[NUM_OF_KEYS] =
 
 void setup()
 {
-  //For sending MIDI messages to BBB. 
+  //For sending MIDI messages to BBB.
   //We don't need to use the MIDI baud rate (31250) here, as we're sending the messages to a general
   //serial output rather than a MIDI-specific output.
-  Serial.begin(38400); 
+  Serial.begin(38400);
 
   pinMode(2, OUTPUT);    // mux1 s0
   pinMode(3, OUTPUT);    // mux1 s1
   pinMode(4, OUTPUT);    // mux1 s2
-  
+
   pinMode(5, OUTPUT);    // mux2 s0
   pinMode(6, OUTPUT);    // mux2 s1
   pinMode(7, OUTPUT);    // mux2 s2
-  
+
   pinMode(13, OUTPUT);    // LED
 }
 
@@ -81,19 +81,19 @@ void loop()
   for (int count; count < NUM_OF_KEYS; count++)
   {
     triggerVal[count] = 0;
-    
+
     //==========================================
     //==========================================
     //==========================================
     //Read input
     //FIXME: this code could be tidier
 
-      if (count < 8)
+    if (count < 8)
     {
-      //select the bit/input  
-      int r0 = bitRead (count, 0);   
-      int r1 = bitRead (count, 1);     
-      int r2 = bitRead (count, 2); 
+      //select the bit/input
+      int r0 = bitRead (count, 0);
+      int r1 = bitRead (count, 1);
+      int r2 = bitRead (count, 2);
       digitalWrite (2, r0);
       digitalWrite (3, r1);
       digitalWrite (4, r2);
@@ -114,13 +114,13 @@ void loop()
 
     else if (count > 9)
     {
-      //select the bit/input  
+      //select the bit/input
 
       int mux_input = count - 10;
 
-      int r0 = bitRead (mux_input, 0);   
-      int r1 = bitRead (mux_input, 1);     
-      int r2 = bitRead (mux_input, 2); 
+      int r0 = bitRead (mux_input, 0);
+      int r1 = bitRead (mux_input, 1);
+      int r2 = bitRead (mux_input, 2);
       digitalWrite (5, r0);
       digitalWrite (6, r1);
       digitalWrite (7, r2);
@@ -129,12 +129,12 @@ void loop()
       triggerVal[count] = analogRead(A3);
     }
 
-    //      if (triggerVal[count] > 0)
-    //      {
-    //        Serial.print(count);
-    //        Serial.print(": ");
-    //        Serial.println(triggerVal[count]);
-    //      }
+    //    if (triggerVal[count] > 0)
+    //    {
+    //      Serial.print(count);
+    //      Serial.print(": ");
+    //      Serial.println(triggerVal[count]);
+    //    }
 
     //==========================================
     //==========================================
@@ -148,7 +148,7 @@ void loop()
     //if we've got the initial press of a key
     if (triggerVal[count] > 0 && inInitPhase[count] == false && noteIsOn[count] == false)
     {
-      //stored the current time 
+      //stored the current time
       triggerTime[count] = millis();
 
       triggerInitVal[count] = 0;
@@ -201,16 +201,16 @@ void loop()
       if (velocity > 0)
       {
         //Send MIDI note-on message
-        SendMidiMessage (0x90 + midiChan, count, velocity); 
+        SendMidiMessage (0x90 + midiChan, count, velocity);
 
         //flag that the note is on
         noteIsOn[count] = true;
-      
+
         //test feedback
         digitalWrite (13, HIGH);
-      
+
       } //if (velocity > 0)
-      
+
     }
 
     //========================
@@ -218,79 +218,79 @@ void loop()
     else if (triggerVal[count] == 0 && noteIsOn[count] == true)
     {
       //Send MIDI note-on message
-      SendMidiMessage (0x80 + midiChan, count, 0); 
-      
+      SendMidiMessage (0x80 + midiChan, count, 0);
+
       noteIsOn[count] = false;
-      
+
       //test feedback
       digitalWrite (13, LOW);
     }
 
-//Disabled aftertouch, as the synth engine on my BBB can't currently handle it, even if it's just being sent to MIDI-out
-//    //==========================================
-//    //Process poly pressure
-//
-//      //========================
-//    //If we've got a key/pressure value of above the init input val whilst the note is on
-//    else if (triggerVal[count] >= (triggerInitVal[count] + PRESSURE_OFFSET) && triggerInitVal[count] != 0 && noteIsOn[count] == true)
-//    {
-//      //Work out pressure value based on the difference between the current val and the init val...
-//      //FIXME: this algorithm only really works for light presses.
-//      //If a heavy press, we don't want so much offset - implement an equation for this.
-//      
-//      //FIXME: make sure a pressure value of 0 is sent on key release if needed
-//
-//      int init_pressure = triggerInitVal[count] + PRESSURE_OFFSET;
-//
-//      int pressure = (((127.0 - 0) * (triggerVal[count] - init_pressure)) / ((float)maxSensorVals[count] - init_pressure)) + 0;
-//
-//      if (pressure > 127)
-//      {
-//        pressure = 127;
-//        //Serial.print("Pressure: ");
-//        //Serial.println(pressure);
-//      }
-//      else if (pressure < 0)
-//      {
-//        pressure = 0;
-//        //Serial.print("Pressure: ");
-//        //Serial.println(pressure);
-//      }
-//      else
-//      {
-//        //Serial.print("Pressure: ");
-//        //Serial.println(pressure);
-//      }
-//      
-//      //if we have a new pressure value for this key
-//      if (pressure != prevPressureVal[count])
-//      {
-//        //Send MIDI poly aftertouch message...
-//        SendMidiMessage (0xA0 + midiChan, midiNote[count], pressure);
-//        
-//        //store the pressure value
-//        prevPressureVal[count] = pressure;
-//      } 
-//      
-//    }
+    //Disabled aftertouch, as the synth engine on my BBB can't currently handle it, even if it's just being sent to MIDI-out
+    //    //==========================================
+    //    //Process poly pressure
+    //
+    //      //========================
+    //    //If we've got a key/pressure value of above the init input val whilst the note is on
+    //    else if (triggerVal[count] >= (triggerInitVal[count] + PRESSURE_OFFSET) && triggerInitVal[count] != 0 && noteIsOn[count] == true)
+    //    {
+    //      //Work out pressure value based on the difference between the current val and the init val...
+    //      //FIXME: this algorithm only really works for light presses.
+    //      //If a heavy press, we don't want so much offset - implement an equation for this.
+    //
+    //      //FIXME: make sure a pressure value of 0 is sent on key release if needed
+    //
+    //      int init_pressure = triggerInitVal[count] + PRESSURE_OFFSET;
+    //
+    //      int pressure = (((127.0 - 0) * (triggerVal[count] - init_pressure)) / ((float)maxSensorVals[count] - init_pressure)) + 0;
+    //
+    //      if (pressure > 127)
+    //      {
+    //        pressure = 127;
+    //        //Serial.print("Pressure: ");
+    //        //Serial.println(pressure);
+    //      }
+    //      else if (pressure < 0)
+    //      {
+    //        pressure = 0;
+    //        //Serial.print("Pressure: ");
+    //        //Serial.println(pressure);
+    //      }
+    //      else
+    //      {
+    //        //Serial.print("Pressure: ");
+    //        //Serial.println(pressure);
+    //      }
+    //
+    //      //if we have a new pressure value for this key
+    //      if (pressure != prevPressureVal[count])
+    //      {
+    //        //Send MIDI poly aftertouch message...
+    //        SendMidiMessage (0xA0 + midiChan, midiNote[count], pressure);
+    //
+    //        //store the pressure value
+    //        prevPressureVal[count] = pressure;
+    //      }
+    //
+    //    }
 
     //==========================================
 
   } //for (int count; count < NUM_OF_KEYS; count++)
-  
+
 }
 
 
-void SendMidiMessage (int cmd_byte, int data_byte_1, int data_byte_2) 
+void SendMidiMessage (int cmd_byte, int data_byte_1, int data_byte_2)
 {
   byte buf[3] = {cmd_byte, data_byte_1, data_byte_2};
-  
+
   Serial.write (buf, 3);
-  
-//  Serial.print(buf[0]);
-//  Serial.print(" ");
-//  Serial.print(buf[1]);
-//  Serial.print(" ");
-//  Serial.println(buf[2]);
+
+  //  Serial.print(buf[0]);
+  //  Serial.print(" ");
+  //  Serial.print(buf[1]);
+  //  Serial.print(" ");
+  //  Serial.println(buf[2]);
 }
 
