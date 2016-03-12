@@ -37,6 +37,8 @@ byte prevParamValue[NUM_OF_CONTROLS] = {0};
 //MIDI channel we want to use
 const byte midiChan = 0;
 
+const byte VAL_CHANGE_OFFSET = 8;
+
 //==========================================
 //param data for each control
 
@@ -224,10 +226,10 @@ void loop()
     //==========================================
     //Process analogue control input...
 
-    //if the read control value is greater that +/-5 from the last value
+    //if the read control value is greater that +/-VAL_CHANGE_OFFSET from the last value
     //this is a quick dirty hack to prevent jitter
-    if ((read_val > prevAnalogueValue[control_num] + 5) ||
-        (read_val < prevAnalogueValue[control_num] - 5) ||
+    if ((read_val > prevAnalogueValue[control_num] + VAL_CHANGE_OFFSET) ||
+        (read_val < prevAnalogueValue[control_num] - VAL_CHANGE_OFFSET) ||
         (read_val == 0 && prevAnalogueValue[control_num] != 0) ||
         (read_val == 1023 && prevAnalogueValue[control_num] != 1023))
     {
@@ -269,7 +271,9 @@ void loop()
 
     } //if (prevAnalogueValue[control_num] != read_val)
 
-    delay (1);
+    //slow down control reading to help prevent jitter.
+    //it also means when pots are turned fast they only send a small number of values
+    delay (2);
 
   } //for (byte control_num; control_num < NUM_OF_CONTROLS; control_num++)
 
