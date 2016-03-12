@@ -35,27 +35,26 @@ byte prevPressureVal[NUM_OF_KEYS] = {0};
 bool testLedState = false;
 
 //array that holds the max analogue values they each sensor key can reach
-//TODO: create this list
-const int maxSensorVals[NUM_OF_KEYS] = 
+const int maxSensorVals[NUM_OF_KEYS] =
 {
-  700, //0
-  700, //1
-  700, //2
-  700, //3
-  700, //4
-  700, //5
-  700, //6
-  700, //7
-  700, //8
-  700, //9
-  700, //10
-  700, //11
-  700, //12
-  700, //13
-  700, //14
-  700, //15
-  700, //16
-  700 //17
+  530, //0
+  630, //1
+  570, //2
+  670, //3
+  680, //4
+  560, //5
+  629, //6
+  650, //7
+  640, //8
+  630, //9
+  580, //10
+  630, //11
+  570, //12
+  610, //13
+  580, //14
+  270, //15
+  650, //16
+  590 //17
 };
 
 void setup()
@@ -189,7 +188,8 @@ void loop()
       //Serial.print("Init val: ");
       //Serial.println(triggerInitVal[count]);
 
-      int velocity = (127.0 * triggerInitVal[count]) / (float)maxSensorVals[count];
+      //use two-thirds of the max sensor value as the top velocity value, as it seems to work well.
+      int velocity = (127.0 * (float)triggerInitVal[count]) / (((float)maxSensorVals[count] / 3.0) * 2.0);
 
       if (velocity > 127)
       {
