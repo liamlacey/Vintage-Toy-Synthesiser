@@ -17,7 +17,7 @@ For more info see the full [project proposal](https://www.element14.com/communit
 ## Hardware/Software Architecture ##
 
 The synthesiser uses a couple of different hardware software platforms:
-+ The brain and sound engine of the synthesiser are seperate Linux applications running on a [BeagleBone Black](https://beagleboard.org/black) board, writen in C/C++, which communicate via software sockets. See the [BeagleBone Black directory](https://github.com/liamlacey/Vintage-Toy-Synthesiser/tree/master/Code/BBB/) for the code for these applications.
++ The brain and sound engine of the synthesiser are seperate Linux applications running on a [BeagleBone Black](https://beagleboard.org/black) board, which communicate via software sockets. The brain application is developed in C, and the sound engine application is developed in C++ using the [Maximilian](https://github.com/micknoise/Maximilian) Audio DSP library and [RtAudio](https://www.music.mcgill.ca/~gary/rtaudio/). See the [BeagleBone Black directory](https://github.com/liamlacey/Vintage-Toy-Synthesiser/tree/master/Code/BBB/) for the code for these applications.
 + The keyboard and panel use [Arduino Pro Mini](https://www.arduino.cc/en/Main/ArduinoBoardProMini) boards for sensor/control scanning. The Arduinos communicate with the BeagleBone Black via serial. See the [Arduino directory](https://github.com/liamlacey/Vintage-Toy-Synthesiser/tree/master/Code/Arduino) for the keyboard and panel code.
 + There is a Mac OS X editor application for saving and loading patches on the synth, written in C++ using the [JUCE](https://www.juce.com) framework. See the [VtsEditor directory](https://github.com/liamlacey/Vintage-Toy-Synthesiser/tree/master/Code/VtsEditor) for the code.
 
