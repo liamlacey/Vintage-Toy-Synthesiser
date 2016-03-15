@@ -35,6 +35,7 @@ VintageVoice::VintageVoice (uint8_t voice_num)
     
     voiceVelocityValue = 1.0;
     rootNoteNum = 60;
+    rootNoteVel = 110;
     aftertouchValue = 0;
     
     velAmpModVal = velFreqModVal = velResoModVal = 0;
@@ -251,6 +252,7 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         
         //============================
         //set the note velocity
+        rootNoteVel = note_vel;
         voiceVelocityValue = scaleValue (note_vel, 0, 127, 0., 1.);
         
         //============================
@@ -418,6 +420,19 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
         //vel->amp env modulation
         velAmpModVal = getModulatedParamValue (param_num, PARAM_FILTER_RESO, patchParameterData[PARAM_FILTER_RESO].voice_val, voiceVelocityValue);
     }
+    
+    else if (param_num == PARAM_UPDATE_NOTE_PITCH)
+    {
+        //if the voice is currently playing a note (which it should if we are getting this message, but check just incase)
+        if (envAmp.trigger == true)
+        {
+            //call processNoteMessage to update the note/voice pitch
+            //TODO: test that calling this just updates the pitch and and doesn't appear to trigger a new note
+            processNoteMessage (true, patchParameterData[param_num].voice_val, rootNoteVel);
+            
+        } //if (envAmp.trigger == true)
+        
+    } //else if (param_num == PARAM_UPDATE_NOTE_PITCH)
 }
 
 //==========================================================
