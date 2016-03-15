@@ -85,10 +85,13 @@ typedef struct
     int16_t note_num;
     int16_t note_vel;
     
+    //for handling realtime keyboard setting changes
+    bool from_internal_keyboard;
+    int16_t keyboard_key_num;
+    
 } NoteData;
 
 //Struct that stores voice allocation data for both poly and mono mode.
-//TODO: when switching between mono and stack mode, make sure ALL of these variables are reset.
 typedef struct
 {
     //for poly mode...
@@ -102,6 +105,8 @@ typedef struct
     
     //for note stealing (last voice)
     uint8_t last_voice;
+    
+    
     
 } VoiceAllocData;
 
@@ -250,6 +255,9 @@ void KillAllVoices (PatchParameterData patch_param_data[],
     {
         voice_alloc_data->note_data[i].note_num = VOICE_NO_NOTE;
         voice_alloc_data->note_data[i].note_vel = VOICE_NO_NOTE;
+        
+        voice_alloc_data->note_data[i].from_internal_keyboard = false;
+        voice_alloc_data->note_data[i].keyboard_key_num = VOICE_NO_NOTE;
     }
     
     voice_alloc_data->mono_note_stack_pointer = 0;
@@ -611,6 +619,9 @@ void RemoveNoteFromMonoStack (uint8_t start_index, uint8_t end_index, VoiceAlloc
     voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_num = VOICE_NO_NOTE;
     voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_vel = VOICE_NO_NOTE;
     
+    //set internal keyboard note stuff
+    voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].keyboard_key_num = VOICE_NO_NOTE;
+    
     //decrement pointer if above 0
     if (voice_alloc_data->mono_note_stack_pointer)
     {
@@ -623,11 +634,16 @@ void RemoveNoteFromMonoStack (uint8_t start_index, uint8_t end_index, VoiceAlloc
 //====================================================================================
 //Adds a note to mono mode stack
 
-void AddNoteToMonoStack (uint8_t note_num, uint8_t note_vel, VoiceAllocData *voice_alloc_data)
+void AddNoteToMonoStack (uint8_t note_num, uint8_t note_vel, VoiceAllocData *voice_alloc_data, bool from_internal_keyboard, uint8_t keyboard_key_num)
 {
     //add note to the top of the stack
     voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_num = note_num;
     voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_vel = note_vel;
+    
+    //set internal keyboard note stuff
+    voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].from_internal_keyboard = from_internal_keyboard;
+    if (from_internal_keyboard)
+        voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].keyboard_key_num = keyboard_key_num;
     
     //increase stack pointer
     voice_alloc_data->mono_note_stack_pointer++;
@@ -678,13 +694,14 @@ void ProcessNoteMessage (uint8_t message_buffer[],
                          VoiceAllocData *voice_alloc_data,
                          bool send_to_midi_out,
                          int sock,
-                         struct sockaddr_un sound_engine_sock_addr)
+                         struct sockaddr_un sound_engine_sock_addr,
+                         bool from_internal_keyboard,
+                         uint8_t keyboard_key_num)
 {
     
     //====================================================================================
     //Voice allocation for sound engine
     
-    //TODO: test mono mode
     //FIXME: it is kind of confusing how in mono mode the seperate functions handle the setting
     //of voice_alloc_data, however in poly mode all of that is done within this function. It
     //may be a good idea to rewrite the voice allocation stuff to make this neater.
@@ -717,6 +734,11 @@ void ProcessNoteMessage (uint8_t message_buffer[],
                 //set the last played voice (for note stealing)
                 voice_alloc_data->last_voice = free_voice + 1;
                 
+                //set internal keyboard note stuff
+                voice_alloc_data->note_data[free_voice].from_internal_keyboard = from_internal_keyboard;
+                if (from_internal_keyboard)
+                    voice_alloc_data->note_data[free_voice].keyboard_key_num = keyboard_key_num;
+                
                 //Send to the sound engine...
                 
                 uint8_t note_buffer[3] = {MIDI_NOTEON + free_voice, message_buffer[1], message_buffer[2]};
@@ -730,7 +752,7 @@ void ProcessNoteMessage (uint8_t message_buffer[],
         //if in mono mode
         else
         {
-            AddNoteToMonoStack (message_buffer[1], message_buffer[2], voice_alloc_data);
+            AddNoteToMonoStack (message_buffer[1], message_buffer[2], voice_alloc_data, from_internal_keyboard, keyboard_key_num);
             
             //Send to the sound engine for voice 0...
             uint8_t note_buffer[3] = {MIDI_NOTEON, message_buffer[1], message_buffer[2]};
@@ -764,6 +786,7 @@ void ProcessNoteMessage (uint8_t message_buffer[],
                 //reset the note info for this voice
                 voice_alloc_data->note_data[freed_voice].note_num = VOICE_NO_NOTE;
                 voice_alloc_data->note_data[freed_voice].note_vel = VOICE_NO_NOTE;
+                voice_alloc_data->note_data[freed_voice].keyboard_key_num = VOICE_NO_NOTE;
                 
                 //Send to the sound engine...
                 
@@ -891,29 +914,45 @@ void ProcessCcMessage (uint8_t message_buffer[],
 
     } //if (param_num == PARAM_VOICE_MODE && patch_param_data[param_num].user_val != param_val)
     
-    //if keyboard scale has changed
-    else if (param_num == PARAM_KEYS_SCALE && patch_param_data[param_num].user_val != param_val)
+    //if keyboard scale, octave, or tranpose value has changed
+    else if ((param_num == PARAM_KEYS_SCALE || param_num == PARAM_KEYS_OCTAVE || param_num == PARAM_KEYS_TRANSPOSE) &&
+             patch_param_data[param_num].user_val != param_val)
     {
-        //kill all voices
-        KillAllVoices (patch_param_data, voice_alloc_data, sock, sound_engine_sock_addr);
+        //update pitch of playing notes/voices...
         
-    } //if (param_num == PARAM_KEYS_SCALE && patch_param_data[param_num].user_val != param_val)
-    
-    //if keyboard octave has changed
-    else if (param_num == PARAM_KEYS_OCTAVE && patch_param_data[param_num].user_val != param_val)
-    {
-        //kill all voices
-        KillAllVoices (patch_param_data, voice_alloc_data, sock, sound_engine_sock_addr);
+        //set the new param value instantly
+        patch_param_data[param_num].user_val = param_val;
+        message_buffer[2] = param_val;
         
-    } //if (param_num == PARAM_KEYS_OCTAVE && patch_param_data[param_num].user_val != param_val)
-    
-    //if keyboard transpose has changed
-    else if (param_num == PARAM_KEYS_TRANSPOSE && patch_param_data[param_num].user_val != param_val)
-    {
-        //kill all voices
-        KillAllVoices (patch_param_data, voice_alloc_data, sock, sound_engine_sock_addr);
+        //for each voice
+        for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+        {
+            //if this voice is currently playing a note from the internal keyboard
+            if (voice_alloc_data->note_data[voice].from_internal_keyboard == true &&
+                voice_alloc_data->note_data[voice].keyboard_key_num != VOICE_NO_NOTE)
+            {
+                //get the new note for the key playing this voice
+                uint8_t note_num = GetNoteForKeyboardKey (voice_alloc_data->note_data[voice].keyboard_key_num, patch_param_data);
+                
+                //update the note pitch of the voice
+                uint8_t cc_buf[3] = {MIDI_CC + voice, PARAM_UPDATE_NOTE_PITCH, note_num};
+                SendToSoundEngine (cc_buf, 3, sock, sound_engine_sock_addr);
+                
+                //Update voice allocation note value...
+                
+                //if in poly mode
+                if (patch_param_data[PARAM_VOICE_MODE].user_val > 0)
+                    voice_alloc_data->note_data[voice].note_num = note_num;
+
+                //if in mono mode
+                else
+                    voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer].note_num = note_num;
+                
+            } //if (playing note from internal keyboard)
+            
+        } //for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
         
-    } //if (param_num == PARAM_KEYS_TRANSPOSE && patch_param_data[param_num].user_val != param_val)
+    } //if (keyboard scale, octave, or transpose changed)
     
     //if global volume has changed
     else if (param_num == PARAM_GLOBAL_VOLUME && patch_param_data[param_num].user_val != param_val)
@@ -1006,6 +1045,37 @@ void ProcessCcMessage (uint8_t message_buffer[],
 //====================================================================================
 //====================================================================================
 //====================================================================================
+//Returns a note number for a keyboard key based on the current scale, octave, and transpose settings
+
+int16_t GetNoteForKeyboardKey (uint8_t keyboard_key_num, PatchParameterData patch_param_data[])
+{
+    int16_t note_num;
+    
+    //apply scale value
+    //Note numbers come from the keyboard in the range of 0 - KEYBOARD_NUM_OF_KEYS-1,
+    //and are used to select an index of keyboardScales[patchParameterData[PARAM_KEYS_SCALE].user_val]
+    note_num = keyboardScales[patch_param_data[PARAM_KEYS_SCALE].user_val][keyboard_key_num];
+    
+    //apply octave value
+    //if octave value is 64 (0) bottom key is note 64 (middle E, as E is the first key)
+    note_num = (note_num + 64) + ((patch_param_data[PARAM_KEYS_OCTAVE].user_val - 64) * 12);
+    
+    //apply tranpose
+    //a value of 64 (0) means no transpose
+    note_num += patch_param_data[PARAM_KEYS_TRANSPOSE].user_val - 64;
+    
+    //make sure note number is still in range
+    if (note_num > 127)
+        note_num = 127;
+    else if (note_num < 0)
+        note_num = 0;
+    
+    return note_num;
+}
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
 //Handles signals
 static void SignalHandler (int sig)
 {
@@ -1074,10 +1144,14 @@ int main (void)
     {
         voice_alloc_data.note_data[i].note_num = VOICE_NO_NOTE;
         voice_alloc_data.note_data[i].note_vel = VOICE_NO_NOTE;
+        
+        voice_alloc_data.note_data[i].from_internal_keyboard = false;
+        voice_alloc_data.note_data[i].keyboard_key_num = VOICE_NO_NOTE;
     }
     
     voice_alloc_data.mono_note_stack_pointer = 0;
     voice_alloc_data.last_voice = 0;
+    
     
     //==========================================================
     //Set up SIGINT and SIGTERM so that the process can be shutdown
@@ -1194,33 +1268,21 @@ int main (void)
                         #endif
                         
                         //Set note number based on keyboard scale, octave, and transpose settings...
-                        int16_t note_num;
-                        
-                        //apply scale value
-                        //Note numbers come from the keyboard in the range of 0 - KEYBOARD_NUM_OF_KEYS-1,
-                        //and are used to select an index of keyboardScales[patchParameterData[PARAM_KEYS_SCALE].user_val]
                         uint8_t note_index = input_message_buffer[INPUT_SRC_KEYBOARD][1];
-                        note_num = keyboardScales[patchParameterData[PARAM_KEYS_SCALE].user_val][note_index];
-                        
-                        //apply octave value
-                        //if octave value is 64 bottom key is note 64 (middle E, as E is the first key)
-                        note_num = (note_num + 64) + ((patchParameterData[PARAM_KEYS_OCTAVE].user_val - 64) * 12);
-                        
-                        //apply tranpose
-                        //a value of 64 means no transpose
-                        note_num += patchParameterData[PARAM_KEYS_TRANSPOSE].user_val - 64;
-                        
-                        //make sure note number is still in range
-                        if (note_num > 127)
-                            note_num = 127;
-                        else if (note_num < 0)
-                            note_num = 0;
+                        int16_t note_num = GetNoteForKeyboardKey (note_index, patchParameterData);
                         
                         //put new note number back into input_message_buffer buffer
                         input_message_buffer[INPUT_SRC_KEYBOARD][1] = note_num;
                         
                         //Process the note message
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD], patchParameterData, &voice_alloc_data, send_to_midi_out, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_KEYBOARD],
+                                            patchParameterData,
+                                            &voice_alloc_data,
+                                            send_to_midi_out,
+                                            sock,
+                                            sound_engine_sock_addr,
+                                            true,
+                                            note_index);
                         
                     } //if (input_message_flag == MIDI_NOTEON)
                     
@@ -1281,7 +1343,7 @@ int main (void)
                         //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEON;
                         
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr, false, 0);
                         
                     } //if (input_message_flag == MIDI_NOTEON)
                     
@@ -1294,7 +1356,7 @@ int main (void)
                         //set the MIDI channel to 0
                         input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEOFF;
                         
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr);
+                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr, false, 0);
                         
                     } //else if (input_message_flag == MIDI_NOTEOFF)
                     

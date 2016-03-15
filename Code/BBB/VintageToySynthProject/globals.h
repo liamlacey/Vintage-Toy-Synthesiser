@@ -125,6 +125,9 @@
 #define PARAM_GLOBAL_VINTAGE_AMOUNT 107
 #define PARAM_GLOBAL_VOLUME 9
 
+//CC only used between the brain and voice
+#define PARAM_UPDATE_NOTE_PITCH 126
+
 //special CC num used for sending commands rather than settings
 #define PARAM_CMD 127
 
@@ -307,7 +310,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //123
     {}, //124
     {}, //125
-    {}, //126
+    {0, 0, 127, true, false, 0, 0, 127},  //126 - PARAM_UPDATE_NOTE_PITCH
     {0, 0, 127, false, false, 0, 0, 0}  //127 - PARAM_CMD
 };
 

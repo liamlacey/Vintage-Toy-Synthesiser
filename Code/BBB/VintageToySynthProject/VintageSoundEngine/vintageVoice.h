@@ -80,7 +80,7 @@ private:
     double filterCutoffRealtimeVal;
     
     double voiceVelocityValue;
-    uint8_t rootNoteNum;
+    uint8_t rootNoteNum, rootNoteVel;
     double aftertouchValue;
     
     double velAmpModVal, velFreqModVal, velResoModVal;
