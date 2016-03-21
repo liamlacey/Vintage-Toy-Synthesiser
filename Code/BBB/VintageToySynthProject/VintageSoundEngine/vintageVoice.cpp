@@ -237,7 +237,7 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
             //offset the random pitch value so that the offset could be negative
             vintage_pitch_offset -= patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val / 2;
             
-            //FIXME: the above algorithm will make higher notes sound less out of tune than higher notes - fix this.
+            //FIXME: the above algorithm will make lower notes sound less out of tune than higher notes - fix this.
             
         } //if (patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val != 0)
         

@@ -842,6 +842,37 @@ void ProcessNoteMessage (uint8_t message_buffer[],
 //====================================================================================
 //====================================================================================
 //====================================================================================
+//Returns a note number for a keyboard key based on the current scale, octave, and transpose settings
+
+int16_t GetNoteForKeyboardKey (uint8_t keyboard_key_num, PatchParameterData patch_param_data[])
+{
+    int16_t note_num;
+    
+    //apply scale value
+    //Note numbers come from the keyboard in the range of 0 - KEYBOARD_NUM_OF_KEYS-1,
+    //and are used to select an index of keyboardScales[patchParameterData[PARAM_KEYS_SCALE].user_val]
+    note_num = keyboardScales[patch_param_data[PARAM_KEYS_SCALE].user_val][keyboard_key_num];
+    
+    //apply octave value
+    //if octave value is 64 (0) bottom key is note 64 (middle E, as E is the first key)
+    note_num = (note_num + 64) + ((patch_param_data[PARAM_KEYS_OCTAVE].user_val - 64) * 12);
+    
+    //apply tranpose
+    //a value of 64 (0) means no transpose
+    note_num += patch_param_data[PARAM_KEYS_TRANSPOSE].user_val - 64;
+    
+    //make sure note number is still in range
+    if (note_num > 127)
+        note_num = 127;
+    else if (note_num < 0)
+        note_num = 0;
+    
+    return note_num;
+}
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
 //Processes a poly aftertouch message, sending it to the needed places
 
 void ProcessPolyAftertouchMessage (uint8_t message_buffer[],
@@ -973,7 +1004,6 @@ void ProcessCcMessage (uint8_t message_buffer[],
         //printf ("[VB] - volume command: %s\r\n", volume_cmd);
         
         //Send the command to the system
-        //FIXME: would be nice to call this without it outputing to the console to print glitches in the audio, somehow...
         system (volume_cmd);
         
     } //if (param_num == PARAM_GLOBAL_VOLUME && patch_param_data[param_num].user_val != param_val)
@@ -1040,37 +1070,6 @@ void ProcessCcMessage (uint8_t message_buffer[],
         
         WriteToMidiOutFd (message_buffer, 3);
     }
-}
-
-//====================================================================================
-//====================================================================================
-//====================================================================================
-//Returns a note number for a keyboard key based on the current scale, octave, and transpose settings
-
-int16_t GetNoteForKeyboardKey (uint8_t keyboard_key_num, PatchParameterData patch_param_data[])
-{
-    int16_t note_num;
-    
-    //apply scale value
-    //Note numbers come from the keyboard in the range of 0 - KEYBOARD_NUM_OF_KEYS-1,
-    //and are used to select an index of keyboardScales[patchParameterData[PARAM_KEYS_SCALE].user_val]
-    note_num = keyboardScales[patch_param_data[PARAM_KEYS_SCALE].user_val][keyboard_key_num];
-    
-    //apply octave value
-    //if octave value is 64 (0) bottom key is note 64 (middle E, as E is the first key)
-    note_num = (note_num + 64) + ((patch_param_data[PARAM_KEYS_OCTAVE].user_val - 64) * 12);
-    
-    //apply tranpose
-    //a value of 64 (0) means no transpose
-    note_num += patch_param_data[PARAM_KEYS_TRANSPOSE].user_val - 64;
-    
-    //make sure note number is still in range
-    if (note_num > 127)
-        note_num = 127;
-    else if (note_num < 0)
-        note_num = 0;
-    
-    return note_num;
 }
 
 //====================================================================================
