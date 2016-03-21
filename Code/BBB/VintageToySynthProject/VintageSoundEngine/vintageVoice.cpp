@@ -104,12 +104,6 @@ void VintageVoice::processAudio (double *output)
     //generate the amp evelope output using amp_val as the envelope amount
     envAmpOut = envAmp.adsr (amp_val, envAmp.trigger);
     
-    //if the output of the amp envelope is above 0, continue processing audio.
-    //else don't, as it is just silence.
-    //FIXME: will this work? What if LFO is creating tremolo that causes this to be true even when the note isn't over - will this make weird things happen?
-    
-    if (envAmpOut > 0)
-    {
         //==========================================================
         //process filter envelope
         envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
@@ -203,9 +197,6 @@ void VintageVoice::processAudio (double *output)
         {
             output[i] = distortionOut * envAmpOut;
         }
-        
-    } // if (envAmpOut > 0)
-    
 }
 
 //==========================================================
