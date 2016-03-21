@@ -12,14 +12,11 @@
 # 5. Make systemd take notice of it, activate the service immediately and enable the service to be started on boot-up:
 #       - systemctl daemon-reload
 #       - systemctl start vintageToySynthStartup.service
-#       - ystemctl enable vintageToySynthStartup.service
+#       - systemctl enable vintageToySynthStartup.service
 
 #The guide I followed to get the startup script working: 
 # - http://www.nunoalves.com/open_source/?p=308
 # - http://mybeagleboneblackfindings.blogspot.co.uk/2013/10/running-script-on-beaglebone-black-boot.html
-
-#FIXME: should I do what's described here for VB and VSE and remove the sleeps? 
-#http://askubuntu.com/questions/137776/starting-multiple-applications-using-a-shell-script
 
 #set CPU frequency
 echo "Setting CPU frequency"
@@ -35,8 +32,6 @@ sleep 1
 #start vintageBrain application
 echo "Starting vintageBrain"
 /usr/VintageToySynthProject/VintageBrain/vintageBrain & 
-
-#sleep 1
 
 #start vintageSoundEngine application
 echo "Starting vintageSoundEngine"
