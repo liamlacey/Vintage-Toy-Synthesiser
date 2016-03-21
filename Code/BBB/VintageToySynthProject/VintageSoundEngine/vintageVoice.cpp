@@ -104,99 +104,94 @@ void VintageVoice::processAudio (double *output)
     //generate the amp evelope output using amp_val as the envelope amount
     envAmpOut = envAmp.adsr (amp_val, envAmp.trigger);
     
-        //==========================================================
-        //process filter envelope
-        envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
+    //==========================================================
+    //process filter envelope
+    envFilterOut = envFilter.adsr (1.0, envFilter.trigger);
+    
+    //==========================================================
+    //process oscillators
+    oscSineOut = oscSine.sinewave (oscSinePitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;
+    oscTriOut = (oscTri.triangle (oscTriPitch) * patchParameterData[PARAM_OSC_TRI_LEVEL].voice_val);
+    oscSawOut = (oscSaw.saw (oscSawPitch) * patchParameterData[PARAM_OSC_SAW_LEVEL].voice_val);
+    oscPulseOut = (oscPulse.pulse (oscPulsePitch, patchParameterData[PARAM_OSC_PULSE_AMOUNT].voice_val) * patchParameterData[PARAM_OSC_PULSE_LEVEL].voice_val);
+    oscSquareOut = (oscSquare.square (oscSquarePitch) * patchParameterData[PARAM_OSC_SQUARE_LEVEL].voice_val);
+    
+    //mix oscillators together
+    oscMixOut = (oscSineOut + oscTriOut + oscSawOut + oscPulseOut + oscSquareOut) / 5.;
+    
+    //==========================================================
+    //process filter (pass in oscOut, return filterOut)
+    
+    //================================
+    //process cutoff value
+    //In order to prevent cutoff stepping when changing the value via the panel/MIDI-in,
+    //I use a seperate cutoff value from that within patchParameterData to set the filter,
+    //which is set to the patchParameterData value by incrementing/decrementing the value
+    //by a small amount each time this function is called until the values match.
+    
+    if (filterCutoffRealtimeVal < patchParameterData[PARAM_FILTER_FREQ].voice_val)
+    {
+        filterCutoffRealtimeVal += 1.0;
         
-        //==========================================================
-        //process oscillators
-        oscSineOut = oscSine.sinewave (oscSinePitch) * patchParameterData[PARAM_OSC_SINE_LEVEL].voice_val;
-        oscTriOut = (oscTri.triangle (oscTriPitch) * patchParameterData[PARAM_OSC_TRI_LEVEL].voice_val);
-        oscSawOut = (oscSaw.saw (oscSawPitch) * patchParameterData[PARAM_OSC_SAW_LEVEL].voice_val);
-        oscPulseOut = (oscPulse.pulse (oscPulsePitch, patchParameterData[PARAM_OSC_PULSE_AMOUNT].voice_val) * patchParameterData[PARAM_OSC_PULSE_LEVEL].voice_val);
-        oscSquareOut = (oscSquare.square (oscSquarePitch) * patchParameterData[PARAM_OSC_SQUARE_LEVEL].voice_val);
-        
-        //mix oscillators together
-        oscMixOut = (oscSineOut + oscTriOut + oscSawOut + oscPulseOut + oscSquareOut) / 5.;
-        
-        //==========================================================
-        //process filter (pass in oscOut, return filterOut)
-        
-        //================================
-        //process cutoff value
-        //In order to prevent cutoff stepping when changing the value via the panel/MIDI-in,
-        //I use a seperate cutoff value from that within patchParameterData to set the filter,
-        //which is set to the patchParameterData value by incrementing/decrementing the value
-        //by a small amount each time this function is called until the values match.
+        if (filterCutoffRealtimeVal > patchParameterData[PARAM_FILTER_FREQ].voice_val)
+            filterCutoffRealtimeVal = patchParameterData[PARAM_FILTER_FREQ].voice_val;
+    }
+    
+    else if (filterCutoffRealtimeVal > patchParameterData[PARAM_FILTER_FREQ].voice_val)
+    {
+        filterCutoffRealtimeVal -= 1.0;
         
         if (filterCutoffRealtimeVal < patchParameterData[PARAM_FILTER_FREQ].voice_val)
-        {
-            filterCutoffRealtimeVal += 1.0;
-            
-            if (filterCutoffRealtimeVal > patchParameterData[PARAM_FILTER_FREQ].voice_val)
-                filterCutoffRealtimeVal = patchParameterData[PARAM_FILTER_FREQ].voice_val;
-        }
-        
-        else if (filterCutoffRealtimeVal > patchParameterData[PARAM_FILTER_FREQ].voice_val)
-        {
-            filterCutoffRealtimeVal -= 1.0;
-            
-            if (filterCutoffRealtimeVal < patchParameterData[PARAM_FILTER_FREQ].voice_val)
-                filterCutoffRealtimeVal = patchParameterData[PARAM_FILTER_FREQ].voice_val;
-        }
-        
-        //================================
-        //process LFO->cutoff modulation
-        double cutoff_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_FREQ, PARAM_FILTER_FREQ, filterCutoffRealtimeVal, lfoOut);
-        
-        //Add the cutoff modulation values to the patch value, making sure the produced value is in range
-        double cutoff_val = filterCutoffRealtimeVal + cutoff_lfo_mod_val + velFreqModVal;
-        cutoff_val = boundValue (cutoff_val, patchParameterData[PARAM_FILTER_FREQ].voice_min_val, patchParameterData[PARAM_FILTER_FREQ].voice_max_val);
-        
-        //set cutoff value, multipled by filter envelope
-        filterSvf.setCutoff (cutoff_val * envFilterOut);
-        
-        //================================
-        //process LFO->reso modulation
-        double reso_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_RESO, PARAM_FILTER_RESO, patchParameterData[PARAM_FILTER_RESO].voice_val, lfoOut);
-        
-        //Add the reso modulation values to the patch value, making sure the produced value is in range
-        double reso_val = patchParameterData[PARAM_FILTER_RESO].voice_val + reso_lfo_mod_val + velResoModVal;
-        reso_val = boundValue (reso_val, patchParameterData[PARAM_FILTER_RESO].voice_min_val, patchParameterData[PARAM_FILTER_RESO].voice_max_val);
-        
-        //set resonance value
-        filterSvf.setResonance (reso_val);
-        
-        //================================
-        //Apply the filter
-        
-        filterOut = filterSvf.play (oscMixOut,
-                                    patchParameterData[PARAM_FILTER_LP_MIX].voice_val,
-                                    patchParameterData[PARAM_FILTER_BP_MIX].voice_val,
-                                    patchParameterData[PARAM_FILTER_HP_MIX].voice_val,
-                                    patchParameterData[PARAM_FILTER_NOTCH_MIX].voice_val);
-        
-        
-        //==========================================================
-        //process distortion...
-        //Use patchParameterData[PARAM_FX_DISTORTION_AMOUNT] to set the distortion shape
-        //FIXME: what should be the min shape value be? Is 1 no distortion or just soft distortion? Try something like 0.1/
-        distortionOut = distortion.atanDist (filterOut, 1 + (patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val * 20.0));
-        //Apply gain reduction
-        //FIXME: will be a bit of trial and error getting algorithm correct. Change the last value to set how low it goes.
-        distortionOut = distortionOut * (1.0 - (patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val * 0.5));
-        
-        //process distortion mix
-        //FIXME: is this (mixing dry and wet) the best way to apply distortion? Or should I just always be running the main output through the distortion function?
-        //FIXME: probably need to reduce the disortionOut value so bringing in disortion doesn't increase the overall volume too much
-//        effectsMixOut = (distortionOut * patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val) + (filterOut * (1.0 - patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val));
-        
-        //==========================================================
-        //apply amp envelope, making all channels the same (pass in effectsMixOut, return output)
-        for (uint8_t i = 0; i < maxiSettings::channels; i++)
-        {
-            output[i] = distortionOut * envAmpOut;
-        }
+            filterCutoffRealtimeVal = patchParameterData[PARAM_FILTER_FREQ].voice_val;
+    }
+    
+    //================================
+    //process LFO->cutoff modulation
+    double cutoff_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_FREQ, PARAM_FILTER_FREQ, filterCutoffRealtimeVal, lfoOut);
+    
+    //Add the cutoff modulation values to the patch value, making sure the produced value is in range
+    double cutoff_val = filterCutoffRealtimeVal + cutoff_lfo_mod_val + velFreqModVal;
+    cutoff_val = boundValue (cutoff_val, patchParameterData[PARAM_FILTER_FREQ].voice_min_val, patchParameterData[PARAM_FILTER_FREQ].voice_max_val);
+    
+    //set cutoff value, multipled by filter envelope
+    filterSvf.setCutoff (cutoff_val * envFilterOut);
+    
+    //================================
+    //process LFO->reso modulation
+    double reso_lfo_mod_val = getModulatedParamValue (PARAM_MOD_LFO_RESO, PARAM_FILTER_RESO, patchParameterData[PARAM_FILTER_RESO].voice_val, lfoOut);
+    
+    //Add the reso modulation values to the patch value, making sure the produced value is in range
+    double reso_val = patchParameterData[PARAM_FILTER_RESO].voice_val + reso_lfo_mod_val + velResoModVal;
+    reso_val = boundValue (reso_val, patchParameterData[PARAM_FILTER_RESO].voice_min_val, patchParameterData[PARAM_FILTER_RESO].voice_max_val);
+    
+    //set resonance value
+    filterSvf.setResonance (reso_val);
+    
+    //================================
+    //Apply the filter
+    
+    filterOut = filterSvf.play (oscMixOut,
+                                patchParameterData[PARAM_FILTER_LP_MIX].voice_val,
+                                patchParameterData[PARAM_FILTER_BP_MIX].voice_val,
+                                patchParameterData[PARAM_FILTER_HP_MIX].voice_val,
+                                patchParameterData[PARAM_FILTER_NOTCH_MIX].voice_val);
+    
+    
+    //==========================================================
+    //process distortion...
+    //Use patchParameterData[PARAM_FX_DISTORTION_AMOUNT] to set the distortion shape
+    //FIXME: what should be the min shape value be? Is 1 no distortion or just soft distortion? Try something like 0.1?
+    distortionOut = distortion.atanDist (filterOut, 1 + (patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val * 20.0));
+    //Apply gain reduction
+    //FIXME: will be a bit of trial and error getting algorithm correct. Change the last value to set how low it goes.
+    distortionOut = distortionOut * (1.0 - (patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val * 0.5));
+    
+    //==========================================================
+    //apply amp envelope, making all channels the same (pass in effectsMixOut, return output)
+    for (uint8_t i = 0; i < maxiSettings::channels; i++)
+    {
+        output[i] = distortionOut * envAmpOut;
+    }
 }
 
 //==========================================================
@@ -307,6 +302,15 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
                                                           patchParameterData[param_num].user_max_val,
                                                           patchParameterData[param_num].voice_min_val,
                                                           patchParameterData[param_num].voice_max_val);
+    
+    //debugging
+//    if (voiceNum == 0)
+//    {
+//        if (param_num == PARAM_FX_DISTORTION_AMOUNT)
+//        {
+//            printf ("[VV] Distortion amount: %f\r\n", 1 + (patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val * 20.0));
+//        }
+//    }
     
     //==========================================================
     //Set certain things based on the recieved param num
