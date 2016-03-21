@@ -34,10 +34,12 @@ sleep 1
 
 #start vintageBrain application
 echo "Starting vintageBrain"
-/usr/VintageToySynthProject/VintageBrain/vintageBrain
+/usr/VintageToySynthProject/VintageBrain/vintageBrain & 
 
-sleep 1
+#sleep 1
 
 #start vintageSoundEngine application
 echo "Starting vintageSoundEngine"
-/usr/VintageToySynthProject/VintageBrain/vintageSoundEngine
+/usr/VintageToySynthProject/VintageSoundEngine/vintageSoundEngine & 
+
+exit 0
