@@ -1419,12 +1419,26 @@ double maxiEnv::adsr(double input, int trigger)
         //if reached the end of the attack phase
         if (amplitude >= 1)
         {
-            //start the decay phase
             amplitude = 1;
             attackphase = 0;
-            decayphase = 1;
-        }
-    }
+            
+            //if we have a decay time
+            if (decay > 0)
+            {
+                //start the decay phase
+                decayphase = 1;
+            }
+            //if decay time is set to 0
+            else
+            {
+                //start the sustain phase
+                amplitude = sustain;
+                sustainphase = 1;
+            }
+            
+        } //if (amplitude >= 1)
+        
+    } //if (attackphase == 1 && trigger == 1)
     
     //if in the decay phase
     if (decayphase == 1 && trigger == 1)
