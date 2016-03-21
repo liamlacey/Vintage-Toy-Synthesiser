@@ -206,10 +206,10 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {5, 0, 127, true, true, 0.1, 0.1, 50.}, //19 - PARAM_FILTER_RESO
     {0, 0, 127, true, true, 10, 0, 100}, //20 - PARAM_OSC_PHASE_SPREAD //TODO: Check this CC is OK to use
     {}, //21
-    {0, 0, 127, true, true, 0, 0, 5000}, //22 - PARAM_FEG_ATTACK
+    {0, 0, 127, true, true, 0, 0, 20000}, //22 - PARAM_FEG_ATTACK
     {2, 0, 127, true, true, 400, 0, 5000}, //23 - PARAM_FEG_DECAY
     {20, 0, 127, true, true, 0.7, 0., 1.}, //24 - PARAM_FEG_SUSTAIN
-    {20, 0, 127, true, true, 3000, 0, 5000}, //25 - PARAM_FEG_RELEASE
+    {20, 0, 127, true, true, 3000, 0, 10000}, //25 - PARAM_FEG_RELEASE
     {127, 0, 127, true, true, 1., 0, 1.}, //26 - PARAM_FILTER_LP_MIX
     {0, 0, 127, true, true, 0., 0, 1.}, //27 - PARAM_FILTER_BP_MIX
     {0, 0, 127, true, true, 0., 0, 1.}, //28 - PARAM_FILTER_HP_MIX
@@ -256,9 +256,9 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //69
     {}, //70
     {}, //71
-    {20, 0, 127, true, true, 2000, 0, 5000}, //72 - PARAM_AEG_RELEASE
-    {0, 0, 127, true, true, 0, 0, 5000}, //73 - PARAM_AEG_ATTACK
-    {20, 0, 127, true, true, 5000, 50, 20000}, //74 - PARAM_FILTER_FREQ
+    {20, 0, 127, true, true, 2000, 0, 10000}, //72 - PARAM_AEG_RELEASE
+    {0, 0, 127, true, true, 0, 0, 20000}, //73 - PARAM_AEG_ATTACK
+    {20, 0, 127, true, true, 5000, 50, 15000}, //74 - PARAM_FILTER_FREQ
     {2, 0, 127, true, true, 200, 0, 5000}, //75 - PARAM_AEG_DECAY
     {}, //76
     {}, //77
