@@ -1014,6 +1014,8 @@ void ProcessCcMessage (uint8_t message_buffer[],
         //if got a request for all current patch data from the VTS Editor via MIDI-out
         if (param_val == CMD_REQUEST_ALL_PATCH_DATA)
         {
+            printf ("[VB] Got a request for all patch data from the VTS Editor. Sending to MIDI-out...\r\n");
+            
             //send back all patch data to the MIDI-out
             for (uint8_t i = 0; i < 127; i++)
             {
@@ -1034,6 +1036,8 @@ void ProcessCcMessage (uint8_t message_buffer[],
         //if got a request for all current panel patch data settings, most probably from the vintageSoundEngine
         else if (param_val == CMD_REQUEST_PANEL_PARAM_DATA)
         {
+            printf ("[VB] Got a request for current panel settings from vintageSoundEngine\r\n");
+            
             //forward the message to the panel
             WriteToPanelFd (message_buffer, 3);
             
@@ -1444,7 +1448,7 @@ int main (void)
                 for (uint8_t i = 0; i < ret; i++)
                 {
                     //display the read byte
-                    printf ("[VB] Byte read from vintageSoundEngine: %d\n", socket_input_buf[i]);
+                    //printf ("[VB] Byte read from vintageSoundEngine: %d\n", socket_input_buf[i]);
                     
                     //process the read byte
                     uint8_t input_message_flag = ProcInputByte (socket_input_buf[i],
