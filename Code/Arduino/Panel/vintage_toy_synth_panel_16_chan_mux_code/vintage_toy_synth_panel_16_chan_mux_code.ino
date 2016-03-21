@@ -87,7 +87,7 @@ ControlParamData controlParamData[NUM_OF_CONTROLS] =
   {.cc_num = 102, .cc_min_val = 0, .cc_max_val = 7, false}, //32 - PARAM_KEYS_SCALE
   {.cc_num = 114, .cc_min_val = 61, .cc_max_val = 67, false}, //33 - PARAM_KEYS_OCTAVE
   {.cc_num = 106, .cc_min_val = 58, .cc_max_val = 70, false}, //34 - PARAM_KEYS_TRANSPOSE
-  {.cc_num = 103, .cc_min_val = 0, .cc_max_val = 127, false}, //35 - PARAM_VOICE_MODE
+  {.cc_num = 103, .cc_min_val = 127, .cc_max_val = 0, false}, //35 - PARAM_VOICE_MODE
   {.cc_num = 58, .cc_min_val = 0, .cc_max_val = 127, true}, //36 - PARAM_MOD_LFO_AMP
   {.cc_num = 112, .cc_min_val = 0, .cc_max_val = 127, true}, //37 - PARAM_MOD_LFO_CUTOFF
   {.cc_num = 56, .cc_min_val = 0, .cc_max_val = 127, true}, //38 - PARAM_MOD_LFO_RESO
@@ -273,7 +273,7 @@ void loop()
 
     //slow down control reading to help prevent jitter.
     //it also means when pots are turned fast they only send a small number of values
-    delay (2);
+    delay (1);
 
   } //for (byte control_num; control_num < NUM_OF_CONTROLS; control_num++)
 
@@ -285,7 +285,7 @@ void loop()
   //if there is something to read on the serial port
   if (Serial.available())
   {
-    Serial.println ("Received messages from serial input");
+    //Serial.println ("Received messages from serial input");
 
     byte midi_in_buf[64];
 
@@ -331,10 +331,10 @@ void SendMidiMessage (byte cmd_byte, byte data_byte_1, byte data_byte_2)
 
   Serial.write (buf, 3);
 
-  //  Serial.print(buf[0]);
-  //  Serial.print(" ");
-  //  Serial.print(buf[1]);
-  //  Serial.print(" ");
-  //  Serial.println(buf[2]);
+//    Serial.print(buf[0]);
+//    Serial.print(" ");
+//    Serial.print(buf[1]);
+//    Serial.print(" ");
+//    Serial.println(buf[2]);
 }
 
