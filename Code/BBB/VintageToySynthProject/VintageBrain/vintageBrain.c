@@ -334,7 +334,7 @@ uint8_t ProcInputByte (uint8_t input_byte, uint8_t message_buffer[], uint8_t *by
     
     //=====================================================================
     //If we're received a data byte of a non-sysex MIDI message...
-    //FIXME: do I actually need to check *byte_counter here?
+    //FIXME: do I actually need to check byte_counter here?
     
     else if (input_byte < MIDI_NOTEOFF && message_buffer[0] != MIDI_SYSEX_START && *byte_counter != 0)
     {
@@ -499,7 +499,7 @@ uint8_t ProcInputByte (uint8_t input_byte, uint8_t message_buffer[], uint8_t *by
 //Gets the next free voice (the oldest played voice) from the voice_alloc_data.free_voices buffer,
 //or steals the oldest voice if not voices are currently free.
 
-uint8_t GetNextFreeVoice (VoiceAllocData *voice_alloc_data)
+uint8_t GetNextFreeVoice (VoiceAllocData *voice_alloc_data, int sock, struct sockaddr_un sound_engine_sock_addr)
 {
     uint8_t free_voice = 0;
     
@@ -525,8 +525,10 @@ uint8_t GetNextFreeVoice (VoiceAllocData *voice_alloc_data)
         //use the oldest voice
         free_voice = voice_alloc_data->last_voice;
         
-        //TODO: Send a note-off message to the stolen voice so that when
+        //Send a note-off message to the stolen voice so that when
         //sending the new note-on it enters the attack phase....
+        uint8_t note_buffer[3] = {MIDI_NOTEOFF + (free_voice - 1), voice_alloc_data->note_data[free_voice - 1].note_num, 0};
+        SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
         
     } //else ((free_voice != 0))
     
@@ -715,7 +717,7 @@ void ProcessNoteMessage (uint8_t message_buffer[],
         if (patch_param_data[PARAM_VOICE_MODE].user_val > 0)
         {
             //get next voice we can use
-            uint8_t free_voice = GetNextFreeVoice (voice_alloc_data);
+            uint8_t free_voice = GetNextFreeVoice (voice_alloc_data, sock, sound_engine_sock_addr);
             
             #ifdef DEBUG
             printf ("[VB] Next free voice: %d\r\n", free_voice);
