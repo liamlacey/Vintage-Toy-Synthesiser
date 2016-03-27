@@ -177,6 +177,7 @@ typedef struct
     double voice_val;
     double voice_min_val;
     double voice_max_val;
+    uint8_t param_name[32];
 
 } PatchParameterData;
 
@@ -187,41 +188,41 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //0
     {}, //1
     {}, //2
-    {90, 0, 127, true, true, 0.7, 0., 1.}, //3 - PARAM_OSC_PULSE_AMOUNT
+    {90, 0, 127, true, true, 0.7, 0., 1., "OSC PULSE AMOUNT"}, //3 - PARAM_OSC_PULSE_AMOUNT
     {}, //4
     {}, //5
     {}, //6
-    {127, 0, 127, true, true, 0.6, 0., 1.}, //7 - PARAM_AEG_AMOUNT
+    {127, 0, 127, true, true, 0.6, 0., 1., "AEG AMOUNT"}, //7 - PARAM_AEG_AMOUNT
     {}, //8
-    {80, 0, 100, false, false, 80, 0, 100}, //9 - PARAM_GLOBAL_VOLUME
+    {80, 0, 100, false, false, 80, 0, 100, "GLOBAL VOLUME"}, //9 - PARAM_GLOBAL_VOLUME
     {}, //10
     {}, //11
     {}, //12
-    {0, 0, 127, true, true, 0, 0., 1.}, //13 - PARAM_FX_DISTORTION_AMOUNT
-    {127, 0, 127, true, true, 0., 0., 1.}, //14 - PARAM_OSC_SINE_LEVEL
-    {127, 0, 127, true, true, 0., 0., 1.}, //15 - PARAM_OSC_TRI_LEVEL
-    {127, 0, 127, true, true, 1., 0., 1.}, //16 - PARAM_OSC_SAW_LEVEL
-    {127, 0, 127, true, true, 0., 0., 1.}, //17 - PARAM_OSC_PULSE_LEVEL
-    {127, 0, 127, true, true, 0., 0., 1.}, //18 - PARAM_OSC_SQUARE_LEVEL
-    {5, 0, 127, true, true, 0.1, 0.1, 50.}, //19 - PARAM_FILTER_RESO
-    {0, 0, 127, true, true, 10, 0, 100}, //20 - PARAM_OSC_PHASE_SPREAD //TODO: Check this CC is OK to use
+    {0, 0, 127, true, true, 0, 0., 1., "DISTORTION AMOUNT"}, //13 - PARAM_FX_DISTORTION_AMOUNT
+    {127, 0, 127, true, true, 0., 0., 1., "OSC SINE LEVEL"}, //14 - PARAM_OSC_SINE_LEVEL
+    {127, 0, 127, true, true, 0., 0., 1., "OSC TRI LEVEL"}, //15 - PARAM_OSC_TRI_LEVEL
+    {127, 0, 127, true, true, 1., 0., 1., "OSC SAW LEVEL"}, //16 - PARAM_OSC_SAW_LEVEL
+    {127, 0, 127, true, true, 0., 0., 1., "OSC PULSE LEVEL"}, //17 - PARAM_OSC_PULSE_LEVEL
+    {127, 0, 127, true, true, 0., 0., 1., "OSC SQUARE LEVEL"}, //18 - PARAM_OSC_SQUARE_LEVEL
+    {5, 0, 127, true, true, 0.1, 0.1, 50., "FILTER RESO"}, //19 - PARAM_FILTER_RESO
+    {0, 0, 127, true, true, 10, 0, 100, "OSC PHASE SPREAD"}, //20 - PARAM_OSC_PHASE_SPREAD
     {}, //21
-    {0, 0, 127, true, true, 0, 0, 20000}, //22 - PARAM_FEG_ATTACK
-    {2, 0, 127, true, true, 400, 0, 5000}, //23 - PARAM_FEG_DECAY
-    {20, 0, 127, true, true, 0.7, 0., 1.}, //24 - PARAM_FEG_SUSTAIN
-    {20, 0, 127, true, true, 3000, 0, 10000}, //25 - PARAM_FEG_RELEASE
-    {127, 0, 127, true, true, 1., 0, 1.}, //26 - PARAM_FILTER_LP_MIX
-    {0, 0, 127, true, true, 0., 0, 1.}, //27 - PARAM_FILTER_BP_MIX
-    {0, 0, 127, true, true, 0., 0, 1.}, //28 - PARAM_FILTER_HP_MIX
-    {0, 0, 127, true, true, 0., 0, 1.}, //29 - PARAM_FILTER_NOTCH_MIX
+    {0, 0, 127, true, true, 0, 0, 20000, "FEG ATTACK"}, //22 - PARAM_FEG_ATTACK
+    {2, 0, 127, true, true, 400, 0, 5000, "FEG DECAY"}, //23 - PARAM_FEG_DECAY
+    {20, 0, 127, true, true, 0.7, 0., 1., "FEG SUSTAIN"}, //24 - PARAM_FEG_SUSTAIN
+    {20, 0, 127, true, true, 3000, 0, 10000, "FEG RELEASE"}, //25 - PARAM_FEG_RELEASE
+    {127, 0, 127, true, true, 1., 0, 1., "FILTER LP MIX"}, //26 - PARAM_FILTER_LP_MIX
+    {0, 0, 127, true, true, 0., 0, 1., "FILTER BP MIX"}, //27 - PARAM_FILTER_BP_MIX
+    {0, 0, 127, true, true, 0., 0, 1., "FILTER HP MIX"}, //28 - PARAM_FILTER_HP_MIX
+    {0, 0, 127, true, true, 0., 0, 1., "FILTER NOTCH MIX"}, //29 - PARAM_FILTER_NOTCH_MIX
     {}, //30
     {}, //31
     {}, //32
-    {64, 40, 88, true, true, 64, 40, 88}, //33 - PARAM_OSC_SINE_NOTE //TODO: Check this CC is OK to use
-    {64, 40, 88, true, true, 64, 40, 88}, //34 - PARAM_OSC_TRI_NOTE //TODO: Check this CC is OK to use
-    {64, 40, 88, true, true, 64, 40, 88}, //35 - PARAM_OSC_SAW_NOTE //TODO: Check this CC is OK to use
-    {64, 40, 88, true, true, 64, 40, 88}, //36 - PARAM_OSC_PULSE_NOTE //TODO: Check this CC is OK to use
-    {52, 40, 88, true, true, 52, 40, 88}, //37 - PARAM_OSC_SQUARE_NOTE //TODO: Check this CC is OK to use
+    {64, 40, 88, true, true, 64, 40, 88, "OSC SINE NOTE"}, //33 - PARAM_OSC_SINE_NOTE
+    {64, 40, 88, true, true, 64, 40, 88, "OSC TRI NOTE"}, //34 - PARAM_OSC_TRI_NOTE
+    {64, 40, 88, true, true, 64, 40, 88, "OSC SAW NOTE"}, //35 - PARAM_OSC_SAW_NOTE
+    {64, 40, 88, true, true, 64, 40, 88, "OSC PULSE NOTE"}, //36 - PARAM_OSC_PULSE_NOTE
+    {52, 40, 88, true, true, 52, 40, 88, "OSC SQUARE NOTE"}, //37 - PARAM_OSC_SQUARE_NOTE
     {}, //38
     {}, //39
     {}, //40
@@ -231,23 +232,23 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //44
     {}, //45
     {}, //46
-    {1, 0, 127, true, true, 1, 0.01, 30}, //47 - PARAM_LFO_RATE
-    {64, 0, 127, true, true, 1., -1., 1.}, //48 - PARAM_LFO_DEPTH
+    {1, 0, 127, true, true, 1, 0.01, 30, "LFO RATE"}, //47 - PARAM_LFO_RATE
+    {64, 0, 127, true, true, 1., -1., 1., "LFO DEPTH"}, //48 - PARAM_LFO_DEPTH
     {}, //49
-    {0, 0, 3, true, true, 0, 0, 3}, //50 - PARAM_LFO_SHAPE
+    {0, 0, 3, true, true, 0, 0, 3, "LFO SHAPE"}, //50 - PARAM_LFO_SHAPE
     {}, //51
     {}, //52
     {}, //53
     {}, //54
     {}, //55
-    {64, 0, 127, true, true, 0., -1., 1.}, //56 - PARAM_MOD_LFO_RESO
+    {64, 0, 127, true, true, 0., -1., 1., "LFO -> RESO"}, //56 - PARAM_MOD_LFO_RESO
     {}, //57
-    {64, 0, 127, true, true, 0., -1., 1.}, //58 - PARAM_MOD_LFO_AMP
+    {64, 0, 127, true, true, 0., -1., 1., "LFO -> AMP"}, //58 - PARAM_MOD_LFO_AMP
     {}, //59
     {}, //60
     {}, //61
     {}, //62
-    {64, 0, 127, true, true, 0., -1., 1.}, //63 - PARAM_MOD_VEL_AMP
+    {64, 0, 127, true, true, 0., -1., 1., "VEL -> AMP"}, //63 - PARAM_MOD_VEL_AMP
     {}, //64
     {}, //65
     {}, //66
@@ -256,14 +257,14 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //69
     {}, //70
     {}, //71
-    {20, 0, 127, true, true, 2000, 0, 10000}, //72 - PARAM_AEG_RELEASE
-    {0, 0, 127, true, true, 0, 0, 20000}, //73 - PARAM_AEG_ATTACK
-    {20, 0, 127, true, true, 5000, 50, 15000}, //74 - PARAM_FILTER_FREQ
-    {2, 0, 127, true, true, 200, 0, 5000}, //75 - PARAM_AEG_DECAY
+    {20, 0, 127, true, true, 2000, 0, 10000, "AEG RELEASE"}, //72 - PARAM_AEG_RELEASE
+    {0, 0, 127, true, true, 0, 0, 20000, "AEG ATTACK"}, //73 - PARAM_AEG_ATTACK
+    {20, 0, 127, true, true, 5000, 50, 15000, "FILTER CUTOFF"}, //74 - PARAM_FILTER_FREQ
+    {2, 0, 127, true, true, 200, 0, 5000, "AEG DECAY"}, //75 - PARAM_AEG_DECAY
     {}, //76
     {}, //77
     {}, //78
-    {20, 0, 127, true, true, 0.2, 0., 1.}, //79 - PARAM_AEG_SUSTAIN
+    {20, 0, 127, true, true, 0.2, 0., 1., "AEG SUSTAIN"}, //79 - PARAM_AEG_SUSTAIN
     {}, //80
     {}, //81
     {}, //82
@@ -273,8 +274,8 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //86
     {}, //87
     {}, //88
-    {64, 0, 127, true, true, 0., -1., 1.}, //89 - PARAM_MOD_AT_LFO_DEPTH
-    {64, 0, 127, true, true, 0., -1., 1.}, //90 - PARAM_MOD_AT_FREQ
+    {64, 0, 127, true, true, 0., -1., 1., "AT -> LFO DEPTH"}, //89 - PARAM_MOD_AT_LFO_DEPTH
+    {64, 0, 127, true, true, 0., -1., 1., "AT -> CUTOFF"}, //90 - PARAM_MOD_AT_FREQ
     {}, //91
     {}, //92
     {}, //93
@@ -286,19 +287,19 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //99
     {}, //100
     {}, //101
-    {1, 0, KEYBOARD_NUM_OF_SCALES-1, false, true, 0, 0, 0}, //102 - PARAM_KEYS_SCALE
-    {127, 0, 127, false, true, 0, 0, 0}, //103 - PARAM_VOICE_MODE
+    {1, 0, KEYBOARD_NUM_OF_SCALES-1, false, true, 0, 0, 0, "KEYBOARD SCALE"}, //102 - PARAM_KEYS_SCALE
+    {127, 0, 127, false, true, 0, 0, 0, "VOICE MODE"}, //103 - PARAM_VOICE_MODE
     {}, //104
     {}, //105
-    {64, 58, 70, false, true, 0, 0, 0}, //106 - PARAM_KEYS_TRANSPOSE
-    {0, 0, 127, true, true, 0, 0, 127}, //107 - PARAM_GLOBAL_VINTAGE_AMOUNT
+    {64, 58, 70, false, true, 0, 0, 0, "KEYBOARD TRANSPOSE"}, //106 - PARAM_KEYS_TRANSPOSE
+    {0, 0, 127, true, true, 0, 0, 127, "VINTAGE AMOUNT"}, //107 - PARAM_GLOBAL_VINTAGE_AMOUNT
     {}, //108
-    {64, 0, 127, true, true, 0., -1., 1.}, //109 - PARAM_MOD_VEL_FREQ
-    {64, 0, 127, true, true, 0., -1., 1.}, //110 - PARAM_MOD_VEL_RESO
+    {64, 0, 127, true, true, 0., -1., 1., "VEL -> CUTOFF"}, //109 - PARAM_MOD_VEL_FREQ
+    {64, 0, 127, true, true, 0., -1., 1., "VEL -> RESO"}, //110 - PARAM_MOD_VEL_RESO
     {}, //111
-    {64, 0, 127, true, true, 0., -1., 1.}, //112 - PARAM_MOD_LFO_FREQ
+    {64, 0, 127, true, true, 0., -1., 1., "LFO -> CUTOFF"}, //112 - PARAM_MOD_LFO_FREQ
     {}, //113
-    {64, 61, 67, false, true, 0, 0, 0}, //114 - PARAM_KEYS_OCTAVE
+    {64, 61, 67, false, true, 0, 0, 0, "KEYBOARD OCTAVE"}, //114 - PARAM_KEYS_OCTAVE
     {}, //115
     {}, //116
     {}, //117
@@ -310,8 +311,8 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //123
     {}, //124
     {}, //125
-    {0, 0, 127, true, false, 0, 0, 127},  //126 - PARAM_UPDATE_NOTE_PITCH
-    {0, 0, 127, false, false, 0, 0, 0}  //127 - PARAM_CMD
+    {0, 0, 127, true, false, 0, 0, 127, "UPDATE NOTE PITCH"},  //126 - PARAM_UPDATE_NOTE_PITCH
+    {0, 0, 127, false, false, 0, 0, 0, "COMMAND CC"}  //127 - PARAM_CMD
 };
 
 

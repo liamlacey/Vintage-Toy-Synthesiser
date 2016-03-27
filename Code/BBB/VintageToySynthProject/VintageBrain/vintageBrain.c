@@ -1419,7 +1419,8 @@ int main (void)
                     if (input_message_flag == MIDI_CC)
                     {
                         //#ifdef DEBUG
-                        printf ("[VB] Received CC message from panel - num: %d, val %d\r\n",
+                        printf ("[VB] %s change from panel - CC num: %d, CC val %d\r\n",
+                                patchParameterData[input_message_buffer[INPUT_SRC_PANEL][1]].param_name,
                                 input_message_buffer[INPUT_SRC_PANEL][1],
                                 input_message_buffer[INPUT_SRC_PANEL][2]);
                         //#endif
