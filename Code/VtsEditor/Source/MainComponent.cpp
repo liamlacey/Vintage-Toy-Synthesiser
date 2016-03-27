@@ -79,8 +79,17 @@ MainContentComponent::MainContentComponent()
     disablePanelButton->setButtonText("Disable Synth Panel");
     disablePanelButton->setClickingTogglesState(true);
     
+    addAndMakeVisible(titleLabel = new Label());
+    titleLabel->setText("VTS Editor", dontSendNotification);
+    titleLabel->setJustificationType(Justification::topLeft);
+    Font title_font ("calibri", 96, Font::bold);
+    titleLabel->setFont(title_font);
+    
+    addAndMakeVisible(saveGroup = new GroupComponent("save group", "Save Patch"));
+    addAndMakeVisible(loadGroup = new GroupComponent("load group", "Load Patch"));
+    addAndMakeVisible(midiIoGroup = new GroupComponent("midi IO group", "MIDI I/O Settings"));
 
-    setSize (800, 600);
+    setSize (800, 400);
 }
 
 //==============================================================================
@@ -100,18 +109,21 @@ MainContentComponent::~MainContentComponent()
 
 void MainContentComponent::resized()
 {
-    requestPatchDataButton->setBounds(0, 0, getWidth(), 20);
-    patchNameEditor->setBounds(0, 20, getWidth() - 50, 20);
-    saveButton->setBounds(getWidth()-50, 20, 50, 20);
+    titleLabel->setBounds(0, 0, getWidth(), 80);
+    eventLabel->setBounds(getWidth()/2, 50, getWidth()/2, 20);
+    
+    saveGroup->setBounds(0, 100, getWidth(), 55);
+    requestPatchDataButton->setBounds(10, 120, 200, 20);
+    patchNameEditor->setBounds(220, 120, 500, 20);
+    saveButton->setBounds(getWidth()-60, 120, 50, 20);
  
-    patchDirFileListComponent->setBounds(0, getHeight()/2, getWidth()/2, getHeight()/2);
+    loadGroup->setBounds(0, 170, (getWidth()/2) - 10, getHeight() - 170);
+    patchDirFileListComponent->setBounds(10, 190, (getWidth()/2) - 30, 150);
+    resetSoundEngineButton->setBounds(10, getHeight() - 55, (getWidth()/2) - 30, 20);
+    disablePanelButton->setBounds(10, getHeight() - 30, (getWidth()/2) - 30, 20);
+    
+    midiIoGroup->setBounds(getWidth()/2, 170, (getWidth()/2) - 10, getHeight() - 170);
     audioDeviceSelectorComponent->setBounds(getWidth()/2, getHeight()/2, getWidth()/2, getHeight()/2);
-    
-    eventLabel->setBounds(getWidth()/2, getHeight()-20, getWidth()/2, 20);
-    
-    resetSoundEngineButton->setBounds(0, 100, 200, 20);
-    disablePanelButton->setBounds(0, 150, 200, 20);
-    
 }
 
 //==============================================================================

@@ -64,7 +64,8 @@ private:
     ScopedPointer<TextButton> resetSoundEngineButton;
     ScopedPointer<TextButton> disablePanelButton;
     
-    ScopedPointer<Label> eventLabel;
+    ScopedPointer<Label> eventLabel, titleLabel;
+    ScopedPointer<GroupComponent> loadGroup, saveGroup, midiIoGroup;
     
     //backend
     AudioDeviceManager audioDeviceManager;
