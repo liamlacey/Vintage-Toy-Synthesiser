@@ -116,6 +116,10 @@ typedef struct
 
 void WriteToMidiOutFd (uint8_t data_buffer[], int data_buffer_size)
 {
+    
+    for (int i = 0; i < data_buffer_size; i++)
+        printf ("[VB] Byte to MIDI-output: %d\r\n", data_buffer[i]);
+    
     if (write (midi_fd, data_buffer, data_buffer_size) == -1)
         perror("[VB] Writing to MIDI output");
 }
@@ -1323,7 +1327,7 @@ int main (void)
             if (ret != -1)
             {
                 //display the read byte
-                //printf ("[VB] Byte read from MIDI interface: %d\n", serial_input_buf[0]);
+                printf ("[VB] Byte read from MIDI interface: %d\n", serial_input_buf[0]);
                 
                 //process the read byte
                 uint8_t input_message_flag = ProcInputByte (serial_input_buf[0],
@@ -1412,11 +1416,11 @@ int main (void)
                     
                     if (input_message_flag == MIDI_CC)
                     {
-                        #ifdef DEBUG
+                        //#ifdef DEBUG
                         printf ("[VB] Received CC message from panel - num: %d, val %d\r\n",
                                 input_message_buffer[INPUT_SRC_PANEL][1],
                                 input_message_buffer[INPUT_SRC_PANEL][2]);
-                        #endif
+                        //#endif
                         
                         ProcessCcMessage (input_message_buffer[INPUT_SRC_PANEL], patchParameterData, &voice_alloc_data, send_to_midi_out, sock, sound_engine_sock_addr);
                         
