@@ -74,6 +74,11 @@ MainContentComponent::MainContentComponent()
     resetSoundEngineButton->addListener(this);
     resetSoundEngineButton->setButtonText("Reset Synth to Panel Settings");
     
+    addAndMakeVisible(disablePanelButton = new TextButton());
+    disablePanelButton->addListener(this);
+    disablePanelButton->setButtonText("Disable Synth Panel");
+    disablePanelButton->setClickingTogglesState(true);
+    
 
     setSize (800, 600);
 }
@@ -104,7 +109,8 @@ void MainContentComponent::resized()
     
     eventLabel->setBounds(getWidth()/2, getHeight()-20, getWidth()/2, 20);
     
-    resetSoundEngineButton->setBounds(0, 100, 100, 20);
+    resetSoundEngineButton->setBounds(0, 100, 200, 20);
+    disablePanelButton->setBounds(0, 150, 200, 20);
     
 }
 
@@ -149,7 +155,34 @@ void MainContentComponent::buttonClicked (Button *button)
         //send command CC to synth via MIDI
         MidiMessage message = MidiMessage::controllerEvent(1, PARAM_CMD, CMD_REQUEST_PANEL_PARAM_DATA);
         sendMidiMessage (message);
-    }
+        
+    } //else if (button == resetSoundEngineButton)
+    
+    else if (button == disablePanelButton)
+    {
+        if (button->getToggleState() == true)
+        {
+            printf("Disabling synth panel\r\n");
+            eventLabel->setText("Disabling synth panel...", dontSendNotification);
+            
+            //send command CC to synth via MIDI
+            MidiMessage message = MidiMessage::controllerEvent(1, PARAM_CMD, CMD_DISABLE_PANEL);
+            sendMidiMessage (message);
+            
+        } //if (button->getToggleState() == true)
+        
+        else
+        {
+            printf("Enabling synth panel\r\n");
+            eventLabel->setText("Enabling synth panel...", dontSendNotification);
+            
+            //send command CC to synth via MIDI
+            MidiMessage message = MidiMessage::controllerEvent(1, PARAM_CMD, CMD_ENABLE_PANEL);
+            sendMidiMessage (message);
+            
+        } //else (button->getToggleState() == false)
+        
+    } //else if (button == disablePanelButton)
 }
 
 //==============================================================================

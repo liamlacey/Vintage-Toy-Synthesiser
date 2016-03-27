@@ -62,6 +62,8 @@ private:
     ScopedPointer<FileListComponent> patchDirFileListComponent;
     
     ScopedPointer<TextButton> resetSoundEngineButton;
+    ScopedPointer<TextButton> disablePanelButton;
+    
     ScopedPointer<Label> eventLabel;
     
     //backend

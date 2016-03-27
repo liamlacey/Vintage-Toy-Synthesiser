@@ -162,6 +162,8 @@ const int keyboardScales[KEYBOARD_NUM_OF_SCALES][KEYBOARD_NUM_OF_KEYS] =
 #define CMD_REQUEST_PANEL_PARAM_DATA 1
 #define CMD_REQUEST_ALL_PATCH_DATA 2
 #define CMD_SENT_ALL_PATCH_DATA 3
+#define CMD_DISABLE_PANEL 4
+#define CMD_ENABLE_PANEL 5
 
 //==========================================================================
 //structure that stores info about a patch parameter

@@ -77,6 +77,9 @@ enum InputSources
 
 int keyboard_fd, midi_fd, panel_fd;
 
+//FIXME: make these variables not global!
+bool panelIsEnabled = true;
+
 //Struct that stores info about playing notes.
 //In poly mode this is for each voice, but in mono mode this
 //is for each note in the note stack.
@@ -1049,6 +1052,22 @@ void ProcessCcMessage (uint8_t message_buffer[],
             
         } //else if (param_val == CMD_REQUEST_PANEL_PARAM_DATA)
         
+        //if got a disabled panel command
+        else if (param_val == CMD_DISABLE_PANEL)
+        {
+            printf ("[VB] Disabling panel\r\n");
+            panelIsEnabled = false;
+            
+        } //else if (param_val == CMD_DISABLE_PANEL)
+        
+        //if got a disabled panel command
+        else if (param_val == CMD_ENABLE_PANEL)
+        {
+            printf ("[VB] Enabling panel\r\n");
+            panelIsEnabled = true;
+            
+        } //else if (param_val == CMD_ENABLE_PANEL)
+        
     } //else if (param_num == PARAM_CMD)
     
     
@@ -1416,7 +1435,9 @@ int main (void)
                 {
                     //printf ("[VB] Received full MIDI message from panel with status byte %d\n", input_message_buffer[INPUT_SRC_PANEL][0]);
                     
-                    if (input_message_flag == MIDI_CC)
+                    //if it is a CC, and the panel is currently enabled or it is a volume control message
+                    if (input_message_flag == MIDI_CC &&
+                        (panelIsEnabled || input_message_buffer[INPUT_SRC_PANEL][1] == PARAM_GLOBAL_VOLUME))
                     {
                         //#ifdef DEBUG
                         printf ("[VB] %s change from panel - CC num: %d, CC val %d\r\n",
