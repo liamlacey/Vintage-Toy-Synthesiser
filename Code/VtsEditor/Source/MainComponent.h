@@ -61,6 +61,7 @@ private:
     ScopedPointer<TextButton> saveButton;
     ScopedPointer<FileListComponent> patchDirFileListComponent;
     
+    ScopedPointer<TextButton> resetSoundEngineButton;
     ScopedPointer<Label> eventLabel;
     
     //backend

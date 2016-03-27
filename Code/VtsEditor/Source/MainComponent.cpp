@@ -70,6 +70,10 @@ MainContentComponent::MainContentComponent()
     eventLabel->setText("Application started", dontSendNotification);
     eventLabel->setJustificationType(Justification::right);
     
+    addAndMakeVisible(resetSoundEngineButton = new TextButton());
+    resetSoundEngineButton->addListener(this);
+    resetSoundEngineButton->setButtonText("Reset Synth to Panel Settings");
+    
 
     setSize (800, 600);
 }
@@ -99,6 +103,8 @@ void MainContentComponent::resized()
     audioDeviceSelectorComponent->setBounds(getWidth()/2, getHeight()/2, getWidth()/2, getHeight()/2);
     
     eventLabel->setBounds(getWidth()/2, getHeight()-20, getWidth()/2, 20);
+    
+    resetSoundEngineButton->setBounds(0, 100, 100, 20);
     
 }
 
@@ -134,6 +140,16 @@ void MainContentComponent::buttonClicked (Button *button)
         sendMidiMessage (message);
         
     } //else if (button == requestPatchDataButton)
+    
+    else if (button == resetSoundEngineButton)
+    {
+        printf("Reseting synth to panel settings\r\n");
+        eventLabel->setText("Reseting synth to panel settings...", dontSendNotification);
+        
+        //send command CC to synth via MIDI
+        MidiMessage message = MidiMessage::controllerEvent(1, PARAM_CMD, CMD_REQUEST_PANEL_PARAM_DATA);
+        sendMidiMessage (message);
+    }
 }
 
 //==============================================================================
