@@ -22,6 +22,9 @@
 
 //==========================================
 
+//set to 1 when we want to debug to serial monitor rather than send data to the BBB
+const byte DEBUG_MODE = 0;
+
 //The number of pots/switches attached
 const byte NUM_OF_CONTROLS = 43;
 
@@ -273,7 +276,7 @@ void loop()
 
     //slow down control reading to help prevent jitter.
     //it also means when pots are turned fast they only send a small number of values
-    delay (1);
+    delay (2);
 
   } //for (byte control_num; control_num < NUM_OF_CONTROLS; control_num++)
 
@@ -329,12 +332,18 @@ void SendMidiMessage (byte cmd_byte, byte data_byte_1, byte data_byte_2)
 {
   byte buf[3] = {cmd_byte, data_byte_1, data_byte_2};
 
-  Serial.write (buf, 3);
+  if (!DEBUG_MODE)
+  {
+    Serial.write (buf, 3);
+  }
 
-//    Serial.print(buf[0]);
-//    Serial.print(" ");
-//    Serial.print(buf[1]);
-//    Serial.print(" ");
-//    Serial.println(buf[2]);
+  else
+  {
+    Serial.print(buf[0]);
+    Serial.print(" ");
+    Serial.print(buf[1]);
+    Serial.print(" ");
+    Serial.println(buf[2]);
+  }
 }
 
