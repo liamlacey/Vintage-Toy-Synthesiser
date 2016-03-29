@@ -204,19 +204,19 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //10
     {}, //11
     {}, //12
-    {0, 0, 127, true, true, 0, 0., 1., 1.0, "DISTORTION AMOUNT"}, //13 - PARAM_FX_DISTORTION_AMOUNT
+    {0, 0, 127, true, true, 0, 0., 1., 0.5, "DISTORTION AMOUNT"}, //13 - PARAM_FX_DISTORTION_AMOUNT
     {127, 0, 127, true, true, 0., 0., 1., 1.0, "OSC SINE LEVEL"}, //14 - PARAM_OSC_SINE_LEVEL
     {127, 0, 127, true, true, 0., 0., 1. 1.0,, "OSC TRI LEVEL"}, //15 - PARAM_OSC_TRI_LEVEL
     {127, 0, 127, true, true, 1., 0., 1., 1.0, "OSC SAW LEVEL"}, //16 - PARAM_OSC_SAW_LEVEL
     {127, 0, 127, true, true, 0., 0., 1., 1.0, "OSC PULSE LEVEL"}, //17 - PARAM_OSC_PULSE_LEVEL
     {127, 0, 127, true, true, 0., 0., 1., 1.0, "OSC SQUARE LEVEL"}, //18 - PARAM_OSC_SQUARE_LEVEL
-    {5, 0, 127, true, true, 0.1, 0.1, 50., 1.0, "FILTER RESO"}, //19 - PARAM_FILTER_RESO
+    {5, 0, 127, true, true, 0.1, 0.1, 50., 0.5, "FILTER RESO"}, //19 - PARAM_FILTER_RESO
     {0, 0, 127, true, true, 10, 0, 100, 1.0, "OSC PHASE SPREAD"}, //20 - PARAM_OSC_PHASE_SPREAD
     {}, //21
-    {0, 0, 127, true, true, 0, 0, 20000, 1.0, "FEG ATTACK"}, //22 - PARAM_FEG_ATTACK
-    {2, 0, 127, true, true, 400, 0, 5000, 1.0, "FEG DECAY"}, //23 - PARAM_FEG_DECAY
+    {0, 0, 127, true, true, 0, 0, 20000, 0.5, "FEG ATTACK"}, //22 - PARAM_FEG_ATTACK
+    {2, 0, 127, true, true, 400, 0, 5000, 0.5, "FEG DECAY"}, //23 - PARAM_FEG_DECAY
     {20, 0, 127, true, true, 0.7, 0., 1., 1.0, "FEG SUSTAIN"}, //24 - PARAM_FEG_SUSTAIN
-    {20, 0, 127, true, true, 3000, 0, 10000, 1.0, "FEG RELEASE"}, //25 - PARAM_FEG_RELEASE
+    {20, 0, 127, true, true, 3000, 0, 10000, 0.5, "FEG RELEASE"}, //25 - PARAM_FEG_RELEASE
     {127, 0, 127, true, true, 1., 0, 1., 1.0, "FILTER LP MIX"}, //26 - PARAM_FILTER_LP_MIX
     {0, 0, 127, true, true, 0., 0, 1., 1.0, "FILTER BP MIX"}, //27 - PARAM_FILTER_BP_MIX
     {0, 0, 127, true, true, 0., 0, 1., 1.0, "FILTER HP MIX"}, //28 - PARAM_FILTER_HP_MIX
@@ -238,7 +238,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //44
     {}, //45
     {}, //46
-    {1, 0, 127, true, true, 1, 0.01, 30, 1.0, "LFO RATE"}, //47 - PARAM_LFO_RATE
+    {1, 0, 127, true, true, 1, 0.01, 30, 0.5, "LFO RATE"}, //47 - PARAM_LFO_RATE
     {64, 0, 127, true, true, 1., -1., 1., 1.0, "LFO DEPTH"}, //48 - PARAM_LFO_DEPTH
     {}, //49
     {0, 0, 3, true, true, 0, 0, 3, 1.0, "LFO SHAPE"}, //50 - PARAM_LFO_SHAPE
@@ -263,10 +263,10 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //69
     {}, //70
     {}, //71
-    {20, 0, 127, true, true, 2000, 0, 10000, 1.0, "AEG RELEASE"}, //72 - PARAM_AEG_RELEASE
-    {0, 0, 127, true, true, 0, 0, 20000, 1.0, "AEG ATTACK"}, //73 - PARAM_AEG_ATTACK
+    {20, 0, 127, true, true, 2000, 0, 10000, 0.5, "AEG RELEASE"}, //72 - PARAM_AEG_RELEASE
+    {0, 0, 127, true, true, 0, 0, 20000, 0.5, "AEG ATTACK"}, //73 - PARAM_AEG_ATTACK
     {20, 0, 127, true, true, 5000, 50, 15000, 1.0, "FILTER CUTOFF"}, //74 - PARAM_FILTER_FREQ
-    {2, 0, 127, true, true, 200, 0, 5000, 1.0, "AEG DECAY"}, //75 - PARAM_AEG_DECAY
+    {2, 0, 127, true, true, 200, 0, 5000, 0.5, "AEG DECAY"}, //75 - PARAM_AEG_DECAY
     {}, //76
     {}, //77
     {}, //78
