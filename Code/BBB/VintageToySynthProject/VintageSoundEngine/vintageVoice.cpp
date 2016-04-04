@@ -239,7 +239,7 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         //============================
         //set the note velocity
         rootNoteVel = note_vel;
-        voiceVelocityValue = scaleValue (note_vel, 0, 127, 0., 1.);
+        voiceVelocityValue = scaleValue (note_vel, 0, 127, 0., 1., 1.);
         
         //============================
         //work out velocity modulation values
@@ -283,7 +283,7 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
 
 void VintageVoice::processAftertouchMessage (uint8_t aftertouch_val)
 {
-    aftertouchValue = scaleValue (aftertouch_val, 0, 127, 0., 1.);
+    aftertouchValue = scaleValue (aftertouch_val, 0, 127, 0., 1., 1.);
 }
 
 //==========================================================
@@ -301,7 +301,8 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
                                                           patchParameterData[param_num].user_min_val,
                                                           patchParameterData[param_num].user_max_val,
                                                           patchParameterData[param_num].voice_min_val,
-                                                          patchParameterData[param_num].voice_max_val);
+                                                          patchParameterData[param_num].voice_max_val,
+                                                          patchParameterData[param_num].skew_factor);
     
     //debugging
 //    if (voiceNum == 0)
