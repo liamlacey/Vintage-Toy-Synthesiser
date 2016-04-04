@@ -206,7 +206,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //12
     {0, 0, 127, true, true, 0, 0., 1., 0.5, "DISTORTION AMOUNT"}, //13 - PARAM_FX_DISTORTION_AMOUNT
     {127, 0, 127, true, true, 0., 0., 1., 1.0, "OSC SINE LEVEL"}, //14 - PARAM_OSC_SINE_LEVEL
-    {127, 0, 127, true, true, 0., 0., 1. 1.0,, "OSC TRI LEVEL"}, //15 - PARAM_OSC_TRI_LEVEL
+    {127, 0, 127, true, true, 0., 0., 1., 1.0, "OSC TRI LEVEL"}, //15 - PARAM_OSC_TRI_LEVEL
     {127, 0, 127, true, true, 1., 0., 1., 1.0, "OSC SAW LEVEL"}, //16 - PARAM_OSC_SAW_LEVEL
     {127, 0, 127, true, true, 0., 0., 1., 1.0, "OSC PULSE LEVEL"}, //17 - PARAM_OSC_PULSE_LEVEL
     {127, 0, 127, true, true, 0., 0., 1., 1.0, "OSC SQUARE LEVEL"}, //18 - PARAM_OSC_SQUARE_LEVEL
