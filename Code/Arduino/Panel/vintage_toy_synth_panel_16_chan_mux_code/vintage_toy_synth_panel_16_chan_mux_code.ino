@@ -63,7 +63,7 @@ ControlParamData controlParamData[NUM_OF_CONTROLS] =
   {.cc_num = 29, .cc_min_val = 0, .cc_max_val = 127, false}, //5 - PARAM_FILTER_NOTCH_MIX
   {.cc_num = 50, .cc_min_val = 0, .cc_max_val = 3, false}, //6 - PARAM_LFO_SHAPE
   {.cc_num = 47, .cc_min_val = 0, .cc_max_val = 127, false}, //7 - PARAM_LFO_RATE
-  {.cc_num = 48, .cc_min_val = 0, .cc_max_val = 127, true}, //8 - PARAM_LFO_DEPTH
+  {.cc_num = 48, .cc_min_val = 1, .cc_max_val = 127, true}, //8 - PARAM_LFO_DEPTH
   {.cc_num = 14, .cc_min_val = 0, .cc_max_val = 127, false}, //9 - PARAM_OSC_SINE_LEVEL
   {.cc_num = 15, .cc_min_val = 0, .cc_max_val = 127, false}, //10 - PARAM_OSC_TRI_LEVEL
   {.cc_num = 16, .cc_min_val = 0, .cc_max_val = 127, false}, //11 - PARAM_OSC_SAW_LEVEL
@@ -91,13 +91,13 @@ ControlParamData controlParamData[NUM_OF_CONTROLS] =
   {.cc_num = 114, .cc_min_val = 61, .cc_max_val = 67, false}, //33 - PARAM_KEYS_OCTAVE
   {.cc_num = 106, .cc_min_val = 58, .cc_max_val = 70, false}, //34 - PARAM_KEYS_TRANSPOSE
   {.cc_num = 103, .cc_min_val = 127, .cc_max_val = 0, false}, //35 - PARAM_VOICE_MODE
-  {.cc_num = 58, .cc_min_val = 0, .cc_max_val = 127, true}, //36 - PARAM_MOD_LFO_AMP
-  {.cc_num = 112, .cc_min_val = 0, .cc_max_val = 127, true}, //37 - PARAM_MOD_LFO_CUTOFF
-  {.cc_num = 56, .cc_min_val = 0, .cc_max_val = 127, true}, //38 - PARAM_MOD_LFO_RESO
+  {.cc_num = 58, .cc_min_val = 1, .cc_max_val = 127, true}, //36 - PARAM_MOD_LFO_AMP
+  {.cc_num = 112, .cc_min_val = 1, .cc_max_val = 127, true}, //37 - PARAM_MOD_LFO_CUTOFF
+  {.cc_num = 56, .cc_min_val = 1, .cc_max_val = 127, true}, //38 - PARAM_MOD_LFO_RESO
   {.cc_num = 9, .cc_min_val = 0, .cc_max_val = 100, false}, //39 - PARAM_GLOBAL_VOLUME
-  {.cc_num = 63, .cc_min_val = 0, .cc_max_val = 127, true}, //40 - PARAM_MOD_VEL_AMP
-  {.cc_num = 109, .cc_min_val = 0, .cc_max_val = 127, true}, //41 - PARAM_MOD_VEL_CUTOFF
-  {.cc_num = 110, .cc_min_val = 0, .cc_max_val = 127, true}, //42 - PARAM_MOD_VEL_RESO
+  {.cc_num = 63, .cc_min_val = 1, .cc_max_val = 127, true}, //40 - PARAM_MOD_VEL_AMP
+  {.cc_num = 109, .cc_min_val = 1, .cc_max_val = 127, true}, //41 - PARAM_MOD_VEL_CUTOFF
+  {.cc_num = 110, .cc_min_val = 1, .cc_max_val = 127, true}, //42 - PARAM_MOD_VEL_RESO
 };
 
 //FOR DEVELOPMENT

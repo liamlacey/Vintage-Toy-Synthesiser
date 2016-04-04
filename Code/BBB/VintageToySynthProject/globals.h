@@ -239,7 +239,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //45
     {}, //46
     {1, 0, 127, true, true, 1, 0.01, 30, 0.5, "LFO RATE"}, //47 - PARAM_LFO_RATE
-    {64, 0, 127, true, true, 1., -1., 1., 1.0, "LFO DEPTH"}, //48 - PARAM_LFO_DEPTH
+    {64, 1, 127, true, true, 1., -1., 1., 1.0, "LFO DEPTH"}, //48 - PARAM_LFO_DEPTH
     {}, //49
     {0, 0, 3, true, true, 0, 0, 3, 1.0, "LFO SHAPE"}, //50 - PARAM_LFO_SHAPE
     {}, //51
@@ -247,14 +247,14 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //53
     {}, //54
     {}, //55
-    {64, 0, 127, true, true, 0., -1., 1., 1.0, "LFO -> RESO"}, //56 - PARAM_MOD_LFO_RESO
+    {64, 1, 127, true, true, 0., -1., 1., 1.0, "LFO -> RESO"}, //56 - PARAM_MOD_LFO_RESO
     {}, //57
-    {64, 0, 127, true, true, 0., -1., 1., 1.0, "LFO -> AMP"}, //58 - PARAM_MOD_LFO_AMP
+    {64, 1, 127, true, true, 0., -1., 1., 1.0, "LFO -> AMP"}, //58 - PARAM_MOD_LFO_AMP
     {}, //59
     {}, //60
     {}, //61
     {}, //62
-    {64, 0, 127, true, true, 0., -1., 1., 1.0, "VEL -> AMP"}, //63 - PARAM_MOD_VEL_AMP
+    {64, 1, 127, true, true, 0., -1., 1., 1.0, "VEL -> AMP"}, //63 - PARAM_MOD_VEL_AMP
     {}, //64
     {}, //65
     {}, //66
@@ -280,8 +280,8 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //86
     {}, //87
     {}, //88
-    {64, 0, 127, true, true, 0., -1., 1., 1.0, "AT -> LFO DEPTH"}, //89 - PARAM_MOD_AT_LFO_DEPTH
-    {64, 0, 127, true, true, 0., -1., 1., 1.0, "AT -> CUTOFF"}, //90 - PARAM_MOD_AT_FREQ
+    {64, 1, 127, true, true, 0., -1., 1., 1.0, "AT -> LFO DEPTH"}, //89 - PARAM_MOD_AT_LFO_DEPTH
+    {64, 1, 127, true, true, 0., -1., 1., 1.0, "AT -> CUTOFF"}, //90 - PARAM_MOD_AT_FREQ
     {}, //91
     {}, //92
     {}, //93
@@ -300,10 +300,10 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {64, 58, 70, false, true, 0, 0, 0, 1.0, "KEYBOARD TRANSPOSE"}, //106 - PARAM_KEYS_TRANSPOSE
     {0, 0, 127, true, true, 0, 0, 127, 1.0, "VINTAGE AMOUNT"}, //107 - PARAM_GLOBAL_VINTAGE_AMOUNT
     {}, //108
-    {64, 0, 127, true, true, 0., -1., 1., 1.0, "VEL -> CUTOFF"}, //109 - PARAM_MOD_VEL_FREQ
-    {64, 0, 127, true, true, 0., -1., 1., 1.0, "VEL -> RESO"}, //110 - PARAM_MOD_VEL_RESO
+    {64, 1, 127, true, true, 0., -1., 1., 1.0, "VEL -> CUTOFF"}, //109 - PARAM_MOD_VEL_FREQ
+    {64, 1, 127, true, true, 0., -1., 1., 1.0, "VEL -> RESO"}, //110 - PARAM_MOD_VEL_RESO
     {}, //111
-    {64, 0, 127, true, true, 0., -1., 1., 1.0, "LFO -> CUTOFF"}, //112 - PARAM_MOD_LFO_FREQ
+    {64, 1, 127, true, true, 0., -1., 1., 1.0, "LFO -> CUTOFF"}, //112 - PARAM_MOD_LFO_FREQ
     {}, //113
     {64, 61, 67, false, true, 0, 0, 0, 1.0, "KEYBOARD OCTAVE"}, //114 - PARAM_KEYS_OCTAVE
     {}, //115
