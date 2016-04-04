@@ -307,10 +307,7 @@ void VintageVoice::setPatchParamVoiceValue (uint8_t param_num, uint8_t param_use
     //debugging
 //    if (voiceNum == 0)
 //    {
-//        if (param_num == PARAM_FX_DISTORTION_AMOUNT)
-//        {
-//            printf ("[VV] Distortion amount: %f\r\n", 1 + (patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val * 20.0));
-//        }
+//        printf ("[VV] %s voice value: %f\r\n", patchParameterData[param_num].param_name, patchParameterData[param_num].voice_val);
 //    }
     
     //==========================================================
