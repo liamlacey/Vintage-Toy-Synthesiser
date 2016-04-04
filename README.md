@@ -2,6 +2,8 @@
 
 Vintage Toy Synthesiser is my project for the [Element14 Music Tech Design Challenge](https://www.element14.com/community/community/design-challenges/musictech) where I am converting a wooden vintage toy piano into a standalone digital synthesiser. See the [project blog](https://www.element14.com/community/community/design-challenges/musictech/blog/tags#/?tags=project_vintage) to stay up-to-date with the project activity. 
 
+![alt vintage-toy-synthesiser](https://www.element14.com/community/servlet/JiveServlet/showImage/38-22778-263494/IMG_3791.JPG)
+
 ## Project Proposal ##
 
 At the time of writing this the project is still under development, however here is the original project proposal specification:
