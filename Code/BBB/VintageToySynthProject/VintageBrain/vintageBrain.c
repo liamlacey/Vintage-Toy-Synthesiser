@@ -892,21 +892,23 @@ void ProcessPolyAftertouchMessage (uint8_t message_buffer[],
 {
     //====================================================================================
     //Sending to sound engine
+    //Currently the sound engine doesn't do anything with aftertouch, so disabled sending it
+    //to save CPU usage
     
-    uint8_t voice_list[NUM_OF_VOICES];
-    uint8_t num_of_voices;
-    
-    //get all voices that the note for this aftertouch message are currently playing on
-    num_of_voices = GetVoicesOfNote (message_buffer[1], voice_alloc_data, voice_list);
-    
-    //for each found voice
-    for (uint8_t voice = 0; voice < num_of_voices; voice++)
-    {
-        //send the aftertouch message to the sound engine, using channel to signify voice number
-        uint8_t pat_buffer[3] = {MIDI_PAT + voice_list[voice] - 1, message_buffer[1], message_buffer[2]};
-        SendToSoundEngine (pat_buffer, 3, sock, sound_engine_sock_addr);
-        
-    } //for (uint8_t voice = 0; voice < num_of_voices; voice++)
+//    uint8_t voice_list[NUM_OF_VOICES];
+//    uint8_t num_of_voices;
+//    
+//    //get all voices that the note for this aftertouch message are currently playing on
+//    num_of_voices = GetVoicesOfNote (message_buffer[1], voice_alloc_data, voice_list);
+//    
+//    //for each found voice
+//    for (uint8_t voice = 0; voice < num_of_voices; voice++)
+//    {
+//        //send the aftertouch message to the sound engine, using channel to signify voice number
+//        uint8_t pat_buffer[3] = {MIDI_PAT + voice_list[voice] - 1, message_buffer[1], message_buffer[2]};
+//        SendToSoundEngine (pat_buffer, 3, sock, sound_engine_sock_addr);
+//        
+//    } //for (uint8_t voice = 0; voice < num_of_voices; voice++)
     
     //====================================================================================
     //Sending to MIDI-out
@@ -1320,6 +1322,14 @@ int main (void)
                         printf ("[VB] Received poly aftertouch message from keyboard\r\n");
                         #endif
                         
+                        //Set note number based on keyboard scale, octave, and transpose settings...
+                        uint8_t note_index = input_message_buffer[INPUT_SRC_KEYBOARD][1];
+                        int16_t note_num = GetNoteForKeyboardKey (note_index, patchParameterData);
+                        
+                        //put new note number back into input_message_buffer buffer
+                        input_message_buffer[INPUT_SRC_KEYBOARD][1] = note_num;
+                        
+                        //Process the aftertouch message
                         ProcessPolyAftertouchMessage (input_message_buffer[INPUT_SRC_KEYBOARD],
                                                       &voice_alloc_data,
                                                       send_to_midi_out,
