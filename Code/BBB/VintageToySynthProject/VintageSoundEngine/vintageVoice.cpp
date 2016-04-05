@@ -258,7 +258,7 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         //This means that the phase won't be reset in mono mode when triggering stacked notes.
         
         if (envAmp.trigger == 0)
-            lfo.phaseReset(0.0);
+            lfo.phaseReset(TWOPI/2.0);
         
     } //if (note_status == true)
     
