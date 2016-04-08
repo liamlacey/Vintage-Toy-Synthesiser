@@ -228,12 +228,16 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         {
             //set the global offset...
             
-            uint8_t max_global_offset_val = patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val / 2;
+            uint8_t max_global_offset_val = patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val / 8;
             
             //get a random pitch value using a division of the vintage amount as the max possible value
-            vintage_global_pitch_offset = rand() % max_offset_val;
-            //offset the random pitch value so that the offset could be negative
-            vintage_global_pitch_offset -= max_offset_val / 2;
+            if (max_global_offset_val != 0) //otherwise it will crash when trying to divide by 0!
+            {
+                vintage_global_pitch_offset = rand() % max_global_offset_val;
+                //offset the random pitch value so that the offset could be negative
+                vintage_global_pitch_offset -= max_global_offset_val / 2;
+                
+            } //if (max_global_offset_val != 0)
             
             //FIXME: the above algorithm will make lower notes sound less out of tune than higher notes - fix this.
             
@@ -241,7 +245,7 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
             //FIXME: these values could instead be created/modified when vintage amount value changes, rather than
             //at the start of each note here.
             
-            float max_osc_offset_val = patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val / 10.0;
+            float max_osc_offset_val = patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val / 40.0;
             
             //for each oscillator...
             for (uint8_t i = 0; i < 5; i++)
