@@ -131,7 +131,7 @@ void VintageVoice::processAudio (double *output)
     
     if (filterCutoffRealtimeVal < patchParameterData[PARAM_FILTER_FREQ].voice_val)
     {
-        filterCutoffRealtimeVal += 1.0;
+        filterCutoffRealtimeVal = filterCutoffRealtimeVal + 0.5;
         
         if (filterCutoffRealtimeVal > patchParameterData[PARAM_FILTER_FREQ].voice_val)
             filterCutoffRealtimeVal = patchParameterData[PARAM_FILTER_FREQ].voice_val;
@@ -139,7 +139,7 @@ void VintageVoice::processAudio (double *output)
     
     else if (filterCutoffRealtimeVal > patchParameterData[PARAM_FILTER_FREQ].voice_val)
     {
-        filterCutoffRealtimeVal -= 1.0;
+        filterCutoffRealtimeVal = filterCutoffRealtimeVal - 0.5;
         
         if (filterCutoffRealtimeVal < patchParameterData[PARAM_FILTER_FREQ].voice_val)
             filterCutoffRealtimeVal = patchParameterData[PARAM_FILTER_FREQ].voice_val;
