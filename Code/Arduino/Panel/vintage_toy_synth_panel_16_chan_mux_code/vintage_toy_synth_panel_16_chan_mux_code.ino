@@ -276,7 +276,7 @@ void loop()
 
     //slow down control reading to help prevent jitter.
     //it also means when pots are turned fast they only send a small number of values
-    delay (1);
+    delay (2);
 
   } //for (byte control_num; control_num < NUM_OF_CONTROLS; control_num++)
 
