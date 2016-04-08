@@ -218,10 +218,12 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         //if there is a vintage value
         if (patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val != 0)
         {
+            uint8_t max_offset_val = patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val / 2;
+            
             //get a random pitch value using the vintage amount as the max possible value
-            vintage_pitch_offset = rand() % (int)patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val;
+            vintage_pitch_offset = rand() % max_offset_val;
             //offset the random pitch value so that the offset could be negative
-            vintage_pitch_offset -= patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val / 2;
+            vintage_pitch_offset -= max_offset_val / 2;
             
             //FIXME: the above algorithm will make lower notes sound less out of tune than higher notes - fix this.
             
