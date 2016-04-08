@@ -181,7 +181,7 @@ void VintageVoice::processAudio (double *output)
     //process distortion...
     //Use patchParameterData[PARAM_FX_DISTORTION_AMOUNT] to set the distortion shape
     //FIXME: what should be the min shape value be? Is 1 no distortion or just soft distortion? Try something like 0.1?
-    distortionOut = distortion.atanDist (filterOut, 1 + (patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val * 20.0));
+    distortionOut = distortion.atanDist (filterOut, 1 + (patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val * 50.0));
     //Apply gain reduction
     //FIXME: will be a bit of trial and error getting algorithm correct. Change the last value to set how low it goes.
     distortionOut = distortionOut * (1.0 - (patchParameterData[PARAM_FX_DISTORTION_AMOUNT].voice_val * 0.5));

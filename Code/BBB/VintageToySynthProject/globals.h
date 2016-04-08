@@ -210,7 +210,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {127, 0, 127, true, true, 1., 0., 1., 1.0, "OSC SAW LEVEL"}, //16 - PARAM_OSC_SAW_LEVEL
     {127, 0, 127, true, true, 0., 0., 1., 1.0, "OSC PULSE LEVEL"}, //17 - PARAM_OSC_PULSE_LEVEL
     {127, 0, 127, true, true, 0., 0., 1., 1.0, "OSC SQUARE LEVEL"}, //18 - PARAM_OSC_SQUARE_LEVEL
-    {5, 0, 127, true, true, 0.1, 0.1, 50., 0.5, "FILTER RESO"}, //19 - PARAM_FILTER_RESO
+    {5, 0, 127, true, true, 0.1, 0.1, 30., 0.5, "FILTER RESO"}, //19 - PARAM_FILTER_RESO
     {0, 0, 127, true, true, 10, 0, 100, 1.0, "OSC PHASE SPREAD"}, //20 - PARAM_OSC_PHASE_SPREAD
     {}, //21
     {0, 0, 127, true, true, 0, 0, 20000, 0.5, "FEG ATTACK"}, //22 - PARAM_FEG_ATTACK
