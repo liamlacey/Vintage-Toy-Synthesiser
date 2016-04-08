@@ -221,7 +221,7 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
         //Individual oscillator pitch offsets (same for each note (not random), and more subtle).
         //These are used to make the oscillators of each note slightly detuned/spread.
         //Non-bipolar offsets.
-        int16_t vintage_oscillator_pitch_offset[5] = {0};
+        float vintage_oscillator_pitch_offset[5] = {0.0};
         
         //if there is a vintage value
         if (patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val != 0)
@@ -241,7 +241,7 @@ void VintageVoice::processNoteMessage (bool note_status, uint8_t note_num, uint8
             //FIXME: these values could instead be created/modified when vintage amount value changes, rather than
             //at the start of each note here.
             
-            uint8_t max_osc_offset_val = patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val / 10;
+            float max_osc_offset_val = patchParameterData[PARAM_GLOBAL_VINTAGE_AMOUNT].voice_val / 10.0;
             
             //for each oscillator...
             for (uint8_t i = 0; i < 5; i++)
