@@ -189,7 +189,7 @@ void loop()
       //Serial.println(triggerInitVal[count]);
 
       //use two-thirds of the max sensor value as the top velocity value, as it seems to work well.
-      int velocity = (127.0 * (float)triggerInitVal[count]) / (((float)maxSensorVals[count] / 3.0) * 2.0);
+      int velocity = (127.0 * (float)triggerInitVal[count]) / (((float)maxSensorVals[count] / 3.0));
 
       if (velocity > 127)
       {
