@@ -119,9 +119,8 @@ typedef struct
 
 void WriteToMidiOutFd (uint8_t data_buffer[], int data_buffer_size)
 {
-    
-    for (int i = 0; i < data_buffer_size; i++)
-        printf ("[VB] Byte to MIDI-output: %d\r\n", data_buffer[i]);
+    //for (int i = 0; i < data_buffer_size; i++)
+    //    printf ("[VB] Byte to MIDI-output: %d\r\n", data_buffer[i]);
     
     if (write (midi_fd, data_buffer, data_buffer_size) == -1)
         perror("[VB] Writing to MIDI output");
