@@ -10,9 +10,13 @@
 # 5. reboot BBB to make sure the service starts on boot
 
 # To check the status of the service - sudo systemctl status vintageToySynthStartup.service
+# To check all services currently running - systemctl
 
 #The guide I followed to get the startup script working: 
 # https://learn.adafruit.com/running-programs-automatically-on-your-tiny-computer/systemd-writing-and-enabling-a-service
+
+# Tutorial on writing service Unit files:
+# https://coreos.com/docs/launching-containers/launching/getting-started-with-systemd/
 
 #set CPU frequency
 echo "Setting CPU frequency"

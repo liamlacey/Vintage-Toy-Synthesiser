@@ -1,5 +1,6 @@
 [Unit]
 Description=Vintage Toy Synth Startup Service
+After=cpufrequtils.service
  
 [Service]
 ExecStart=/usr/VintageToySynthProject/vintageToySynthStartup.sh
