@@ -1,27 +1,24 @@
 #! /bin/bash
 
-#This is the script run on startup to prep and start the vintage toy synth applciations.
+#This is the script run on startup to prep and start the vintage toy synth applications.
 
-#To get the startup script and service working, do the following:
-# 1. Place this file in /usr/bin/ on the BBB
-# 2. Grant the file execute permissions - chmod u+x /usr/bin/vintageToySynthStartup.sh
-# 3. Place vintageToySynthStartup.service into /lib/systemd/system/ on the BBB
-# 4. Create a symbolic link to the service file:
-#       - cd /etc/systemd/system/ 
-#       - ln -s /lib/systemd/system/vintageToySynthStartup.service vintageToySynthStartup.service
-# 5. Make systemd take notice of it, activate the service immediately and enable the service to be started on boot-up:
-#       - systemctl daemon-reload
-#       - systemctl start vintageToySynthStartup.service
-#       - systemctl enable vintageToySynthStartup.service
+#To get the startup script and service working using systemd, do the following on the BBB:
+# 1. Grant this file execute permissions - chmod u+x /usr/VintageToySynthProject/vintageToySynthStartup.sh
+# 2. Copy the vintageToySynthStartup.service file into /lib/systemd/system/
+# 3. Enable the service to be started on boot-up - sudo systemctl enable vintageToySynthStartup.service
+# 4. Start the service - sudo systemctl start vintageToySynthStartup.service
+# 5. reboot BBB to make sure the service starts on boot
+
+# To check the status of the service - sudo systemctl status vintageToySynthStartup.service
 
 #The guide I followed to get the startup script working: 
-# - http://www.nunoalves.com/open_source/?p=308
-# - http://mybeagleboneblackfindings.blogspot.co.uk/2013/10/running-script-on-beaglebone-black-boot.html
+# https://learn.adafruit.com/running-programs-automatically-on-your-tiny-computer/systemd-writing-and-enabling-a-service
 
 #set CPU frequency
 echo "Setting CPU frequency"
 cpufreq-set -g userspace
 cpufreq-set -f 1000Mhz
+cpufreq-info
 
 #init serial ports
 echo "Initing serial ports"

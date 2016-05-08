@@ -1,7 +1,10 @@
 [Unit]
-Description=Start Vintage Toy Synthesiser applications
+Description=Vintage Toy Synth Startup Service
+ 
 [Service]
-Type=simple
-ExecStart=/usr/bin/vintageToySynthStartup.sh
+ExecStart=/usr/VintageToySynthProject/vintageToySynthStartup.sh
+RemainAfterExit=yes
+ 
 [Install]
 WantedBy=multi-user.target
+Alias=vintageToySynthStartup.service
