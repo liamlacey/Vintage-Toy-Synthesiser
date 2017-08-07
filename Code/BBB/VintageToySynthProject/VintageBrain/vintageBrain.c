@@ -1356,8 +1356,10 @@ int main (void)
             //if read something
             if (ret != -1)
             {
+                #ifdef DEBUG
                 //display the read byte
                 printf ("[VB] Byte read from MIDI interface: %d\n", serial_input_buf[0]);
+                #endif
                 
                 //process the read byte
                 uint8_t input_message_flag = ProcInputByte (serial_input_buf[0],
