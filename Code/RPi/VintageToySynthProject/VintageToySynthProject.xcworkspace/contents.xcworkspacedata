@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:globals.h">
+   </FileRef>
+   <Group
+      location = "group:VintageBrain"
+      name = "VintageBrain">
+      <FileRef
+         location = "group:vintageBrain.c">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:VintageSoundEngine"
+      name = "VintageSoundEngine">
+      <FileRef
+         location = "group:vintageSoundEngine.h">
+      </FileRef>
+      <FileRef
+         location = "group:vintageSoundEngine.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:vintageVoice.h">
+      </FileRef>
+      <FileRef
+         location = "group:vintageVoice.cpp">
+      </FileRef>
+      <Group
+         location = "group:Maximilian"
+         name = "Maximilian">
+         <Group
+            location = "group:libs"
+            name = "libs">
+            <FileRef
+               location = "group:fft.cpp">
+            </FileRef>
+            <FileRef
+               location = "group:fft.h">
+            </FileRef>
+            <FileRef
+               location = "group:maxiAtoms.cpp">
+            </FileRef>
+            <FileRef
+               location = "group:maxiAtoms.h">
+            </FileRef>
+            <FileRef
+               location = "group:maxiBark.cpp">
+            </FileRef>
+            <FileRef
+               location = "group:maxiBark.h">
+            </FileRef>
+            <FileRef
+               location = "group:maxiFFT.cpp">
+            </FileRef>
+            <FileRef
+               location = "group:maxiFFT.h">
+            </FileRef>
+            <FileRef
+               location = "group:maxiGrains.cpp">
+            </FileRef>
+            <FileRef
+               location = "group:maxiGrains.h">
+            </FileRef>
+            <FileRef
+               location = "group:maxim.h">
+            </FileRef>
+            <FileRef
+               location = "group:maxiMFCC.cpp">
+            </FileRef>
+            <FileRef
+               location = "group:maxiMFCC.h">
+            </FileRef>
+            <FileRef
+               location = "group:maxiSynths.cpp">
+            </FileRef>
+            <FileRef
+               location = "group:maxiSynths.h">
+            </FileRef>
+            <FileRef
+               location = "group:sineTable.h">
+            </FileRef>
+         </Group>
+         <FileRef
+            location = "group:main.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:maximilian.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:maximilian.h">
+         </FileRef>
+         <FileRef
+            location = "group:portaudio.h">
+         </FileRef>
+         <FileRef
+            location = "group:RtAudio.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:RtAudio.h">
+         </FileRef>
+         <FileRef
+            location = "group:RtError.h">
+         </FileRef>
+         <FileRef
+            location = "group:stb_vorbis.c">
+         </FileRef>
+         <FileRef
+            location = "group:stb_vorbis.h">
+         </FileRef>
+      </Group>
+   </Group>
+</Workspace>
