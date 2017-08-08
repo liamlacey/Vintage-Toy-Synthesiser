@@ -4,7 +4,7 @@
  Created by Liam Lacey on 28/01/2016.
  Copyright 2016 Liam Lacey. All rights reserved.
  
- This is the main file for the vintageBrain application for the Vintage Toy Piano Synth project.
+ This is the main file for the vintageBrain application for the Vintage Toy Synthesiser v1.5 (RPi version).
  This application is used provide communication between the synths keyboard, panel, sound engine, and MIDI I/O.
  It is also used to handle voice allocation and patch storage.
  
