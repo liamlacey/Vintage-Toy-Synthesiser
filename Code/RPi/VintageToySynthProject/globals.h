@@ -7,6 +7,10 @@
 //
 
 //==========================================================================
+
+#define ENABLE_USB_MIDI 1
+
+//==========================================================================
 //Socket stuff.
 //I needed to create the vintageToySynthProject directory in order for these sockets to be setup
 
