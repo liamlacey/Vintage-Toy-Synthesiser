@@ -74,7 +74,7 @@ enum InputSources
 };
 
 #define NUM_OF_POLL_FDS NUM_OF_INPUT_SRC_TYPES
-#define POLL_TIME -1
+#define POLL_TIME 1
 
 int keyboard_fd, midi_fd, panel_fd, usb_midi_fd;
 
@@ -1347,6 +1347,9 @@ int main (void)
     poll_fds[INPUT_SRC_USB_MIDI].fd = -1;
     poll_fds[INPUT_SRC_USB_MIDI].events = POLLHUP;
     
+    //flag that usb_midi_fd isn't currently connected
+    usb_midi_fd = -1;
+    
     //==========================================================
     //Enter main loop, and just read any data that comes in over the serial ports, sockets, or USB-MIDI files
     
@@ -1354,6 +1357,8 @@ int main (void)
     
 //    uint8_t test_num = 48;
 //    uint8_t test_vel = 20;
+    
+    bool first_loop_run = true;
     
     while (true)
     {
@@ -1365,7 +1370,7 @@ int main (void)
         //Only want to do this once per second (otherwise CPU usage is high)
         long interval_check_time = GetCurrentTimeDifference (usb_midi_device_checker_time);
         
-        if (interval_check_time >= 1000)
+        if (interval_check_time >= 1000 || first_loop_run)
         {
             //printf ("[VB] Checking USB-MIDI connections\r\n");
             
@@ -1732,6 +1737,8 @@ int main (void)
             } //if (strncmp (from_addr.sun_path, SOCK_SOUND_ENGINE_FILENAME, strlen(from_addr.sun_path)) == 0)
             
         } //if (poll_fds[INPUT_SRC_SOCKETS].revents & POLLIN)
+        
+        first_loop_run = false;
     
         //test sending data to socket
 //        uint8_t test_buf[3] = {MIDI_NOTEON, test_num, test_vel};
