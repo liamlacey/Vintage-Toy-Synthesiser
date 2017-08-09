@@ -1342,7 +1342,7 @@ int main (void)
     clock_gettime (CLOCK_MONOTONIC, &usb_midi_device_checker_time);
     
     //Set the poll_fd struct array to ignore polling for USB MIDI device data.
-    //This are then set up when device is connected.
+    //This is then set up when device is connected.
     //Trying to read from polls not connected to anything creates high CPU usage.
     poll_fds[INPUT_SRC_USB_MIDI].fd = -1;
     poll_fds[INPUT_SRC_USB_MIDI].events = POLLHUP;
@@ -1371,12 +1371,13 @@ int main (void)
             
             //Check if we need to connect or disconnected for the USB-MIDI device fd.
             
-            //The USB-MIDI file desciptors are '/dev/snd/midiCxD0', where 'x' is the number of the device on the system (starting from 0).
+            //The USB-MIDI file desciptors are '/dev/snd/midiCxD0',
+            //where 'x' is the number of the device on the system (starting from 1 on RPi).
             //Here we only want to attempt to connect to the first USB MIDI device connected.
             //FIXME: is the above correct for every MIDI device that could be connected?
             
             char fd_path[32];
-            strcpy (fd_path, "/dev/snd/midiC0D0");
+            strcpy (fd_path, "/dev/snd/midiC1D0");
             
             //if this fd_path exists on the system (a device is plugged in),
             //but we're currently not connected to the fd (device has just been plugged in)
@@ -1426,6 +1427,7 @@ int main (void)
 #endif //ENABLE_USB_MIDI
         
         //==========================================================
+        
         //for now only send data from keyboard/panel to MIDI-out if global volume is 0,
         //due to the issue where sending to MIDI-out causes glitches in the audio.
         //FIXME: this MIDI-out audio glitch issue

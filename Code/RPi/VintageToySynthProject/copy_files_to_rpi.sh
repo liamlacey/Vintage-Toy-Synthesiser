@@ -13,9 +13,7 @@ fi
 
 echo "Copying files to the RPi with IP address $1"
 scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/VintageBrain/"* root@$1:/usr/VintageToySynthProject/VintageBrain/
+
 scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/VintageSoundEngine/"* root@$1:/usr/VintageToySynthProject/VintageSoundEngine/
-scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/globals.h" root@$1:/usr/VintageToySynthProject/
-scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/vintageToySynthStartup.sh" root@$1:/usr/VintageToySynthProject/
-scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/vintageToySynthStartup.service" root@$1:/usr/VintageToySynthProject/
-scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/start.sh" root@$1:/usr/VintageToySynthProject/
-scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/stop.sh" root@$1:/usr/VintageToySynthProject/
+
+scp -r "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/globals.h" "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/vintageToySynthStartup.sh" "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/vintageToySynthStartup.service" "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/start.sh" "/Users/Liam/Documents/Vintage toy synth project/Code/RPi/VintageToySynthProject/stop.sh" root@$1:/usr/VintageToySynthProject/
