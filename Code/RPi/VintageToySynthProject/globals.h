@@ -21,7 +21,7 @@
 #define SOCK_SOUND_ENGINE_FILENAME "/var/vintageToySynthProject/vintageSoundEngine.cli"
 
 //==========================================================================
-#define NUM_OF_VOICES 2
+#define NUM_OF_VOICES 8
 
 //==========================================================================
 #define VOICE_MONO_BUFFER_SIZE 18
