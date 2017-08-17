@@ -48,7 +48,7 @@
 
 #include "../globals.h"
 
-#define DEBUG 1
+//#define DEBUG 1
 
 #define KEYBOARD_SERIAL_PATH "/dev/ttyO1"
 #define MIDI_SERIAL_PATH "/dev/ttyO2"
@@ -1348,7 +1348,7 @@ int main (void)
     poll_fds[INPUT_SRC_USB_MIDI].events = POLLHUP;
     
     //flag that usb_midi_fd isn't currently connected
-    usb_midi_fd = -1;
+    int currentUsbMidiDeviceIndex = -1;
     
     //==========================================================
     //Enter main loop, and just read any data that comes in over the serial ports, sockets, or USB-MIDI files
@@ -1375,54 +1375,66 @@ int main (void)
             //printf ("[VB] Checking USB-MIDI connections\r\n");
             
             //Check if we need to connect or disconnected for the USB-MIDI device fd.
+            //The USB-MIDI file desciptors are '/dev/snd/midiCxD0', where 'x' is the number/index of the device on the system.
+            //On the RPi I can't seem to find a pattern for how each connected device given an index, therefore below
+            //I am checking for a large set of indexes. However the code only allows one device to be connected at any time -
+            //connecting any further devices will just be ignored.
             
-            //The USB-MIDI file desciptors are '/dev/snd/midiCxD0',
-            //where 'x' is the number of the device on the system (starting from 1 on RPi).
-            //Here we only want to attempt to connect to the first USB MIDI device connected.
-            //FIXME: is the above correct for every MIDI device that could be connected?
-            
-            char fd_path[32];
-            strcpy (fd_path, "/dev/snd/midiC1D0");
-            
-            //if this fd_path exists on the system (a device is plugged in),
-            //but we're currently not connected to the fd (device has just been plugged in)
-            if (access (fd_path, F_OK) != -1 && usb_midi_fd == -1)
+            for (uint8_t i = 0; i < 16; i++)
             {
-                printf ("[VB] USB-MIDI device connected.\r\n");
+                char fd_path[32];
+                char number_str[8];
                 
-                //Connect to/open the fd - just need to open it as a file - https://ccrma.stanford.edu/~craig/articles/linuxmidi/
-                usb_midi_fd = open (fd_path, O_RDWR);
+                snprintf (number_str, sizeof(number_str), "%d", i);
                 
-                if (usb_midi_fd == -1)
+                strcpy (fd_path, "/dev/snd/midiC");
+                strcat (fd_path, number_str);
+                strcat (fd_path, "D0");
+                
+                //if this fd_path exists on the system (a device is plugged in),
+                //but we're currently not connected to a USB MIDI device (first device has just been plugged in)
+                if (access (fd_path, F_OK) != -1 && currentUsbMidiDeviceIndex == -1)
                 {
-                    printf("[VB] ERROR: cannot open %s\n", fd_path);
-                    continue;
-                }
+                    printf ("[VB] USB-MIDI device connected (device index %d).\r\n", i);
+                    
+                    //Connect to/open the fd - just need to open it as a file - https://ccrma.stanford.edu/~craig/articles/linuxmidi/
+                    usb_midi_fd = open (fd_path, O_RDWR);
+                    
+                    if (usb_midi_fd == -1)
+                    {
+                        printf("[VB] ERROR: cannot open %s\n", fd_path);
+                        continue;
+                    }
+                    
+                    //add to the polls fd struct array
+                    poll_fds[INPUT_SRC_USB_MIDI].fd = usb_midi_fd;
+                    poll_fds[INPUT_SRC_USB_MIDI].events = POLLIN;
+                    
+                    //store the connected device index
+                    currentUsbMidiDeviceIndex = i;
+                    
+                } //if (access (fd_path, F_OK) != -1 && currentUsbMidiDeviceIndex == -1)
                 
-                //add to the polls fd struct array
-                poll_fds[INPUT_SRC_USB_MIDI].fd = usb_midi_fd;
-                poll_fds[INPUT_SRC_USB_MIDI].events = POLLIN;
+                //if this fd_path doesn't exists on the system,
+                //but we're currently connected to the device (device has just been disconnected)
+                else if (access (fd_path, F_OK) == -1 && currentUsbMidiDeviceIndex == i)
+                {
+                    printf ("[VB] USB-MIDI device disconnected (device index %d).\r\n", i);
+                    
+                    //close the fd descriptor
+                    if (close (usb_midi_fd) == -1)
+                        perror("[VB] Closing usb_midi_fd file descriptor");
+                    
+                    //flag that this device is no longer connected
+                    currentUsbMidiDeviceIndex = -1;
+                    
+                    //Set to ignore reading from the fd via polling
+                    poll_fds[INPUT_SRC_USB_MIDI].fd = -1;
+                    poll_fds[INPUT_SRC_USB_MIDI].events = POLLHUP;
+                    
+                } //else if (access (fd_path, F_OK) == -1 && currentUsbMidiDeviceIndex == i)
                 
-            } //if (access (fd_path, F_OK) != -1)
-            
-            //if this fd_path doesn't exists on the system,
-            //but we're currently connected to the fd (device has just been disconnected)
-            else if (access (fd_path, F_OK) == -1 && usb_midi_fd != -1)
-            {
-                printf ("[VB] USB-MIDI device disconnected.\r\n");
-                
-                //close the fd descriptor
-                if (close (usb_midi_fd) == -1)
-                    perror("[VB] Closing usb_midi_fd file descriptor");
-                
-                //flag that this fd no longer exists
-                usb_midi_fd = -1;
-                
-                //Set to ignore reading from the fd via polling
-                poll_fds[INPUT_SRC_USB_MIDI].fd = -1;
-                poll_fds[INPUT_SRC_USB_MIDI].events = POLLHUP;
-                
-            } //else if (access (fd_path, F_OK) == -1 && usb_midi_fd != -1)
+            } //for (uint8_t i = 0; i < 16; i++)
             
             //reset checker time
             clock_gettime (CLOCK_MONOTONIC, &usb_midi_device_checker_time);
