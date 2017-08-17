@@ -516,7 +516,25 @@ int main()
     std::cout << "[VSE] Setting up RtAudio..." << std::endl;
     
 	RtAudio::StreamParameters parameters;
-	parameters.deviceId = dac.getDefaultOutputDevice();
+    
+    int num_of_devices = dac.getDeviceCount();
+    std::cout << "[VSE] Num of available audio devices: " << num_of_devices << std::endl;
+    
+    //Set the RTAudio object audio deviceID to the first USB audio device found
+    for (int i = 0; i < num_of_devices; i++)
+    {
+        std::string device_name = dac.getDeviceInfo(i).name;
+        
+        if (device_name.find("USB") != string::npos)
+        {
+            std::cout << "[VSE] Setting audio device ID to " << i << " (" << device_name << ")" << std::endl;
+            parameters.deviceId = i;
+            break;
+        }
+        
+    } //for (int i = 0; i < num_of_devices; i++)
+    
+	//parameters.deviceId = dac.getDefaultOutputDevice();
 	parameters.nChannels = maxiSettings::channels;
 	parameters.firstChannel = 0;
 	unsigned int sampleRate = maxiSettings::sampleRate;
