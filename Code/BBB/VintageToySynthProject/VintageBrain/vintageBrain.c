@@ -5,7 +5,7 @@
  Copyright 2016 Liam Lacey. All rights reserved.
  
  This is the main file for the vintageBrain application for the Vintage Toy Piano Synth project.
- This application is used provide communication between the synths keyboard, panel, sound engine, and MIDI I/O.
+ This application is used provide communication between the synths keyboard, panel, sound engine, MIDI I/O, and USB MIDI I/O.
  It is also used to handle voice allocation and patch storage.
  
  */
@@ -60,6 +60,7 @@ enum InputSources
     INPUT_SRC_KEYBOARD = 0,
     INPUT_SRC_MIDI_IN,
     INPUT_SRC_PANEL,
+    INPUT_SRC_USB_MIDI,
     INPUT_SRC_SOCKETS,
 
     //use this when setting up polling stuff
@@ -73,9 +74,9 @@ enum InputSources
 };
 
 #define NUM_OF_POLL_FDS NUM_OF_INPUT_SRC_TYPES
-#define POLL_TIME -1
+#define POLL_TIME 1
 
-int keyboard_fd, midi_fd, panel_fd;
+int keyboard_fd, midi_fd, panel_fd, usb_midi_fd;
 
 //FIXME: make these variables not global!
 bool panelIsEnabled = true;
@@ -113,6 +114,26 @@ typedef struct
     
 } VoiceAllocData;
 
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//Function that gets the time interval (in ms?) between the current time and the
+//passed in previous time.
+
+long GetCurrentTimeDifference (struct timespec previous_time)
+{
+    //get current time
+    struct timespec current_time;
+    clock_gettime (CLOCK_MONOTONIC, &current_time);
+    
+    //compare current time with the previous time
+    long seconds = current_time.tv_sec - previous_time.tv_sec;
+    long nseconds = current_time.tv_nsec - previous_time.tv_nsec;
+    long interval_time = ((seconds) * 1000 + nseconds/1000000.0) + 0.5;
+    
+    return interval_time;
+}
+
 //==========================================================
 //==========================================================
 //==========================================================
@@ -134,6 +155,17 @@ void WriteToPanelFd (uint8_t data_buffer[], int data_buffer_size)
 {
     if (write (panel_fd, data_buffer, data_buffer_size) == -1)
         perror("[VB] Writing to panel");
+}
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//TODO: use this function
+
+void WriteToLinuxUsbMidiDevice (const uint8_t data_buffer[], const int data_buffer_size)
+{
+    if (write (usb_midi_fd, data_buffer, data_buffer_size) == -1)
+        perror("[VB] Writing to USB-MIDI");
 }
 
 //==========================================================
@@ -1105,6 +1137,64 @@ void ProcessCcMessage (uint8_t message_buffer[],
 //====================================================================================
 //====================================================================================
 //====================================================================================
+void ProcessMidiInData (uint8_t input_src,
+                        uint8_t input_message_flag,
+                        uint8_t input_message_buffer[],
+                        PatchParameterData patchParameterData[],
+                        VoiceAllocData *voice_alloc_data,
+                        int sock,
+                        struct sockaddr_un sound_engine_sock_addr)
+{
+    //if we have received a full MIDI message
+    if (input_message_flag)
+    {
+        //printf ("[VB] Received full MIDI message from MIDI interface with status byte %d\n", input_message_buffer[INPUT_SRC_MIDI_IN][0]);
+        
+        if (input_message_flag == MIDI_NOTEON)
+        {
+#ifdef DEBUG
+            printf ("[VB] Received note-on message from MIDI\r\n");
+#endif
+            
+            //set the MIDI channel to 0
+            input_message_buffer[0] = MIDI_NOTEON;
+            
+            ProcessNoteMessage (input_message_buffer, patchParameterData, voice_alloc_data, false, sock, sound_engine_sock_addr, false, 0);
+            
+        } //if (input_message_flag == MIDI_NOTEON)
+        
+        else if (input_message_flag == MIDI_NOTEOFF)
+        {
+#ifdef DEBUG
+            printf ("[VB] Received note-off message from MIDI\r\n");
+#endif
+            
+            //set the MIDI channel to 0
+            input_message_buffer[0] = MIDI_NOTEOFF;
+            
+            ProcessNoteMessage (input_message_buffer, patchParameterData, voice_alloc_data, false, sock, sound_engine_sock_addr, false, 0);
+            
+        } //else if (input_message_flag == MIDI_NOTEOFF)
+        
+        else if (input_message_flag == MIDI_CC)
+        {
+#ifdef DEBUG
+            printf ("[VB] Received CC message from MIDI\r\n");
+#endif
+            
+            //set the MIDI channel to 0
+            input_message_buffer[0] = MIDI_CC;
+            
+            ProcessCcMessage (input_message_buffer, patchParameterData, voice_alloc_data, false, sock, sound_engine_sock_addr);
+            
+        } //else if (input_message_flag == MIDI_CC)
+        
+    } //if (input_message_flag)
+}
+
+//====================================================================================
+//====================================================================================
+//====================================================================================
 //Handles signals
 static void SignalHandler (int sig)
 {
@@ -1242,16 +1332,118 @@ int main (void)
     //Variable to hold the size of a struct sockaddr_un.
     socklen_t len = (socklen_t)sizeof(struct sockaddr_un);
     
-    //==========================================================
-    //Enter main loop, and just read any data that comes in over the serial ports or sockets
+    //====================================================================================
+    //USB-MIDI setup stuff.
+    //Actually connecting to/opening the fd is done at the top of the while loop below, as this
+    //device/file can be created and removed at anytime during runtime
     
-    printf ("[VB] Starting reading data from serial ports...\n");
+    struct timespec usb_midi_device_checker_time;
+    clock_gettime (CLOCK_MONOTONIC, &usb_midi_device_checker_time);
+    
+    //Set the poll_fd struct array to ignore polling for USB MIDI device data.
+    //This is then set up when device is connected.
+    //Trying to read from polls not connected to anything creates high CPU usage.
+    poll_fds[INPUT_SRC_USB_MIDI].fd = -1;
+    poll_fds[INPUT_SRC_USB_MIDI].events = POLLHUP;
+    
+    //flag that usb_midi_fd isn't currently connected
+    int currentUsbMidiDeviceIndex = -1;
+    
+    //==========================================================
+    //Enter main loop, and just read any data that comes in over the serial ports, sockets, or USB-MIDI files
+    
+    printf ("[VB] Starting reading data from interfaces...\n");
     
 //    uint8_t test_num = 48;
 //    uint8_t test_vel = 20;
     
+    bool first_loop_run = true;
+    
     while (true)
     {
+        //====================================================================================
+        //USB-MIDI device connection stuff
+        
+#ifdef ENABLE_USB_MIDI
+        
+        //Only want to do this once per second (otherwise CPU usage is high)
+        long interval_check_time = GetCurrentTimeDifference (usb_midi_device_checker_time);
+        
+        if (interval_check_time >= 1000 || first_loop_run)
+        {
+            //printf ("[VB] Checking USB-MIDI connections\r\n");
+            
+            //Check if we need to connect or disconnected for the USB-MIDI device fd.
+            //The USB-MIDI file desciptors are '/dev/snd/midiCxD0', where 'x' is the number/index of the device on the system.
+            //On the RPi I can't seem to find a pattern for how each connected device given an index, therefore below
+            //I am checking for a large set of indexes. However the code only allows one device to be connected at any time -
+            //connecting any further devices will just be ignored.
+            
+            for (uint8_t i = 0; i < 16; i++)
+            {
+                char fd_path[32];
+                char number_str[8];
+                
+                snprintf (number_str, sizeof(number_str), "%d", i);
+                
+                strcpy (fd_path, "/dev/snd/midiC");
+                strcat (fd_path, number_str);
+                strcat (fd_path, "D0");
+                
+                //if this fd_path exists on the system (a device is plugged in),
+                //but we're currently not connected to a USB MIDI device (first device has just been plugged in)
+                if (access (fd_path, F_OK) != -1 && currentUsbMidiDeviceIndex == -1)
+                {
+                    printf ("[VB] USB-MIDI device connected (device index %d).\r\n", i);
+                    
+                    //Connect to/open the fd - just need to open it as a file - https://ccrma.stanford.edu/~craig/articles/linuxmidi/
+                    usb_midi_fd = open (fd_path, O_RDWR);
+                    
+                    if (usb_midi_fd == -1)
+                    {
+                        printf("[VB] ERROR: cannot open %s\n", fd_path);
+                        continue;
+                    }
+                    
+                    //add to the polls fd struct array
+                    poll_fds[INPUT_SRC_USB_MIDI].fd = usb_midi_fd;
+                    poll_fds[INPUT_SRC_USB_MIDI].events = POLLIN;
+                    
+                    //store the connected device index
+                    currentUsbMidiDeviceIndex = i;
+                    
+                } //if (access (fd_path, F_OK) != -1 && currentUsbMidiDeviceIndex == -1)
+                
+                //if this fd_path doesn't exists on the system,
+                //but we're currently connected to the device (device has just been disconnected)
+                else if (access (fd_path, F_OK) == -1 && currentUsbMidiDeviceIndex == i)
+                {
+                    printf ("[VB] USB-MIDI device disconnected (device index %d).\r\n", i);
+                    
+                    //close the fd descriptor
+                    if (close (usb_midi_fd) == -1)
+                        perror("[VB] Closing usb_midi_fd file descriptor");
+                    
+                    //flag that this device is no longer connected
+                    currentUsbMidiDeviceIndex = -1;
+                    
+                    //Set to ignore reading from the fd via polling
+                    poll_fds[INPUT_SRC_USB_MIDI].fd = -1;
+                    poll_fds[INPUT_SRC_USB_MIDI].events = POLLHUP;
+                    
+                } //else if (access (fd_path, F_OK) == -1 && currentUsbMidiDeviceIndex == i)
+                
+            } //for (uint8_t i = 0; i < 16; i++)
+            
+            //reset checker time
+            clock_gettime (CLOCK_MONOTONIC, &usb_midi_device_checker_time);
+            
+        } //if (interval_check_time >= 1000)
+        
+#endif //ENABLE_USB_MIDI
+        
+        //==========================================================
+        
         //for now only send data from keyboard/panel to MIDI-out if global volume is 0,
         //due to the issue where sending to MIDI-out causes glitches in the audio.
         //FIXME: this MIDI-out audio glitch issue
@@ -1368,52 +1560,86 @@ int main (void)
                                                             &input_message_running_status_value[INPUT_SRC_MIDI_IN],
                                                             &input_message_prev_cc_num[INPUT_SRC_MIDI_IN]);
                 
-                //if we have received a full MIDI message
-                if (input_message_flag)
-                {
-                     //printf ("[VB] Received full MIDI message from MIDI interface with status byte %d\n", input_message_buffer[INPUT_SRC_MIDI_IN][0]);
-                   
-                    if (input_message_flag == MIDI_NOTEON)
-                    {
-                        #ifdef DEBUG
-                        printf ("[VB] Received note-on message from MIDI\r\n");
-                        #endif
-                        
-                        //set the MIDI channel to 0
-                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEON;
-                        
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr, false, 0);
-                        
-                    } //if (input_message_flag == MIDI_NOTEON)
-                    
-                    else if (input_message_flag == MIDI_NOTEOFF)
-                    {
-                        #ifdef DEBUG
-                        printf ("[VB] Received note-off message from MIDI\r\n");
-                        #endif
-                        
-                        //set the MIDI channel to 0
-                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEOFF;
-                        
-                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr, false, 0);
-                        
-                    } //else if (input_message_flag == MIDI_NOTEOFF)
-                    
-                    else if (input_message_flag == MIDI_CC)
-                    {
-                        #ifdef DEBUG
-                        printf ("[VB] Received CC message from MIDI\r\n");
-                        #endif
-                        
-                        //set the MIDI channel to 0
-                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_CC;
-                        
-                        ProcessCcMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr);
-                        
-                    } //else if (input_message_flag == MIDI_CC)
-                    
-                } //if (input_message_flag)
+                ProcessMidiInData (INPUT_SRC_MIDI_IN, input_message_flag, input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, sock, sound_engine_sock_addr);
+                
+//                //if we have received a full MIDI message
+//                if (input_message_flag)
+//                {
+//                     //printf ("[VB] Received full MIDI message from MIDI interface with status byte %d\n", input_message_buffer[INPUT_SRC_MIDI_IN][0]);
+//
+//                    if (input_message_flag == MIDI_NOTEON)
+//                    {
+//                        #ifdef DEBUG
+//                        printf ("[VB] Received note-on message from MIDI\r\n");
+//                        #endif
+//
+//                        //set the MIDI channel to 0
+//                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEON;
+//
+//                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr, false, 0);
+//
+//                    } //if (input_message_flag == MIDI_NOTEON)
+//
+//                    else if (input_message_flag == MIDI_NOTEOFF)
+//                    {
+//                        #ifdef DEBUG
+//                        printf ("[VB] Received note-off message from MIDI\r\n");
+//                        #endif
+//
+//                        //set the MIDI channel to 0
+//                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEOFF;
+//
+//                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr, false, 0);
+//
+//                    } //else if (input_message_flag == MIDI_NOTEOFF)
+//
+//                    else if (input_message_flag == MIDI_CC)
+//                    {
+//                        #ifdef DEBUG
+//                        printf ("[VB] Received CC message from MIDI\r\n");
+//                        #endif
+//
+//                        //set the MIDI channel to 0
+//                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_CC;
+//
+//                        ProcessCcMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr);
+//
+//                    } //else if (input_message_flag == MIDI_CC)
+//
+//                } //if (input_message_flag)
 
+            } //if (ret)
+            
+        } //if (poll_fds[INPUT_SRC_MIDI_IN].revents & POLLIN)
+        
+        //==========================================================
+        //Reading data from the USB-MIDI device
+        
+        //if an event has happened on the USB-MIDI file descriptor
+        //FIXME: can this be an else if?
+        if (poll_fds[INPUT_SRC_USB_MIDI].revents & POLLIN)
+        {
+            //attempt to read a byte from the USB MIDI device file
+            ret = read (usb_midi_fd, serial_input_buf, 1);
+            
+            //if read something
+            if (ret != -1)
+            {
+                #ifdef DEBUG
+                //display the read byte
+                printf ("[VB] Byte read from USB-MIDI device: %d\n", serial_input_buf[0]);
+                #endif
+                
+                //process the read byte
+                uint8_t input_message_flag = ProcInputByte (serial_input_buf[0],
+                                                            input_message_buffer[INPUT_SRC_USB_MIDI],
+                                                            &input_message_counter[INPUT_SRC_USB_MIDI],
+                                                            &input_message_running_status_value[INPUT_SRC_USB_MIDI],
+                                                            &input_message_prev_cc_num[INPUT_SRC_USB_MIDI]);
+                
+                
+                ProcessMidiInData (INPUT_SRC_USB_MIDI, input_message_flag, input_message_buffer[INPUT_SRC_USB_MIDI], patchParameterData, &voice_alloc_data, sock, sound_engine_sock_addr);
+                
             } //if (ret)
             
         } //if (poll_fds[INPUT_SRC_MIDI_IN].revents & POLLIN)
@@ -1521,6 +1747,8 @@ int main (void)
             } //if (strncmp (from_addr.sun_path, SOCK_SOUND_ENGINE_FILENAME, strlen(from_addr.sun_path)) == 0)
             
         } //if (poll_fds[INPUT_SRC_SOCKETS].revents & POLLIN)
+        
+        first_loop_run = false;
     
         //test sending data to socket
 //        uint8_t test_buf[3] = {MIDI_NOTEON, test_num, test_vel};
