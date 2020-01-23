@@ -20,14 +20,20 @@
 #define SOCK_SOUND_ENGINE_FILENAME "/var/vintageToySynthProject/vintageSoundEngine.cli"
 
 //==========================================================================
-#define NUM_OF_VOICES 2
+//if NUM_OF_VOICES > 16, uncomment USE_SYS_NOTE_MSGS.
+//This value currently can't be higher than 128 (beyond MIDI data byte range for setting voice number)
+#define NUM_OF_VOICES 16
+
+//uncomment this to send notes messages to the sound engine as sysex messages,
+//where we can use channel / voice numbers greater than 16
+//#define USE_SYS_NOTE_MSGS 1
 
 //==========================================================================
 #define VOICE_MONO_BUFFER_SIZE 18
 #define VOICE_NO_NOTE -1
 
 //this value must not be smaller than NUM_OF_VOICES or VOICE_MONO_BUFFER_SIZE
-#define VOICE_ALLOC_NOTE_BUFFER_SIZE 18
+#define VOICE_ALLOC_NOTE_BUFFER_SIZE NUM_OF_VOICES
 
 //==========================================================================
 //MIDI defines
@@ -203,7 +209,7 @@ static const PatchParameterData defaultPatchParameterData[128] =
     {}, //6
     {127, 0, 127, true, true, 0.6, 0., 1., 1.0, "AEG AMOUNT"}, //7 - PARAM_AEG_AMOUNT
     {}, //8
-    {80, 0, 100, false, false, 80, 0, 100, 1.0, "GLOBAL VOLUME"}, //9 - PARAM_GLOBAL_VOLUME
+    {100, 0, 100, false, false, 100, 0, 100, 1.0, "GLOBAL VOLUME"}, //9 - PARAM_GLOBAL_VOLUME
     {}, //10
     {}, //11
     {}, //12

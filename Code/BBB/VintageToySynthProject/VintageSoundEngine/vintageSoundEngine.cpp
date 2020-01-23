@@ -51,6 +51,8 @@
 #include "Maximilian/maximilian.h"
 #include "vintageVoice.h"
 
+//#define DEBUG 1
+
 //FIXME: am I able to declare these in main and pass it into routing and play?
 //I think I pass into routing using the *userData variable.
 VintageVoice *vintageVoice[NUM_OF_VOICES];
@@ -165,7 +167,7 @@ int routing	(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
         //set output
         for (uint8_t i = 0; i < maxiSettings::channels; i++)
         {
-            output[i] = mix / (double)NUM_OF_VOICES;
+            output[i] = mix / ((double)NUM_OF_VOICES / 2);
         }
         
         //Trying out individual distortions per each voice to see if this sounds better.
@@ -401,7 +403,8 @@ int routing	(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
         {
             //add data to the sysex buffer
             message_buffer[*byte_counter] = input_byte;
-            *byte_counter++;
+            //*byte_counter++; <<< DOESN'T WORK
+            *byte_counter = *byte_counter + 1;
         }
         
         return result;
@@ -613,61 +616,88 @@ int main()
                         
                     } //if (input_message_flag == MIDI_NOTEOFF)
                     
-                    //================================
-                    //Process CC/param messages
-                    else if (input_message_flag == MIDI_CC)
-                    {
-                        //if a patch parameter
-                        if (input_message_buffer[1] != PARAM_CMD)
-                        {
-                            //channel relates to voice number. Channel 15 means send to all voices
-                            uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
-                            
-                            for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
-                            {
-                                //if we want to send this message to voice number 'voice'
-                                if (voice_num == 15 || voice_num == voice)
-                                {
-                                    //TODO: check if this param/CC num is a sound param, and in range.
-                                    //At this point it always should be, but it may be best to check anyway.
-                                    
-                                    //set the paramaters voice value
-                                    vintageVoice[voice]->setPatchParamVoiceValue (input_message_buffer[1], input_message_buffer[2]);
-                                    
-                                } //if (voice_num == 15 || voice_num == voice)
-                                
-                            } //for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
-                            
-                        } //if (input_message_buffer[1] != PARAM_CMD)
-                        
-                        //if a command message
-                        else
-                        {
-                            //if 'kill all voices' command
-                            if (input_message_buffer[2] == CMD_KILL_ALL_VOICES)
-                            {
-                                for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
-                                {
-                                    vintageVoice[voice]->processNoteMessage (0, 0, 0);
-                                }
-                            }
-                            
-                        } //if (input_message_buffer[1] == PARAM_CMD)
-                        
-                    } //if (input_message_flag == MIDI_CC)
+//                    //================================
+//                    //Process CC/param messages
+//                    else if (input_message_flag == MIDI_CC)
+//                    {
+//                        //if a patch parameter
+//                        if (input_message_buffer[1] != PARAM_CMD)
+//                        {
+//                            //channel relates to voice number. Channel 15 means send to all voices
+//                            uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
+//
+//                            for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+//                            {
+//                                //if we want to send this message to voice number 'voice'
+//                                if (voice_num == 15 || voice_num == voice)
+//                                {
+//                                    //TODO: check if this param/CC num is a sound param, and in range.
+//                                    //At this point it always should be, but it may be best to check anyway.
+//
+//                                    //set the paramaters voice value
+//                                    vintageVoice[voice]->setPatchParamVoiceValue (input_message_buffer[1], input_message_buffer[2]);
+//
+//                                } //if (voice_num == 15 || voice_num == voice)
+//
+//                            } //for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+//
+//                        } //if (input_message_buffer[1] != PARAM_CMD)
+//
+//                        //if a command message
+//                        else
+//                        {
+//                            //if 'kill all voices' command
+//                            if (input_message_buffer[2] == CMD_KILL_ALL_VOICES)
+//                            {
+//                                for (uint8_t voice = 0; voice < NUM_OF_VOICES; voice++)
+//                                {
+//                                    vintageVoice[voice]->processNoteMessage (0, 0, 0);
+//                                }
+//                            }
+//
+//                        } //if (input_message_buffer[1] == PARAM_CMD)
+//
+//                    } //if (input_message_flag == MIDI_CC)
+//
+//                    //================================
+//                    //Process poly aftertouch messages
+//
+//                    else if (input_message_flag == MIDI_PAT)
+//                    {
+//                        //channel relates to voice number
+//                        uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
+//
+//                        vintageVoice[voice_num]->processAftertouchMessage (input_message_buffer[2]);
+//
+//                    } //if (input_message_flag == MIDI_NOTEOFF)
                     
                     //================================
-                    //Process poly aftertouch messages
-
-                    else if (input_message_flag == MIDI_PAT)
+                    //Process sysex messages
+                    else if (input_message_flag == MIDI_SYSEX_START)
                     {
-                        //channel relates to voice number
-                        uint8_t voice_num = input_message_buffer[0] & MIDI_CHANNEL_BITS;
+                        //Process note-on sysex messages
+                        if (input_message_buffer[1] == 1)
+                        {
+                            #ifdef DEBUG
+                            printf ("[VSE] Recieved sys note-on msg: voice %d, note %d, velo %d\r\n", input_message_buffer[2], input_message_buffer[3], input_message_buffer[4]);
+                            #endif
+                            
+                            vintageVoice[input_message_buffer[2]]->processNoteMessage (1, input_message_buffer[3], input_message_buffer[4]);
+                            
+                        } //if (input_message_flag == MIDI_NOTEON)
                         
-                        vintageVoice[voice_num]->processAftertouchMessage (input_message_buffer[2]);
+                        //Process note-off sysex messages
+                        else if (input_message_buffer[1] == 0)
+                        {
+                            #ifdef DEBUG
+                            printf ("[VSE] Recieved sys note-off msg: voice %d, note %d, velo %d\r\n", input_message_buffer[2], input_message_buffer[3], input_message_buffer[4]);
+                            #endif
+                            
+                            vintageVoice[input_message_buffer[2]]->processNoteMessage (0, 0, 0);
+                            
+                        } //if (input_message_flag == MIDI_NOTEOFF)
                         
-                    } //if (input_message_flag == MIDI_NOTEOFF)
-                    
+                    }
                     
                 } //if (input_message_flag)
                 

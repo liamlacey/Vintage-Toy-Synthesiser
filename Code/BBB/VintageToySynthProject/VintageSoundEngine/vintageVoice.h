@@ -44,6 +44,8 @@
 #include "../globals.h"
 #include "Maximilian/maximilian.h"
 
+#define NUM_OF_SAMPLES 2
+
 class VintageVoice
 {
 public:
@@ -54,39 +56,44 @@ public:
     
     void processNoteMessage (bool note_status, uint8_t note_num, uint8_t note_vel);
 
-    void setPatchParamVoiceValue (uint8_t param_num, uint8_t param_user_val);
-    
-    void processAftertouchMessage (uint8_t aftertouch_val);
-    
-    double getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, double source_val, double realtime_mod_val);
-    double boundValue (double val, double min_val, double max_val);
+//    void setPatchParamVoiceValue (uint8_t param_num, uint8_t param_user_val);
+//    
+//    void processAftertouchMessage (uint8_t aftertouch_val);
+//    
+//    double getModulatedParamValue (uint8_t mod_depth_param, uint8_t source_param, double source_val, double realtime_mod_val);
+//    double boundValue (double val, double min_val, double max_val);
     
 private:
     
     uint8_t voiceNum;
     
-    //maximilian objects
-    maxiOsc oscSine, oscTri, oscSaw, oscPulse, oscSquare;
-    maxiEnv envAmp, envFilter;
-    maxiSVF filterSvf;
-    maxiOsc lfo;
-    maxiDistortion distortion;
-    
-    //'patch' parameters
-    PatchParameterData patchParameterData[128];
-    
-    //other parameters
-    double oscSinePitch, oscTriPitch, oscSawPitch, oscPulsePitch, oscSquarePitch;
-    double filterCutoffRealtimeVal;
-    
-    double voiceVelocityValue;
-    uint8_t rootNoteNum, rootNoteVel;
-    double aftertouchValue;
-    
-    double velAmpModVal, velFreqModVal, velResoModVal;
-    
-    //audio output variables
-    double envAmpOut, oscSineOut, oscTriOut, oscSawOut, oscPulseOut, oscSquareOut, oscMixOut, filterOut, envFilterOut, lfoOut, distortionOut, effectsMixOut;
+   //maximilian objects
+    maxiSample sample[NUM_OF_SAMPLES];
+    maxiEnv envAmp[NUM_OF_SAMPLES];
+//    maxiOsc oscSine, oscTri, oscSaw, oscPulse, oscSquare;
+//    maxiEnv envAmp, envFilter;
+//    maxiSVF filterSvf;
+//    maxiOsc lfo;
+//    maxiDistortion distortion;
+//
+//    //'patch' parameters
+//    PatchParameterData patchParameterData[128];
+//
+//    //other parameters
+    double sampleSpeed[NUM_OF_SAMPLES];
+    double sampleVeloAmp[NUM_OF_SAMPLES];
+//    double oscSinePitch, oscTriPitch, oscSawPitch, oscPulsePitch, oscSquarePitch;
+//    double filterCutoffRealtimeVal;
+//
+//    double voiceVelocityValue;
+//    uint8_t rootNoteNum, rootNoteVel;
+//    double aftertouchValue;
+//
+//    double velAmpModVal, velFreqModVal, velResoModVal;
+//
+//    //audio output variables
+//    double envAmpOut, oscSineOut, oscTriOut, oscSawOut, oscPulseOut, oscSquareOut, oscMixOut, filterOut, envFilterOut, lfoOut, distortionOut, effectsMixOut;
+    double envAmpOut[NUM_OF_SAMPLES], sampleOut;
     
 };
 

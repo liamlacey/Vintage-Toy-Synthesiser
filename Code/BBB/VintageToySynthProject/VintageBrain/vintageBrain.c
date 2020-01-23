@@ -134,6 +134,30 @@ long GetCurrentTimeDifference (struct timespec previous_time)
     return interval_time;
 }
 
+//====================================================================================
+//====================================================================================
+//====================================================================================
+void SetSystemVolume (uint8_t value)
+{
+    //set the Linux system volume...
+    
+    //create start of amixer command to set 'Speaker' control value
+    //See http://linux.die.net/man/1/amixer for more options
+    uint8_t volume_cmd[64] = {"amixer -q sset Speaker "};
+    
+    //turn the param value into a percentage string
+    uint8_t volume_string[16];
+    sprintf(volume_string, "%d%%", value);
+    
+    //append the value string onto the command
+    strcat (volume_cmd, volume_string);
+    
+    //printf ("[VB] - volume command: %s\r\n", volume_cmd);
+    
+    //Send the command to the system
+    system (volume_cmd);
+}
+
 //==========================================================
 //==========================================================
 //==========================================================
@@ -565,8 +589,13 @@ uint8_t GetNextFreeVoice (VoiceAllocData *voice_alloc_data, int sock, struct soc
         
         //Send a note-off message to the stolen voice so that when
         //sending the new note-on it enters the attack phase....
+#ifndef USE_SYS_NOTE_MSGS
         uint8_t note_buffer[3] = {MIDI_NOTEOFF + (free_voice - 1), voice_alloc_data->note_data[free_voice - 1].note_num, 0};
         SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+#else
+        uint8_t note_sys_buf[6] = {MIDI_SYSEX_START, 0, free_voice - 1, voice_alloc_data->note_data[free_voice - 1].note_num, 0, MIDI_SYSEX_END};
+        SendToSoundEngine (note_sys_buf, 6, sock, sound_engine_sock_addr);
+#endif
         
     } //else ((free_voice != 0))
     
@@ -781,8 +810,14 @@ void ProcessNoteMessage (uint8_t message_buffer[],
                 
                 //Send to the sound engine...
                 
+#ifndef USE_SYS_NOTE_MSGS
                 uint8_t note_buffer[3] = {MIDI_NOTEON + free_voice, message_buffer[1], message_buffer[2]};
                 SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+#else
+                uint8_t note_sys_buf[6] = {MIDI_SYSEX_START, 1, free_voice, message_buffer[1], message_buffer[2], MIDI_SYSEX_END};
+                SendToSoundEngine (note_sys_buf, 6, sock, sound_engine_sock_addr);
+#endif
+                
                 
             } //if (free_voice > 0)
             
@@ -795,8 +830,13 @@ void ProcessNoteMessage (uint8_t message_buffer[],
             AddNoteToMonoStack (message_buffer[1], message_buffer[2], voice_alloc_data, from_internal_keyboard, keyboard_key_num);
             
             //Send to the sound engine for voice 0...
+#ifndef USE_SYS_NOTE_MSGS
             uint8_t note_buffer[3] = {MIDI_NOTEON, message_buffer[1], message_buffer[2]};
             SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+#else
+            uint8_t note_sys_buf[6] = {MIDI_SYSEX_START, 1, 0, message_buffer[1], message_buffer[2], MIDI_SYSEX_END};
+            SendToSoundEngine (note_sys_buf, 6, sock, sound_engine_sock_addr);
+#endif
             
         } //else (mono mode)
         
@@ -830,8 +870,13 @@ void ProcessNoteMessage (uint8_t message_buffer[],
                 
                 //Send to the sound engine...
                 
+#ifndef USE_SYS_NOTE_MSGS
                 uint8_t note_buffer[3] = {MIDI_NOTEOFF + freed_voice, message_buffer[1], message_buffer[2]};
                 SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+#else
+                uint8_t note_sys_buf[6] = {MIDI_SYSEX_START, 0, freed_voice, message_buffer[1], message_buffer[2], MIDI_SYSEX_END};
+                SendToSoundEngine (note_sys_buf, 6, sock, sound_engine_sock_addr);
+#endif
                 
             } //if (freed_voice > 0)
             
@@ -851,8 +896,13 @@ void ProcessNoteMessage (uint8_t message_buffer[],
                 uint8_t note_num = voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer - 1].note_num;
                 uint8_t note_vel = voice_alloc_data->note_data[voice_alloc_data->mono_note_stack_pointer - 1].note_vel;
                 
+#ifndef USE_SYS_NOTE_MSGS
                 uint8_t note_buffer[3] = {MIDI_NOTEON, note_num, note_vel};
                 SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+#else
+                uint8_t note_sys_buf[6] = {MIDI_SYSEX_START, 1, 0, note_num, note_vel, MIDI_SYSEX_END};
+                SendToSoundEngine (note_sys_buf, 6, sock, sound_engine_sock_addr);
+#endif
                 
             } //if (prev_stack_note != VOICE_NO_NOTE)
             
@@ -861,8 +911,13 @@ void ProcessNoteMessage (uint8_t message_buffer[],
             {
                 //Send to the sound engine as a note off...
                 
+#ifndef USE_SYS_NOTE_MSGS
                 uint8_t note_buffer[3] = {MIDI_NOTEOFF, message_buffer[1], message_buffer[2]};
                 SendToSoundEngine (note_buffer, 3, sock, sound_engine_sock_addr);
+#else
+                uint8_t note_sys_buf[6] = {MIDI_SYSEX_START, 0, 0, message_buffer[1], message_buffer[2], MIDI_SYSEX_END};
+                SendToSoundEngine (note_sys_buf, 6, sock, sound_engine_sock_addr);
+#endif
             }
             
         } //else (mono mode)
@@ -1030,23 +1085,7 @@ void ProcessCcMessage (uint8_t message_buffer[],
     //if global volume has changed
     else if (param_num == PARAM_GLOBAL_VOLUME && patch_param_data[param_num].user_val != param_val)
     {
-        //set the Linux system volume...
-        
-        //create start of amixer command to set 'Speaker' control value
-        //See http://linux.die.net/man/1/amixer for more options
-        uint8_t volume_cmd[64] = {"amixer -q sset Speaker "};
-        
-        //turn the param value into a percentage string
-        uint8_t volume_string[16];
-        sprintf(volume_string, "%d%%", param_val);
-        
-        //append the value string onto the command
-        strcat (volume_cmd, volume_string);
-        
-        //printf ("[VB] - volume command: %s\r\n", volume_cmd);
-        
-        //Send the command to the system
-        system (volume_cmd);
+        SetSystemVolume (param_val);
         
     } //if (param_num == PARAM_GLOBAL_VOLUME && patch_param_data[param_num].user_val != param_val)
     
@@ -1349,6 +1388,10 @@ int main (void)
     //flag that usb_midi_fd isn't currently connected
     int currentUsbMidiDeviceIndex = -1;
     
+    //====================================================================================
+    //Set system volume to full
+    SetSystemVolume (100);
+    
     //==========================================================
     //Enter main loop, and just read any data that comes in over the serial ports, sockets, or USB-MIDI files
     
@@ -1561,52 +1604,6 @@ int main (void)
                                                             &input_message_prev_cc_num[INPUT_SRC_MIDI_IN]);
                 
                 ProcessMidiInData (INPUT_SRC_MIDI_IN, input_message_flag, input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, sock, sound_engine_sock_addr);
-                
-//                //if we have received a full MIDI message
-//                if (input_message_flag)
-//                {
-//                     //printf ("[VB] Received full MIDI message from MIDI interface with status byte %d\n", input_message_buffer[INPUT_SRC_MIDI_IN][0]);
-//
-//                    if (input_message_flag == MIDI_NOTEON)
-//                    {
-//                        #ifdef DEBUG
-//                        printf ("[VB] Received note-on message from MIDI\r\n");
-//                        #endif
-//
-//                        //set the MIDI channel to 0
-//                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEON;
-//
-//                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr, false, 0);
-//
-//                    } //if (input_message_flag == MIDI_NOTEON)
-//
-//                    else if (input_message_flag == MIDI_NOTEOFF)
-//                    {
-//                        #ifdef DEBUG
-//                        printf ("[VB] Received note-off message from MIDI\r\n");
-//                        #endif
-//
-//                        //set the MIDI channel to 0
-//                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_NOTEOFF;
-//
-//                        ProcessNoteMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr, false, 0);
-//
-//                    } //else if (input_message_flag == MIDI_NOTEOFF)
-//
-//                    else if (input_message_flag == MIDI_CC)
-//                    {
-//                        #ifdef DEBUG
-//                        printf ("[VB] Received CC message from MIDI\r\n");
-//                        #endif
-//
-//                        //set the MIDI channel to 0
-//                        input_message_buffer[INPUT_SRC_MIDI_IN][0] = MIDI_CC;
-//
-//                        ProcessCcMessage (input_message_buffer[INPUT_SRC_MIDI_IN], patchParameterData, &voice_alloc_data, false, sock, sound_engine_sock_addr);
-//
-//                    } //else if (input_message_flag == MIDI_CC)
-//
-//                } //if (input_message_flag)
 
             } //if (ret)
             
