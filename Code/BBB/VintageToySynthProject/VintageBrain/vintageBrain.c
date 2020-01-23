@@ -549,7 +549,7 @@ uint8_t ProcInputByte (uint8_t input_byte, uint8_t message_buffer[], uint8_t *by
     {
         //add data to the sysex buffer
         message_buffer[*byte_counter] = input_byte;
-        *byte_counter++;
+        *byte_counter = *byte_counter + 1;
     }
     
     return result;
